@@ -1,6 +1,7 @@
 """Experiment runner for the full parameter matrix described in the report.
 
 Runs both Baseline Dijkstra and Probability-Pruned Dijkstra across:
+  - graph_type ∈ {erdos_renyi, layered}
   - |V| ∈ {1_000, 5_000, 10_000, 50_000}
   - d̄  ∈ {2, 5, 10}
   - distribution ∈ {uniform, power_law}
@@ -14,7 +15,8 @@ Records all 7 evaluation metrics per run (§3.8.2):
 Results are saved to a CSV file for analysis.
 
 Usage:
-    python run_experiments.py                          # full matrix
+    python run_experiments.py                          # full matrix (both graph types)
+    python run_experiments.py --graph-types erdos_renyi  # ER only
     python run_experiments.py --sizes 1000 5000        # subset of sizes
     python run_experiments.py --runs 3                 # quick smoke test
     python run_experiments.py --output results.csv     # custom output path
@@ -30,20 +32,27 @@ import time
 import tracemalloc
 from pathlib import Path
 
-from data.graph_generator import generate_erdos_renyi_graph
+from data.graph_generator import generate_erdos_renyi_graph, generate_layered_graph
 from src.dijkstra import dijkstra, dijkstra_pruned, reconstruct_path
 
 
 # ---------------------------------------------------------------------------
 # Default experimental parameters (§3.8.3)
 # ---------------------------------------------------------------------------
+DEFAULT_GRAPH_TYPES = ["erdos_renyi", "layered"]
 DEFAULT_SIZES = [1_000, 5_000, 10_000, 50_000]
 DEFAULT_DEGREES = [2, 5, 10]
 DEFAULT_DISTRIBUTIONS = ["uniform", "power_law"]
 DEFAULT_TAUS = [0, 0.001, 0.01, 0.05, 0.1, 0.5]
 DEFAULT_RUNS = 10
 
+_GRAPH_GENERATORS = {
+    "erdos_renyi": generate_erdos_renyi_graph,
+    "layered": generate_layered_graph,
+}
+
 CSV_HEADER = [
+    "graph_type",
     "graph_size",
     "avg_degree",
     "distribution",
@@ -115,6 +124,7 @@ def _run_single(graph, source, target, tau, baseline_prob):
 
 
 def run_experiments(
+    graph_types=None,
     sizes=None,
     degrees=None,
     distributions=None,
@@ -122,12 +132,13 @@ def run_experiments(
     num_runs=DEFAULT_RUNS,
     output_path="experiment_results.csv",
 ):
+    graph_types = graph_types or DEFAULT_GRAPH_TYPES
     sizes = sizes or DEFAULT_SIZES
     degrees = degrees or DEFAULT_DEGREES
     distributions = distributions or DEFAULT_DISTRIBUTIONS
     taus = taus or DEFAULT_TAUS
 
-    total_configs = len(sizes) * len(degrees) * len(distributions)
+    total_configs = len(graph_types) * len(sizes) * len(degrees) * len(distributions)
     config_num = 0
 
     out = Path(output_path)
@@ -135,71 +146,82 @@ def run_experiments(
         writer = csv.DictWriter(f, fieldnames=CSV_HEADER)
         writer.writeheader()
 
-        for n in sizes:
-            for d in degrees:
-                for dist in distributions:
-                    config_num += 1
-                    print(
-                        f"\n[{config_num}/{total_configs}] "
-                        f"|V|={n:,}  d̄={d}  dist={dist}"
-                    )
+        for gtype in graph_types:
+            gen_fn = _GRAPH_GENERATORS[gtype]
 
-                    for run_idx in range(num_runs):
-                        seed = run_idx * 1000 + n + d  # deterministic, unique per config+run
-
-                        # Generate graph once per run (same graph for both algorithms)
-                        graph = generate_erdos_renyi_graph(
-                            n=n,
-                            avg_degree=d,
-                            distribution=dist,
-                            source="s",
-                            target="t",
-                            seed=seed,
+            for n in sizes:
+                for d in degrees:
+                    for dist in distributions:
+                        config_num += 1
+                        print(
+                            f"\n[{config_num}/{total_configs}] "
+                            f"{gtype}  |V|={n:,}  d̄={d}  dist={dist}"
                         )
 
-                        # --- Baseline (tau=0) ---
-                        baseline_metrics = _run_single(graph, "s", "t", tau=0, baseline_prob=None)
-                        baseline_prob = baseline_metrics["path_probability"]
+                        for run_idx in range(num_runs):
+                            seed = run_idx * 1000 + n + d
 
-                        row_base = {
-                            "graph_size": n,
-                            "avg_degree": d,
-                            "distribution": dist,
-                            "tau": 0,
-                            "run": run_idx + 1,
-                            "seed": seed,
-                            **baseline_metrics,
-                        }
-                        writer.writerow(row_base)
-
-                        # --- Pruned variants (tau > 0) ---
-                        for tau in taus:
-                            if tau == 0:
-                                continue  # already recorded
-                            pruned_metrics = _run_single(
-                                graph, "s", "t", tau=tau, baseline_prob=baseline_prob
+                            graph = gen_fn(
+                                n=n,
+                                avg_degree=d,
+                                distribution=dist,
+                                source="s",
+                                target="t",
+                                seed=seed,
                             )
-                            row_pruned = {
+
+                            # --- Baseline (tau=0) ---
+                            baseline_metrics = _run_single(graph, "s", "t", tau=0, baseline_prob=None)
+                            baseline_prob = baseline_metrics["path_probability"]
+
+                            row_base = {
+                                "graph_type": gtype,
                                 "graph_size": n,
                                 "avg_degree": d,
                                 "distribution": dist,
-                                "tau": tau,
+                                "tau": 0,
                                 "run": run_idx + 1,
                                 "seed": seed,
-                                **pruned_metrics,
+                                **baseline_metrics,
                             }
-                            writer.writerow(row_pruned)
+                            writer.writerow(row_base)
 
-                        # Progress indicator
-                        if (run_idx + 1) % 5 == 0 or run_idx == 0:
-                            print(f"  run {run_idx + 1}/{num_runs} done")
-                            f.flush()
+                            # --- Pruned variants (tau > 0) ---
+                            for tau in taus:
+                                if tau == 0:
+                                    continue
+                                pruned_metrics = _run_single(
+                                    graph, "s", "t", tau=tau, baseline_prob=baseline_prob
+                                )
+                                row_pruned = {
+                                    "graph_type": gtype,
+                                    "graph_size": n,
+                                    "avg_degree": d,
+                                    "distribution": dist,
+                                    "tau": tau,
+                                    "run": run_idx + 1,
+                                    "seed": seed,
+                                    **pruned_metrics,
+                                }
+                                writer.writerow(row_pruned)
+
+                            # Progress indicator
+                            if (run_idx + 1) % 5 == 0 or run_idx == 0:
+                                print(f"  run {run_idx + 1}/{num_runs} done")
+                                f.flush()
 
     print(f"\nResults saved to {out.resolve()}")
 
 
 def parse_args():
     p = argparse.ArgumentParser(description="Run the full experiment matrix.")
+    p.add_argument(
+        "--graph-types",
+        nargs="+",
+        default=None,
+        choices=["erdos_renyi", "layered"],
+        help="Graph types to test (default: erdos_renyi layered)",
+    )
     p.add_argument(
         "--sizes",
         type=int,
@@ -244,6 +266,7 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     run_experiments(
+        graph_types=args.graph_types,
         sizes=args.sizes,
         degrees=args.degrees,
         distributions=args.distributions,
