@@ -107,7 +107,7 @@ def _run_single(graph, source, target, tau, baseline_prob):
         "nodes_explored": result.metrics.nodes_explored,
         "edges_relaxed": result.metrics.edges_relaxed,
         "max_pq_size": result.metrics.max_pq_size,
-        "path_cost": round(cost, 6) if cost != float("inf") else "inf",
+        "path_cost": round(cost, 6),
         "path_probability": round(prob, 10),
         "path_length": path_len,
         "optimality_gap_pct": round(gap, 6),
@@ -193,6 +193,7 @@ def run_experiments(
                         # Progress indicator
                         if (run_idx + 1) % 5 == 0 or run_idx == 0:
                             print(f"  run {run_idx + 1}/{num_runs} done")
+                            f.flush()
 
     print(f"\nResults saved to {out.resolve()}")
 

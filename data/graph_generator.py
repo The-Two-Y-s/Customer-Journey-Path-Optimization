@@ -93,8 +93,8 @@ def generate_erdos_renyi_graph(
     node_set = set(nodes)
 
     # --- Scalable edge generation: sample ~avg_degree neighbours per node ---
-    # For each node, draw the number of outgoing edges from Poisson(avg_degree),
-    # then sample that many distinct neighbours uniformly at random.
+    # For each node, draw the number of outgoing edges from a narrow uniform
+    # range around avg_degree, then sample that many distinct neighbours.
     adj: Dict[str, List[str]] = {nd: [] for nd in nodes}
     edges: List[Tuple[str, str]] = []
 
