@@ -20,15 +20,18 @@ This lets us run shortest-path search (Dijkstra) to recover the highest-probabil
 .
 ├── data/
 │   ├── synthetic_data_generator.py   # Markov-chain clickstream generator
-│   └── graph_generator.py            # Erdős–Rényi random graph generator
+│   └── graph_generator.py            # ER & Layered graph generators
 ├── src/
+│   ├── critical_tau.py               # Critical-τ finder
 │   ├── dijkstra.py                   # Baseline & Pruned Dijkstra
 │   ├── graph_builder.py
 │   └── preprocessing.py
 ├── tests/
 │   └── test_pipeline.py
+├── run_experiments.py                # Full experiment matrix runner
 ├── analysis.ipynb
 ├── main.py
+├── PROJECT_STATUS.md
 └── README.md
 ```
 
@@ -142,8 +145,13 @@ Metrics:
 - **Baseline Dijkstra** (Algorithm 1): Standard Dijkstra with lazy-deletion stale-entry check. Complexity: `O((V + E) log V)`.
 - **Probability-Pruned Dijkstra** (Algorithm 2): Prunes partial paths whose cumulative probability falls below threshold τ. Same worst-case complexity but explores fewer nodes in practice.
 
-## Erdős–Rényi Graph Generator
-For controlled experiments on large graphs:
+## Graph Generators
+
+Two generators in `data/graph_generator.py` produce controlled graphs for experiments.
+Both use O(n·d) scalable edge sampling and guarantee source-target connectivity.
+
+### Erdős–Rényi Generator
+Random directed graph for algorithm stress-testing:
 
 ```python
 from data.graph_generator import generate_erdos_renyi_graph
@@ -155,8 +163,59 @@ graph = generate_erdos_renyi_graph(
 
 Parameters: `n` (vertices), `avg_degree`, `distribution` (`"uniform"` or `"power_law"`), `source`, `target`, `seed`.
 
+### Layered (Stage-Based) Generator
+Funnel-shaped graph mimicking a real customer journey (Awareness → Interest → Consideration → Intent → Conversion):
+
+```python
+from data.graph_generator import generate_layered_graph
+
+graph = generate_layered_graph(
+    n=10000, avg_degree=5.0, distribution="uniform", seed=42,
+    stages=["Awareness", "Interest", "Consideration", "Intent", "Conversion"],
+    backward_prob=0.15
+)
+```
+
+Nodes are distributed evenly across stages. Edges go primarily forward (next stage) with a configurable `backward_prob` for same-stage or backward links.
+
+## Critical-τ Finder
+
+Finds the largest pruning threshold τ\* that preserves optimality (gap < tolerance) while maximizing speedup:
+
+```python
+from src.critical_tau import find_critical_tau
+
+result = find_critical_tau(graph, source="0", target="99")
+print(result.critical_tau)       # e.g. 0.00069
+print(result.max_speedup_at_critical)  # e.g. 1.2x
+```
+
+Uses an adaptive tau sweep centered on the baseline path probability, so it works correctly even on sparse/power-law graphs with very low path probabilities.
+
+## Experiment Runner
+
+Run the full parameter matrix described in the report:
+
+```bash
+python run_experiments.py
+```
+
+Customize with CLI flags:
+
+```bash
+python run_experiments.py --graph-types erdos_renyi layered \
+    --sizes 1000 5000 10000 50000 \
+    --degrees 2 5 10 \
+    --distributions uniform power_law \
+    --taus 0 0.001 0.01 0.05 0.1 0.5 \
+    --runs 10 --output experiment_results.csv
+```
+
+Results are saved to CSV with columns: `graph_type`, `n`, `avg_degree`, `distribution`, `seed`, `tau`, `baseline_time_s`, `pruned_time_s`, `baseline_mem_bytes`, `pruned_mem_bytes`, `baseline_nodes`, `pruned_nodes`, `baseline_edges`, `pruned_edges`, `baseline_maxpq`, `pruned_maxpq`, `gap_pct`.
+
 ## Testing
-Run the unit tests with:
+
+24 unit tests covering the full pipeline:
 
 ```bash
 python -m unittest discover -s tests -p "test_*.py"

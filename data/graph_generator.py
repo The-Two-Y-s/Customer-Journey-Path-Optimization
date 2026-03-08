@@ -97,25 +97,22 @@ def generate_erdos_renyi_graph(
     node_set = set(nodes)
 
     # --- Scalable edge generation: sample ~avg_degree neighbours per node ---
-    # For each node, draw the number of outgoing edges from a narrow uniform
-    # range around avg_degree, then sample that many distinct neighbours.
+    # Use index-based sampling to avoid building O(n) candidate lists.
+    # For node at index i, sample from range(n-1) and map indices >= i to i+1,
+    # effectively excluding self-loops in O(d) time per node.
     adj: Dict[str, List[str]] = {nd: [] for nd in nodes}
     edges: List[Tuple[str, str]] = []
 
-    for u in nodes:
+    for idx, u in enumerate(nodes):
         out_deg = rng.randint(
             max(0, int(avg_degree) - 2), int(avg_degree) + 2
         )
-        out_deg = min(out_deg, n - 1)  # can't exceed n-1 neighbours
+        out_deg = min(out_deg, n - 1)
 
-        # Sample distinct neighbours (reservoir-style for speed)
-        candidates = [v for v in nodes if v != u]
-        if out_deg >= len(candidates):
-            chosen = candidates
-        else:
-            chosen = rng.sample(candidates, out_deg)
-
-        for v in chosen:
+        sample = rng.sample(range(n - 1), out_deg)
+        for j in sample:
+            actual_j = j if j < idx else j + 1
+            v = nodes[actual_j]
             adj[u].append(v)
             edges.append((u, v))
 
@@ -222,7 +219,7 @@ def generate_layered_graph(
         for nd in layer:
             node_to_stage[nd] = s_idx
 
-    # --- Edge generation ---
+    # --- Edge generation (rejection sampling for scalability) ---
     adj: Dict[str, List[str]] = {nd: [] for nd in all_nodes}
     edges: list[tuple[str, str]] = []
 
@@ -234,27 +231,26 @@ def generate_layered_graph(
         )
         out_deg = min(out_deg, len(all_nodes) - 1)
 
-        chosen: list[str] = []
-        for _ in range(out_deg):
+        chosen: set[str] = set()
+        attempts = 0
+        max_attempts = out_deg * 10  # avoid infinite loop on tiny pools
+
+        while len(chosen) < out_deg and attempts < max_attempts:
+            attempts += 1
+
             if rng.random() < backward_prob and u_stage > 0:
-                # Backward edge: pick a node from a previous stage
                 prev_stage = rng.randint(0, u_stage - 1)
                 pool = stage_nodes[prev_stage]
             else:
-                # Forward edge: same stage or next stage(s)
                 fwd_stage = min(u_stage + rng.randint(0, 1), num_stages - 1)
                 pool = stage_nodes[fwd_stage]
 
-            candidates = [v for v in pool if v != u and v not in chosen]
-            if not candidates:
-                # Fall back to any forward node
-                for fs in range(u_stage, num_stages):
-                    candidates = [v for v in stage_nodes[fs] if v != u and v not in chosen]
-                    if candidates:
-                        break
-            if candidates:
-                v = rng.choice(candidates)
-                chosen.append(v)
+            if not pool:
+                continue
+
+            v = pool[rng.randrange(len(pool))]
+            if v != u and v not in chosen:
+                chosen.add(v)
                 adj[u].append(v)
                 edges.append((u, v))
 

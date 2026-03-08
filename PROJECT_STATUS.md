@@ -20,10 +20,12 @@ The full implementation phase of the project is complete. Both algorithms descri
 - DijkstraMetrics dataclass collecting all 7 evaluation metrics per run
 - CLI with --tau parameter, printing path probability and optimality gap
 - Timing via time.perf_counter() and memory via tracemalloc (as specified in Table 3.4)
-- Erdos-Renyi sparse graph generator scalable to |V| = 50,000
-- Experiment runner script covering the full parameter matrix
-- 16 unit tests passing, including convergence, probability consistency, and edge-case tests
-- README aligned with current implementation
+- Erdos-Renyi sparse graph generator scalable to |V| = 50,000 (O(n·d) index-based sampling)
+- Layered (stage-based) graph generator with 5-stage customer funnel and backward edges
+- Critical-tau finder with adaptive sweep centered on baseline path probability
+- Experiment runner script covering the full parameter matrix with graph_type dimension
+- 24 unit tests passing, including convergence, probability consistency, edge-case, generator, and critical-tau tests
+- README and PROJECT_STATUS aligned with current implementation
 
 ---
 
@@ -43,39 +45,46 @@ The full implementation phase of the project is complete. Both algorithms descri
 | File | Purpose |
 |------|---------|
 | `data/synthetic_data_generator.py` | Markov-chain clickstream generator. `SyntheticJourneyGenerator` produces realistic customer journey data with states like Home, Search, Product_Trousers, Cart, Checkout, Exit. Generates a CSV with session_id, step, source, target, category, price, location, and timestamp columns. Used to produce the default `enhanced_synthetic_journey.csv` dataset. |
-| `data/graph_generator.py` | Erdos-Renyi sparse directed graph generator for controlled experiments. `generate_erdos_renyi_graph()` creates random graphs with configurable |V|, average out-degree, probability distribution (uniform or power-law), and fixed random seed. Guarantees s-t connectivity via BFS check and bridge repair. Scales to |V| = 50,000 using per-node neighbor sampling (O(n * d_avg) instead of O(n^2)). |
+| `data/graph_generator.py` | Erdos-Renyi and Layered directed graph generators for controlled experiments. `generate_erdos_renyi_graph()` creates random graphs with configurable |V|, average out-degree, probability distribution (uniform or power-law), and fixed random seed. `generate_layered_graph()` creates funnel-shaped graphs with stages (Awareness → Interest → Consideration → Intent → Conversion), forward-biased edges, and configurable backward probability. Both generators guarantee s-t connectivity via BFS check and bridge repair. Both scale to |V| = 50,000 using O(n·d) sampling (index-based for ER, rejection sampling for layered). |
 
 ### Experiment Infrastructure
 
 | File | Purpose |
 |------|---------|
-| `run_experiments.py` | Experiment runner. Executes both algorithms across the full parameter matrix from Section 3.8.3 of the report: |V| in {1000, 5000, 10000, 50000}, d_avg in {2, 5, 10}, distribution in {uniform, power_law}, tau in {0, 0.001, 0.01, 0.05, 0.1, 0.5}, with 10 or more runs per configuration. Records all metrics to a CSV file. Supports CLI flags to run subsets (--sizes, --degrees, --distributions, --taus, --runs). |
+| `run_experiments.py` | Experiment runner. Executes both algorithms across the full parameter matrix from Section 3.8.3 of the report: graph_type in {erdos_renyi, layered}, |V| in {1000, 5000, 10000, 50000}, d_avg in {2, 5, 10}, distribution in {uniform, power_law}, tau in {0, 0.001, 0.01, 0.05, 0.1, 0.5}, with 10 or more runs per configuration. Records all metrics (including graph_type) to a CSV file. Supports CLI flags to run subsets (--graph-types, --sizes, --degrees, --distributions, --taus, --runs). |
 
 ### Tests
 
 | File | Purpose |
 |------|---------|
-| `tests/test_pipeline.py` | 16 unit tests covering the full pipeline. Organized into 6 test classes: TestPreprocessing (3 tests for transition extraction and probability computation), TestGraphAndDijkstra (5 tests for graph building, baseline Dijkstra, pruned Dijkstra, and missing-sink handling), TestConvergence (1 test verifying pruned algorithm converges to baseline as tau approaches 0), TestProbabilityConsistency (1 test verifying exp(-C*) equals the product of edge probabilities along the path), TestEdgeCases (3 tests for disconnected graphs, single-node graphs, and probability-1 edges), TestGraphGenerator (3 tests for ER graph size, connectivity guarantee, and power-law distribution). |
+| `tests/test_pipeline.py` | 24 unit tests covering the full pipeline. Organized into 9 test classes: TestPreprocessing (3 tests for transition extraction and probability computation), TestGraphAndDijkstra (5 tests for graph building, baseline Dijkstra, pruned Dijkstra, and missing-sink handling), TestConvergence (1 test verifying pruned algorithm converges to baseline as tau approaches 0), TestProbabilityConsistency (1 test verifying exp(-C*) equals the product of edge probabilities along the path), TestEdgeCases (3 tests for disconnected graphs, single-node graphs, and probability-1 edges), TestGraphGenerator (3 tests for ER graph size, connectivity guarantee, and power-law distribution), TestLayeredGenerator (5 tests for size, connectivity, stage labels, DAG mode, and power-law), TestCriticalTau (3 tests for ER graph, layered graph, and unreachable target). |
 
 ### Configuration and Documentation
 
 | File | Purpose |
 |------|---------|
-| `README.md` | Project documentation. Describes the team, algorithms, CLI usage, example output, and how to run tests and experiments. |
+| `README.md` | Project documentation. Describes the team, algorithms, CLI usage, graph generators, critical-tau finder, experiment runner, example output, and how to run tests. |
+| `PROJECT_STATUS.md` | This file. Tracks implementation progress, file inventory, test results, and next steps. |
 | `.gitignore` | Excludes __pycache__, .pyc files, generated CSV data, experiment results, output images, and the PDF report. |
 | `analysis.ipynb` | Jupyter notebook (exists in repo, not yet populated with experiment analysis). |
+
+### Additional Source Modules
+
+| File | Purpose |
+|------|---------|
+| `src/critical_tau.py` | Critical-tau finder. `find_critical_tau()` identifies the largest pruning threshold tau* that preserves optimality (gap < tolerance) while maximizing speedup. Uses an adaptive tau sweep centered on the baseline path probability (`_adaptive_tau_sweep(baseline_prob)` generates fractions at 10%–110% of baseline). Returns a `CriticalTauResult` with critical_tau, max_speedup, per-tau profiles, and baseline metrics. Works correctly even on sparse/power-law graphs with very low path probabilities. |
 
 ---
 
 ## 3. Current Test Results
 
 ```
-Ran 16 tests in 0.013s
+Ran 24 tests in 0.017s
 
 OK
 ```
 
-All 16 tests pass. The tests cover:
+All 24 tests pass. The tests cover:
 - Preprocessing: both CSV formats, probability computation
 - Graph building: negative-log weight transform
 - Baseline Dijkstra: optimal path, missing sink nodes, metrics collection
@@ -83,7 +92,9 @@ All 16 tests pass. The tests cover:
 - Convergence: pruned approaches baseline as tau approaches 0 (Section 4.4 item 3)
 - Probability consistency: exp(-C*) matches edge probability product (Section 4.4 item 4)
 - Edge cases: disconnected graph, single node, probability-1 edges (Section 4.4 item 5)
-- Graph generator: correct size, s-t connectivity, power-law support
+- ER graph generator: correct size, s-t connectivity, power-law support
+- Layered graph generator: correct size, connectivity, stage labels, DAG structure, power-law
+- Critical-tau finder: correct threshold on ER and layered graphs, unreachable target handling
 
 ---
 
@@ -102,8 +113,10 @@ All 16 tests pass. The tests cover:
 | Optimality gap formula (Section 3.8.2) | Implemented |
 | Fixed random seeds per configuration | Implemented |
 | 10 or more runs per configuration | Configured (default = 10) |
-| Custom sparse graph generator (Table 3.4) | Implemented (Erdos-Renyi) |
-| Parameter matrix: |V|, d_avg, distribution, tau (Section 3.8.3) | Configured in run_experiments.py |
+| Custom sparse graph generator (Table 3.4) | Implemented (Erdos-Renyi + Layered) |
+| Layered stage-based graph generator | Implemented (5 stages, backward edges) |
+| Critical-tau finder with adaptive sweep | Implemented |
+| Parameter matrix: graph_type, |V|, d_avg, distribution, tau (Section 3.8.3) | Configured in run_experiments.py |
 | Convergence verification (Section 4.4 item 3) | Tested |
 | Probability consistency check (Section 4.4 item 4) | Tested |
 | Edge-case testing (Section 4.4 item 5) | Tested |
@@ -128,15 +141,15 @@ Based on the report's project timeline (Chapter 8, Figure 8.1):
 python run_experiments.py
 ```
 
-This will execute approximately 24 configurations (4 sizes x 3 degrees x 2 distributions) with 6 tau values each, repeated 10 times per configuration. Results are saved to `experiment_results.csv`.
+This will execute approximately 48 configurations (2 graph types × 4 sizes × 3 degrees × 2 distributions) with 6 tau values each, repeated 10 times per configuration. Results are saved to `experiment_results.csv`.
 
 For a quick partial run first:
 
 ```bash
-python run_experiments.py --sizes 1000 5000 --runs 3
+python run_experiments.py --graph-types erdos_renyi --sizes 1000 5000 --runs 3
 ```
 
-The 50,000-node experiments will take longer. Consider running smaller sizes first to verify the pipeline, then scaling up.
+Both generators scale to 50,000 nodes in under 400ms, so the full matrix is feasible.
 
 ### Step 2: Analyze results in analysis.ipynb
 
@@ -149,6 +162,8 @@ Load `experiment_results.csv` into the Jupyter notebook and produce all figures 
 - Max PQ size comparison
 - Distribution effect: uniform vs power-law pruning effectiveness comparison
 - Time-memory-optimality trade-off curve
+- Critical-tau analysis: baseline probability vs tau* per graph type and size
+- Layered vs ER comparison: structural effect on pruning effectiveness
 
 ### Step 3: Manual trace verification
 
@@ -174,9 +189,9 @@ python main.py --tau 0.01
 # Run CLI with top-3 paths
 python main.py --k 3
 
-# Run full experiment matrix (10 runs per config)
+# Run full experiment matrix (both graph types, 10 runs per config)
 python run_experiments.py
 
 # Run quick subset for testing
-python run_experiments.py --sizes 1000 --runs 2
+python run_experiments.py --graph-types erdos_renyi --sizes 1000 --runs 2
 ```

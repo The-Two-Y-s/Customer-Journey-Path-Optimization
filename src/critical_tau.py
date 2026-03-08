@@ -41,6 +41,21 @@ class CriticalTauResult:
 DEFAULT_TAU_SWEEP = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5]
 
 
+def _adaptive_tau_sweep(baseline_prob: float) -> list[float]:
+    """Generate tau values that are relevant for the given baseline probability.
+
+    If the baseline probability is very small (e.g. 0.0007), fixed tau values
+    like 0.001+ would all prune the optimal path.  This function generates
+    tau values as fractions of the baseline probability so that the sweep
+    actually explores the interesting trade-off region.
+    """
+    # Start with fractions of baseline: 10%, 30%, 50%, 70%, 90%, 95%, 99%, 100%, 110%
+    fractions = [0.10, 0.30, 0.50, 0.70, 0.90, 0.95, 0.99, 1.0, 1.10]
+    adaptive = sorted(set(round(baseline_prob * f, 10) for f in fractions))
+    # Filter out zero or negative values
+    return [t for t in adaptive if t > 0]
+
+
 def find_critical_tau(
     graph,
     source: str,
@@ -67,7 +82,7 @@ def find_critical_tau(
         Contains the critical tau, the speedup at that tau, and the full
         profile list for plotting.
     """
-    taus = sorted(taus or DEFAULT_TAU_SWEEP)
+    taus_input = taus  # save the user's explicit list (or None)
 
     # Run baseline
     result_base = dijkstra(graph, source, target)
@@ -83,9 +98,16 @@ def find_critical_tau(
     base_nodes = result_base.metrics.nodes_explored
     base_prob = math.exp(-result_base.dist[target])
 
+    # If user didn't supply explicit taus, build an adaptive sweep centered
+    # on the baseline probability so the sweep is always relevant.
+    if taus_input is None:
+        taus_list = _adaptive_tau_sweep(base_prob)
+    else:
+        taus_list = sorted(taus_input)
+
     profiles: list[TauProfile] = []
 
-    for tau in taus:
+    for tau in taus_list:
         result_p = dijkstra_pruned(graph, source, target, tau=tau)
         p_nodes = result_p.metrics.nodes_explored
 
