@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import argparse
 import heapq
+import math
+import time
+import tracemalloc
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 import pandas as pd
 
-from src.dijkstra import dijkstra, reconstruct_path
+from src.dijkstra import dijkstra, dijkstra_pruned, reconstruct_path, DijkstraResult
 from src.graph_builder import build_weighted_graph
 from src.preprocessing import compute_transition_statistics, extract_transitions
 
@@ -85,6 +88,27 @@ def export_graph_image(graph: Graph, output_path: Path) -> None:
 	plt.close()
 
 
+def print_result(result: DijkstraResult, source: str, target: str, label: str = "Optimal") -> None:
+	"""Print path, cost, probability, and metrics for a single Dijkstra run."""
+	if target not in result.dist:
+		print(f"No path found from {source} to {target}.")
+		return
+
+	path = reconstruct_path(result.parent, source, target)
+	cost = result.dist[target]
+	prob = math.exp(-cost)
+
+	print(f"{label} Path:")
+	print(format_path(path))
+	print(f"\nTotal Cost (log-space): {cost:.4f}")
+	print(f"Path Probability:       {prob:.6f}")
+	m = result.metrics
+	print(f"\nMetrics:")
+	print(f"  Nodes explored:    {m.nodes_explored}")
+	print(f"  Edges relaxed:     {m.edges_relaxed}")
+	print(f"  Max PQ size:       {m.max_pq_size}")
+
+
 def parse_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(
 		description="Find most probable customer journey paths using Dijkstra."
@@ -97,6 +121,12 @@ def parse_args() -> argparse.Namespace:
 	parser.add_argument("--source", default="Home", help="Start node")
 	parser.add_argument("--target", default="Checkout", help="Target node")
 	parser.add_argument("--k", type=int, default=1, help="Number of top paths to return")
+	parser.add_argument(
+		"--tau",
+		type=float,
+		default=0.0,
+		help="Pruning threshold tau for Pruned Dijkstra (0 = baseline only)",
+	)
 	parser.add_argument(
 		"--output",
 		default=None,
@@ -129,14 +159,45 @@ def main() -> None:
 		raise ValueError(f"Source node '{args.source}' not found in graph")
 
 	if args.k <= 1:
-		dist, parent = dijkstra(graph, args.source, args.target)
-		if args.target not in dist:
-			print(f"No path found from {args.source} to {args.target}.")
-		else:
-			path = reconstruct_path(parent, args.source, args.target)
-			print("Optimal Path:")
-			print(format_path(path))
-			print(f"\nTotal Cost: {dist[args.target]:.2f}")
+		# --- Baseline Dijkstra ---
+		tracemalloc.start()
+		t0 = time.perf_counter()
+		result_baseline = dijkstra(graph, args.source, args.target)
+		t1 = time.perf_counter()
+		_, peak_mem = tracemalloc.get_traced_memory()
+		tracemalloc.stop()
+
+		print("=" * 50)
+		print("BASELINE DIJKSTRA")
+		print("=" * 50)
+		print_result(result_baseline, args.source, args.target, label="Optimal")
+		print(f"  Execution time:    {(t1 - t0) * 1000:.3f} ms")
+		print(f"  Peak memory:       {peak_mem / 1024:.2f} KB")
+
+		# --- Pruned Dijkstra (if tau > 0) ---
+		if args.tau > 0:
+			tracemalloc.start()
+			t0 = time.perf_counter()
+			result_pruned = dijkstra_pruned(graph, args.source, args.target, tau=args.tau)
+			t1 = time.perf_counter()
+			_, peak_mem = tracemalloc.get_traced_memory()
+			tracemalloc.stop()
+
+			print()
+			print("=" * 50)
+			print(f"PRUNED DIJKSTRA (tau={args.tau})")
+			print("=" * 50)
+			print_result(result_pruned, args.source, args.target, label="Pruned")
+			print(f"  Execution time:    {(t1 - t0) * 1000:.3f} ms")
+			print(f"  Peak memory:       {peak_mem / 1024:.2f} KB")
+
+			# Optimality gap
+			if args.target in result_baseline.dist and args.target in result_pruned.dist:
+				prob_base = math.exp(-result_baseline.dist[args.target])
+				prob_pruned = math.exp(-result_pruned.dist[args.target])
+				if prob_base > 0:
+					gap = abs(prob_base - prob_pruned) / prob_base * 100
+					print(f"\n  Optimality gap:    {gap:.4f}%")
 	else:
 		paths = k_shortest_simple_paths(graph, args.source, args.target, args.k)
 		if not paths:
@@ -144,12 +205,13 @@ def main() -> None:
 		else:
 			print(f"Top {len(paths)} Paths:")
 			for i, (cost, path) in enumerate(paths, start=1):
-				print(f"{i}. {format_path(path)} (Cost: {cost:.2f})")
+				prob = math.exp(-cost)
+				print(f"{i}. {format_path(path)} (Cost: {cost:.4f}, Prob: {prob:.6f})")
 
 	if args.output:
 		output_path = Path(args.output)
 		export_graph_image(graph, output_path)
-		print(f"Graph visualization saved to {output_path}")
+		print(f"\nGraph visualization saved to {output_path}")
 
 
 if __name__ == "__main__":

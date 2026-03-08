@@ -4,6 +4,7 @@ __pycache__/
 
 # Generated outputs
 enhanced_synthetic_journey.csv
+experiment_results.csv
 output.png
 
 # Project report artifact

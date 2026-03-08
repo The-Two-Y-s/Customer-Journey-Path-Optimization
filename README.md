@@ -19,11 +19,14 @@ This lets us run shortest-path search (Dijkstra) to recover the highest-probabil
 ```text
 .
 ├── data/
-│   └── synthetic_data_generator.py
+│   ├── synthetic_data_generator.py   # Markov-chain clickstream generator
+│   └── graph_generator.py            # Erdős–Rényi random graph generator
 ├── src/
-│   ├── dijkstra.py
+│   ├── dijkstra.py                   # Baseline & Pruned Dijkstra
 │   ├── graph_builder.py
 │   └── preprocessing.py
+├── tests/
+│   └── test_pipeline.py
 ├── analysis.ipynb
 ├── main.py
 └── README.md
@@ -34,7 +37,9 @@ This lets us run shortest-path search (Dijkstra) to recover the highest-probabil
 2. Extract transitions.
 3. Estimate transition probabilities `P(target|source)`.
 4. Build a weighted directed graph with `-log(probability)` edge weights.
-5. Run shortest-path search for optimal or top-k paths.
+5. Run **Baseline Dijkstra** (Algorithm 1) for the optimal path.
+6. Optionally run **Probability-Pruned Dijkstra** (Algorithm 2) with threshold `τ`.
+7. Report path, probability Π\* = exp(−C\*), and performance metrics.
 
 ## Input Data Formats
 `src/preprocessing.py` supports two formats:
@@ -50,7 +55,7 @@ The generated synthetic dataset uses direct transitions (`source`, `target`).
 
 ## Usage
 
-1. Run with defaults
+1. Run with defaults (Baseline Dijkstra)
 ```bash
 python main.py
 ```
@@ -59,49 +64,96 @@ Default behavior:
 - Reads `enhanced_synthetic_journey.csv`.
 - If the file does not exist, auto-generates synthetic data using `data/synthetic_data_generator.py`.
 - Computes and prints the single optimal path from `Home` to `Checkout`.
+- Reports path probability, execution time, peak memory, and exploration metrics.
 
-2. Specify dataset and nodes
+2. Run with Pruned Dijkstra (threshold τ)
+```bash
+python main.py --tau 0.01
+```
+
+Runs both baseline and pruned Dijkstra side-by-side, printing the optimality gap Δ.
+
+3. Specify dataset and nodes
 ```bash
 python main.py --data enhanced_synthetic_journey.csv --source Home --target Checkout
 ```
 
-3. Compute top-k paths
+4. Compute top-k paths
 ```bash
-python main.py --data enhanced_synthetic_journey.csv --source Home --target Checkout --k 3
+python main.py --source Home --target Checkout --k 3
 ```
 
-4. Export graph visualization
+5. Export graph visualization
 ```bash
-python main.py --data enhanced_synthetic_journey.csv --source Home --target Checkout --k 3 --output output.png
+python main.py --output output.png
 ```
 
 Note:
 - `--output` requires `networkx` and `matplotlib`.
 
 ## CLI Arguments
-- `--data`: CSV path (default: `enhanced_synthetic_journey.csv`)
-- `--source`: start node (default: `Home`)
-- `--target`: end node (default: `Checkout`)
-- `--k`: number of paths (default: `1`)
-- `--output`: optional image file path
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--data` | `enhanced_synthetic_journey.csv` | CSV path |
+| `--source` | `Home` | Start node |
+| `--target` | `Checkout` | Target node |
+| `--k` | `1` | Number of paths (k>1 uses best-first k-shortest) |
+| `--tau` | `0.0` | Pruning threshold τ (0 = baseline only) |
+| `--output` | — | Optional image file path |
 
 ## Example Output
 ```text
+==================================================
+BASELINE DIJKSTRA
+==================================================
 Optimal Path:
 Home -> Checkout
 
-Total Cost: 2.92
+Total Cost (log-space): 2.9200
+Path Probability:       0.053949
+
+Metrics:
+  Nodes explored:    5
+  Edges relaxed:     12
+  Max PQ size:       4
+  Execution time:    0.123 ms
+  Peak memory:       1.23 KB
+
+==================================================
+PRUNED DIJKSTRA (tau=0.01)
+==================================================
+Pruned Path:
+Home -> Checkout
+
+Total Cost (log-space): 2.9200
+Path Probability:       0.053949
+
+Metrics:
+  Nodes explored:    3
+  Edges relaxed:     8
+  Max PQ size:       3
+  Execution time:    0.098 ms
+  Peak memory:       0.98 KB
+
+  Optimality gap:    0.0000%
 ```
 
-```text
-Top 3 Paths:
-1. Home -> Checkout (Cost: 2.92)
-2. Home -> Cart -> Checkout (Cost: 3.33)
-3. Home -> Search -> Cart -> Checkout (Cost: 3.78)
+## Algorithms
+- **Baseline Dijkstra** (Algorithm 1): Standard Dijkstra with lazy-deletion stale-entry check. Complexity: `O((V + E) log V)`.
+- **Probability-Pruned Dijkstra** (Algorithm 2): Prunes partial paths whose cumulative probability falls below threshold τ. Same worst-case complexity but explores fewer nodes in practice.
+
+## Erdős–Rényi Graph Generator
+For controlled experiments on large graphs:
+
+```python
+from data.graph_generator import generate_erdos_renyi_graph
+
+graph = generate_erdos_renyi_graph(
+    n=10000, avg_degree=5.0, distribution="uniform", seed=42
+)
 ```
 
-## Complexity
-- Dijkstra with a priority queue: `O((V + E) log V)`
+Parameters: `n` (vertices), `avg_degree`, `distribution` (`"uniform"` or `"power_law"`), `source`, `target`, `seed`.
 
 ## Testing
 Run the unit tests with:
