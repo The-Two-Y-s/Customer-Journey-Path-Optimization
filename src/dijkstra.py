@@ -1,5 +1,6 @@
 import heapq
 
+
 def dijkstra(graph, start, goal):
     pq = [(0, start)]
     dist = {start: 0}
@@ -11,7 +12,8 @@ def dijkstra(graph, start, goal):
         if node == goal:
             break
 
-        for neighbor, weight in graph[node]:
+        # Some graphs may omit sink nodes from the adjacency map.
+        for neighbor, weight in graph.get(node, []):
             new_cost = cost + weight
 
             if neighbor not in dist or new_cost < dist[neighbor]:
@@ -20,3 +22,18 @@ def dijkstra(graph, start, goal):
                 heapq.heappush(pq, (new_cost, neighbor))
 
     return dist, parent
+
+
+def reconstruct_path(parent, start, goal):
+    if start == goal:
+        return [start]
+    if goal not in parent:
+        return []
+
+    path = [goal]
+    cur = goal
+    while cur != start:
+        cur = parent[cur]
+        path.append(cur)
+    path.reverse()
+    return path

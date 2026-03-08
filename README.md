@@ -1,144 +1,111 @@
-# Customer Journey Path Optimization (Graph Algorithms + Data Mining)
+# AT70.02  ·  Algorithm Design and Analysis
 
-## 📌 Project Overview
-This project addresses a **probabilistic path optimization problem** on directed graphs derived from customer journey data. Using interactions modeled as a directed graph $G=(V,E)$, we transform transition probabilities $p(u,v)$ into non-negative weights using:
-$$w(u,v) = -\log(p(u,v))$$
+# Customer Journey Path Optimization
 
-This allows us to apply **Dijkstra’s Algorithm** to find the most probable conversion path while avoiding numerical underflow.
+## Team The Two Y's
+- Aye Khin Khin Hpone (Yolanda Lim) st125970
+- Yosakorn Sirisoot st126512
 
-## 📁 Project Structure
+## Project Overview
+This project finds the most probable customer conversion path in clickstream data.
 
-```
-code/
+Transition probabilities are converted to non-negative edge weights:
+
+`w(u,v) = -log(p(u,v))`
+
+This lets us run shortest-path search (Dijkstra) to recover the highest-probability path.
+
+## Project Structure
+```text
+.
 ├── data/
-│   ├── synthetic_data_generator.py
-├── src       
-│   ├── preprocessing.py
-│   ├── graph_builder.py
+│   └── synthetic_data_generator.py
+├── src/
 │   ├── dijkstra.py
-├── analysis.py
+│   ├── graph_builder.py
+│   └── preprocessing.py
+├── analysis.ipynb
 ├── main.py
-├── requirements.txt
-├── README.md 
+└── README.md
 ```
 
-## ⭐ Usage
+## How It Works
+1. Load clickstream data from CSV.
+2. Extract transitions.
+3. Estimate transition probabilities `P(target|source)`.
+4. Build a weighted directed graph with `-log(probability)` edge weights.
+5. Run shortest-path search for optimal or top-k paths.
 
-1. Install dependencies:
+## Input Data Formats
+`src/preprocessing.py` supports two formats:
 
-```bash
-pip install -r requirements.txt
-```
+1. Direct transitions
+- Required columns: `source`, `target`
 
-2. Run the algorithm:
+2. Session event stream
+- Required columns: `session_id`, `state`
+- Also requires one ordering column: `step` or `timestamp`
 
+The generated synthetic dataset uses direct transitions (`source`, `target`).
+
+## Usage
+
+1. Run with defaults
 ```bash
 python main.py
 ```
 
-This will 
-1. Load the clickstream dataset
-2. preprocess session transitions
-3. Build the directed graph
-4. Run Dijkstra's algorithm
-5. Print the most probable customer journey path
+Default behavior:
+- Reads `enhanced_synthetic_journey.csv`.
+- If the file does not exist, auto-generates synthetic data using `data/synthetic_data_generator.py`.
+- Computes and prints the single optimal path from `Home` to `Checkout`.
 
-3. Specify dataset and start/end nodes
+2. Specify dataset and nodes
 ```bash
-python main.py --data data/clickstream.csv --source Home --target Checkout
+python main.py --data enhanced_synthetic_journey.csv --source Home --target Checkout
 ```
 
-Example output:
-
+3. Compute top-k paths
+```bash
+python main.py --data enhanced_synthetic_journey.csv --source Home --target Checkout --k 3
 ```
+
+4. Export graph visualization
+```bash
+python main.py --data enhanced_synthetic_journey.csv --source Home --target Checkout --k 3 --output output.png
+```
+
+Note:
+- `--output` requires `networkx` and `matplotlib`.
+
+## CLI Arguments
+- `--data`: CSV path (default: `enhanced_synthetic_journey.csv`)
+- `--source`: start node (default: `Home`)
+- `--target`: end node (default: `Checkout`)
+- `--k`: number of paths (default: `1`)
+- `--output`: optional image file path
+
+## Example Output
+```text
 Optimal Path:
-Home → Search → Product → Cart → Checkout
+Home -> Checkout
 
-Total Cost: 2.41
+Total Cost: 2.92
 ```
 
-4. Compute top-k most probable paths
-```bash
-python main.py --data data/clickstream.csv --source Home --target Checkout --k 3
-```
-
-Example output:
-
-```
+```text
 Top 3 Paths:
-1. Home → Search → Product → Cart → Checkout (Cost: 2.41)
-2. Home → Search → Product → Product → Cart → Checkout (Cost: 2.68)
-3. Home → Search → Product → Product → Product → Cart → Checkout (Cost: 2.95)
+1. Home -> Checkout (Cost: 2.92)
+2. Home -> Cart -> Checkout (Cost: 3.33)
+3. Home -> Search -> Cart -> Checkout (Cost: 3.78)
 ```
 
-5. Export graph visulization
+## Complexity
+- Dijkstra with a priority queue: `O((V + E) log V)`
+
+## Testing
+Run the unit tests with:
+
 ```bash
-python main.py --data data/clickstream.csv --source Home --target Checkout --k 3 --output output.png
+python -m unittest discover -s tests -p "test_*.py"
 ```
-
-## 🔄 Pipeline
-
-```mermaid
-flowchart TD
-    A["01 Ingestion<br/>Clickstream Logs"]
-    B["02 Preprocessing<br/>Session Grouping"]
-    C["03 Modeling<br/>Probability Estimation"]
-    D["04 Topology<br/>Graph Construction"]
-    E["05 Transformation<br/>Weight Conversion"]
-    F["06 Optimization<br/>Dijkstra Search"]
-    G["07 Solution<br/>Optimal Conversion Path"]
-
-    A --> B --> C --> D --> E --> F --> G
-```
-The pipeline converts probabilistic user transitions into a weighted directed graph where Dijkstra's algorithm can efficiently identify the most probable conversion path.
-
-### Algorithm Complexity
-
-Let:
-V = number of nodes
-E = number of edges
-
-Dijkstra's algorithm runs in:
-
-O((V + E) log V)
-
-using a priority queue.
-
-## 📊 Dataset
-The datasets are generated using `synthetic_data_generator.py` script for testing the algorithm. Created using Markov-chain based datasets mimicking the structure of real customer life cycle flow path. 
-
-### Synthetic Data
-- **Source:** Generated using `synthetic_data_generator.py`
-- **Description:** Markov-chain based clickstream data with features: `session_id`, `step`, `timestamp`, `location`, `source`, `target`, `category`, `price`, `is_high_price`
-- **Size:** 2000 sessions, ~20,000 rows
-
-## 🚀 Methodology
-
-### Overview
-The project aims to find the most probable conversion path from a source node to a target node in a weighted directed graph. The graph is built from clickstream data, where nodes represent user states (e.g., product pages, search results) and edges represent transitions between states. The weight of each edge is calculated as the negative logarithm of the transition probability, i.e., $w(u,v) = -\log(p(u,v))$. This transformation allows us to use Dijkstra's algorithm to find the shortest path, which corresponds to the most probable conversion path.
-
-### analysis.py
-- Analyzes clickstream data to extract transition probabilities between nodes.
-- Groups sequences by `session_id` and calculates transition frequencies.
-- Returns transition probabilities, raw transition counts, and aggregated frequency statistics.
-- Convert probabilities into a directed graph. 
-
-### dijkstra.py
-- Implements Dijkstra's algorithm to find the optimal customer journey path from a source node to a target node in a weighted directed graph.
-- Uses a priority queue to efficiently explore the graph and find the shortest path.
-- Returns the shortest distance and the path from the source to the target.
-
-### graph_builder.py
-- Builds a weighted directed graph from clickstream data.
-- Calculates transition probabilities between nodes and converts them to edge weights using the formula $w(u,v) = -\log(p(u,v))$.
-- Returns an adjacency list representation of the graph.
-
-### preprocessing.py
-- Preprocesses clickstream data to extract transition probabilities between nodes.
-- Groups sequences by `session_id` and calculates transition frequencies.
-- Returns transition probabilities between nodes.
-
-### main.py
-- Main script to run the algorithm.
-- Loads clickstream data, builds the graph, and finds the shortest path from source to target.
-- Prints the shortest path and the total weight of the path.

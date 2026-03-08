@@ -1,0 +1,10 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Generated outputs
+enhanced_synthetic_journey.csv
+output.png
+
+# Project report artifact
+CustomerJourney_Report_FINAL.pdf
