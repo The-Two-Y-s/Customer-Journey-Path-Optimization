@@ -11,8 +11,8 @@ smoke_test.csv
 # Large dataset files (too big for GitHub)
 data/real_dataset/
 
-# Large PDFs
-Proposal_report/*.pdf
+# Proposal report (LaTeX source + PDFs)
+Proposal_report/
 
 # Project report artifact
 CustomerJourney_Report_FINAL.pdf
