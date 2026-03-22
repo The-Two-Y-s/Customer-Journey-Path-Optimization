@@ -74,13 +74,39 @@ def load_recsys2015(
     data_dir: str | Path = "data/real_dataset/recsys2015",
     max_sessions: Optional[int] = None,
 ) -> pd.DataFrame:
-    """Load YOOCHOOSE RecSys 2015 click data."""
+    """Load YOOCHOOSE RecSys 2015 click data.
+
+    The full file is ~33M rows.  When *max_sessions* is set the file is
+    read in chunks so that memory usage stays bounded.
+    """
     path = Path(data_dir) / "yoochoose-clicks.dat"
-    df = pd.read_csv(
-        path,
-        header=None,
-        names=["session_id", "timestamp", "item_id", "category"],
-    )
+
+    if max_sessions is not None:
+        # Stream chunks, collect until we have enough sessions
+        chunks = []
+        seen_sessions: set = set()
+        for chunk in pd.read_csv(
+            path,
+            header=None,
+            names=["session_id", "timestamp", "item_id", "category"],
+            dtype={"session_id": int, "item_id": int, "category": str},
+            chunksize=500_000,
+        ):
+            new_ids = set(chunk["session_id"].unique())
+            seen_sessions.update(new_ids)
+            chunks.append(chunk)
+            if len(seen_sessions) >= max_sessions:
+                break
+        df = pd.concat(chunks, ignore_index=True)
+        keep = sorted(seen_sessions)[:max_sessions]
+        df = df[df["session_id"].isin(set(keep))]
+    else:
+        df = pd.read_csv(
+            path,
+            header=None,
+            names=["session_id", "timestamp", "item_id", "category"],
+            dtype={"session_id": int, "item_id": int, "category": str},
+        )
 
     df["state"] = df["item_id"].astype(str)
 

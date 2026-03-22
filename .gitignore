@@ -9,13 +9,12 @@ output.png
 smoke_test.csv
 
 # Large dataset files (too big for GitHub)
-data/real_dataset/RecSys 2015/yoochoose-clicks.dat
-data/real_dataset/RecSys 2015/yoochoose-buys.dat
-data/real_dataset/RecSys 2015/yoochoose-test.dat
-data/real_dataset/RecSys 2015/yoochoose-data/
-data/real_dataset/UCI E-Commerce Clickstream Dataset-e-shop clothing 2008/item_properties_part1.csv
-data/real_dataset/UCI E-Commerce Clickstream Dataset-e-shop clothing 2008/item_properties_part2.csv
-data/real_dataset/UCI E-Commerce Clickstream Dataset-e-shop clothing 2008/events.csv
+data/real_dataset/retailrocket/*.csv
+data/real_dataset/recsys2015/yoochoose-clicks.dat
+data/real_dataset/recsys2015/yoochoose-buys.dat
+data/real_dataset/recsys2015/yoochoose-test.dat
+data/real_dataset/recsys2015/yoochoose-data/
+data/real_dataset/online_shoppers_intention.csv
 
 # Large PDFs
 Proposal_report/*.pdf

@@ -6,6 +6,37 @@
 - Aye Khin Khin Hpone (Yolanda Lim) st125970
 - Yosakorn Sirisoot st126512
 
+---
+
+## Table of Contents
+
+- [AT70.02  ·  Algorithm Design and Analysis](#at7002----algorithm-design-and-analysis)
+- [Customer Journey Path Optimization](#customer-journey-path-optimization)
+  - [Team The Two Y's](#team-the-two-ys)
+  - [Table of Contents](#table-of-contents)
+  - [Project Overview](#project-overview)
+    - [Hypothesis](#hypothesis)
+  - [Project Structure](#project-structure)
+  - [Real Datasets](#real-datasets)
+  - [How It Works](#how-it-works)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [CLI Arguments](#cli-arguments)
+  - [Algorithms](#algorithms)
+  - [Graph Generators](#graph-generators)
+    - [Probability Normalization](#probability-normalization)
+  - [Critical-τ Finder](#critical-τ-finder)
+  - [Experiment Runner](#experiment-runner)
+    - [Real-Data Experiment Runner](#real-data-experiment-runner)
+  - [Analysis Notebook](#analysis-notebook)
+  - [Testing](#testing)
+  - [Experimental Results](#experimental-results)
+    - [Synthetic Data — Speedup by τ](#synthetic-data--speedup-by-τ)
+    - [Real-Data Validation](#real-data-validation)
+    - [Key Findings](#key-findings)
+
+---
+
 ## Project Overview
 This project finds the most probable customer conversion path in clickstream data.
 
@@ -29,38 +60,78 @@ See [Experimental Results](#experimental-results) for the verdict.
 > **Markov assumption:** Transition probabilities are memoryless — P(next page | current page) is independent of the pages visited earlier in the session. This is a standard simplifying assumption in clickstream analysis; real user behaviour may exhibit history-dependent patterns.
 
 ## Project Structure
+
+<details>
+<summary>Click to expand directory tree</summary>
+
 ```text
 .
 ├── data/
 │   ├── synthetic_data_generator.py   # Markov-chain clickstream generator
 │   ├── graph_generator.py            # ER & Layered graph generators
-│   └── enhanced_synthetic_journey.csv# Generated synthetic dataset
+│   ├── real_data_loader.py           # Loaders for real-world datasets
+│   ├── enhanced_synthetic_journey.csv# Generated synthetic dataset
+│   └── real_dataset/                 # Real-world datasets (not in repo)
+│       ├── retailrocket/             # RetailRocket e-commerce dataset
+│       │   ├── events.csv            # 2.7M events (view/addtocart/transaction)
+│       │   ├── category_tree.csv
+│       │   ├── item_properties_part1.csv
+│       │   └── item_properties_part2.csv
+│       └── recsys2015/               # YOOCHOOSE RecSys Challenge 2015
+│           ├── yoochoose-clicks.dat  # 33M click events
+│           ├── yoochoose-buys.dat    # Purchase events
+│           └── yoochoose-test.dat    # Test split
 ├── src/
 │   ├── critical_tau.py               # Critical-τ finder (adaptive sweep)
 │   ├── dijkstra.py                   # Baseline & Pruned Dijkstra
 │   ├── graph_builder.py              # Weighted graph construction
 │   └── preprocessing.py              # Clickstream data ingestion
 ├── tests/
-│   └── test_pipeline.py              # 34 unit tests
+│   └── test_pipeline.py              # 40 unit tests
 ├── results/
-│   ├── experiment_results.csv        # 2,160-row experiment output
+│   ├── experiment_results.csv        # 2,160-row synthetic experiment output
+│   ├── real_data_results.csv         # 300-row real-data experiment output
 │   └── img/                          # Saved plot images from analysis
-├── run_experiments.py                # Full experiment matrix runner
+├── run_experiments.py                # Synthetic experiment matrix runner
+├── run_real_experiments.py            # Real-data experiment runner
 ├── analysis.ipynb                    # Results analysis (5 plots + stats)
 ├── main.py                           # CLI entry point
 ├── requirements.txt
 └── README.md
 ```
 
+</details>
+
 ## Real Datasets
 
-The following real-world e-commerce datasets are used for evaluation (not included in the repository due to size — download them manually into `data/real_dataset/`):
+Two real-world e-commerce clickstream datasets are used for validation (not included in the repository due to size — download them manually into `data/real_dataset/`):
 
-| Dataset | Description | Link |
-|---------|-------------|------|
-| **UCI eShop Clickstream** | Clickstream data for online shopping from a Polish e-commerce site (2008) | [UCI ML Repository](https://archive.ics.uci.edu/dataset/468/clickstream+data+for+online+shopping) |
-| **RecSys Challenge 2015** | YooChoose click and purchase sessions from a European e-commerce site | [Kaggle](https://www.kaggle.com/datasets/chadgostopp/recsys-challenge-2015) |
-| **RetailRocket E-Commerce** | User behaviour data (views, add-to-cart, transactions) from RetailRocket | [Kaggle](https://www.kaggle.com/datasets/retailrocket/ecommerce-dataset) |
+| Dataset | Folder | Key Files | Scale | Download |
+|---------|--------|-----------|-------|----------|
+| **RetailRocket** | `data/real_dataset/retailrocket/` | `events.csv`, `category_tree.csv`, `item_properties_part1.csv`, `item_properties_part2.csv` | 2.7M events, 235K items, 1.4M visitors | [Kaggle](https://www.kaggle.com/datasets/retailrocket/ecommerce-dataset) |
+| **RecSys 2015 (YOOCHOOSE)** | `data/real_dataset/recsys2015/` | `yoochoose-clicks.dat`, `yoochoose-buys.dat`, `yoochoose-test.dat` | 33M clicks, 9.2M sessions, ~52K items | [Kaggle](https://www.kaggle.com/datasets/chadgostopp/recsys-challenge-2015) |
+
+<details>
+<summary>Dataset details & loader usage</summary>
+
+**RetailRocket** (`events.csv` — columns: `timestamp`, `visitorid`, `event`, `itemid`, `transactionid`)
+supports two granularities:
+- `event` — states are event types (`view`, `addtocart`, `transaction`) → 3-node funnel graph
+- `item` — states are item IDs → large graph (~44K nodes from 50K sessions)
+
+**RecSys 2015** (`yoochoose-clicks.dat` — columns: `SessionId`, `Timestamp`, `ItemId`, `Category`)
+uses item-to-item click transitions within sessions → medium graph (~13K nodes from 50K sessions).
+
+Load them programmatically:
+```python
+from data.real_data_loader import load_retailrocket, load_recsys2015
+
+df_rr = load_retailrocket(granularity="event")              # 3-node funnel
+df_rr = load_retailrocket(granularity="item", max_sessions=50000)
+df_rc = load_recsys2015(max_sessions=50000)
+```
+
+</details>
 
 ## How It Works
 1. Load clickstream data from CSV.
@@ -71,7 +142,8 @@ The following real-world e-commerce datasets are used for evaluation (not includ
 6. Optionally run **Probability-Pruned Dijkstra** (Algorithm 2) with threshold `τ`.
 7. Report path, probability Π\* = exp(−C\*), and performance metrics.
 
-### Probability Assignment
+<details>
+<summary><h3>Probability Assignment</h3></summary>
 
 Transition probabilities are assigned differently depending on the data source:
 
@@ -93,7 +165,10 @@ $$P(v \mid u) = \frac{\text{raw}(u \to v)}{\sum_{w} \text{raw}(u \to w)}$$
 
 This ensures `Σ_v P(v|u) = 1` for every node, matching the real-data pipeline.
 
-### Why -log(p) Works
+</details>
+
+<details>
+<summary><h3>Why -log(p) Works</h3></summary>
 
 The probability of a complete path `s → v₁ → v₂ → … → t` is the product of its edge probabilities:
 
@@ -105,7 +180,10 @@ $$-\log P(\text{path}) = \sum_{i} \bigl(-\log P(v_{i+1} \mid v_i)\bigr)$$
 
 Since all `P(v|u) ∈ (0, 1]`, each `-log(p)` is non-negative, so Dijkstra's non-negative-weight requirement is satisfied. **Minimising the sum of `-log(p)` weights is equivalent to maximising the path probability.**
 
-### Pruning Cases
+</details>
+
+<details>
+<summary><h3>Pruning Cases</h3></summary>
 
 The threshold `τ` defines the minimum acceptable path probability. It is converted to log-space as `T = -log(τ)`. During search, if a partial path's cumulative cost exceeds `T`, pruning kicks in and that path is abandoned. This produces three distinct outcomes:
 
@@ -119,6 +197,8 @@ The threshold `τ` defines the minimum acceptable path probability. It is conver
 
 In our experiments, the pruning is **all-or-nothing**: across 1,800 pruned runs, every run that found a path returned the exact optimal path (0.00% gap). The only trade-off is reduced reachability — at aggressive τ values (e.g., τ = 0.5), only 3.3% of runs find a path because most optimal paths have probability well below 0.5.
 
+</details>
+
 ## Installation
 
 ```bash
@@ -127,7 +207,9 @@ pip install -r requirements.txt
 
 Dependencies: `pandas`, `numpy`, `matplotlib`, `scipy` (statistical testing), `pytest` (unit tests).
 
-## Input Data Formats
+<details>
+<summary><h3>Input Data Formats</h3></summary>
+
 `src/preprocessing.py` supports two formats:
 
 1. Direct transitions
@@ -138,6 +220,8 @@ Dependencies: `pandas`, `numpy`, `matplotlib`, `scipy` (statistical testing), `p
 - Also requires one ordering column: `step` or `timestamp`
 
 The generated synthetic dataset uses direct transitions (`source`, `target`).
+
+</details>
 
 ## Usage
 
@@ -177,7 +261,8 @@ python main.py --output output.png
 Note:
 - `--output` requires `networkx` and `matplotlib`.
 
-## CLI Arguments
+### CLI Arguments
+
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--data` | `data/enhanced_synthetic_journey.csv` | CSV path |
@@ -187,7 +272,9 @@ Note:
 | `--tau` | `0.0` | Pruning threshold τ (0 = baseline only) |
 | `--output` | — | Optional image file path |
 
-## Example Output
+<details>
+<summary><h3>Example Output</h3></summary>
+
 ```text
 ==================================================
 BASELINE DIJKSTRA
@@ -224,6 +311,8 @@ Metrics:
   Optimality gap:    0.0000%
 ```
 
+</details>
+
 ## Algorithms
 - **Baseline Dijkstra** (Algorithm 1): Standard Dijkstra with lazy-deletion (stale-entry skip). Complexity: `O((V + E) log V)`.
 - **Probability-Pruned Dijkstra** (Algorithm 2): Converts threshold τ to log-space (`T = -log(τ)`) and skips any edge relaxation where cumulative cost exceeds T. Same worst-case complexity but explores far fewer nodes/edges in practice (experiments show ~0.1% of baseline edges relaxed at τ = 0.1, with median speedups exceeding 200×).
@@ -233,7 +322,9 @@ Metrics:
 Two generators in `data/graph_generator.py` produce controlled graphs for experiments.
 Both use O(n·d) scalable edge sampling and guarantee source-target connectivity via BFS + bridge edge.
 
-### Erdős–Rényi Generator
+<details>
+<summary>Erdős–Rényi Generator</summary>
+
 Random directed graph for algorithm stress-testing:
 
 ```python
@@ -246,7 +337,11 @@ graph = generate_erdos_renyi_graph(
 
 Parameters: `n` (vertices), `avg_degree`, `distribution` (`"uniform"` for U(0.01, 1) or `"power_law"` for inverse-CDF Pareto with α=2, x_min=0.01), `source`, `target`, `seed`.
 
-### Layered (Stage-Based) Generator
+</details>
+
+<details>
+<summary>Layered (Stage-Based) Generator</summary>
+
 Funnel-shaped graph mimicking a real customer journey (Awareness → Interest → Consideration → Intent → Conversion):
 
 ```python
@@ -260,6 +355,8 @@ graph = generate_layered_graph(
 ```
 
 Nodes are distributed evenly across stages. Edges go primarily forward (up to +2 stages) with a configurable `backward_prob` for backward links modeling user loops.
+
+</details>
 
 ### Probability Normalization
 
@@ -287,7 +384,8 @@ Run the full parameter matrix described in the report:
 python run_experiments.py
 ```
 
-Customize with CLI flags:
+<details>
+<summary>Customization & output format</summary>
 
 ```bash
 python run_experiments.py --graph-types erdos_renyi layered \
@@ -304,6 +402,24 @@ Output CSV columns: `graph_type`, `graph_size`, `avg_degree`, `distribution`, `t
 
 The default matrix (2 graph types × 3 sizes × 3 degrees × 2 distributions × 6 τ values × 10 runs) produces **2,160 rows** saved to `results/experiment_results.csv`.
 
+</details>
+
+### Real-Data Experiment Runner
+
+Run Dijkstra experiments on the real-world datasets:
+
+```bash
+python run_real_experiments.py
+```
+
+Customize:
+
+```bash
+python run_real_experiments.py --recsys-sessions 50000 --pairs 20 --seed 42
+```
+
+Tests three dataset configurations (RetailRocket event-level, RetailRocket item-level, RecSys 2015) with 20 random source-target pairs each across 5 τ values. Outputs **300 rows** to `results/real_data_results.csv`.
+
 ## Analysis Notebook
 
 `analysis.ipynb` loads `results/experiment_results.csv` and produces:
@@ -319,7 +435,7 @@ All plots are saved to `results/img/`. See [Experimental Results](#experimental-
 
 ## Testing
 
-34 unit tests covering preprocessing, graph building, both Dijkstra variants, convergence (pruned → baseline as τ → 0), probability consistency, edge cases, both generators, probability normalisation regression, k-shortest simple paths, real-dataset end-to-end pipeline, and the critical-τ finder:
+40 unit tests covering preprocessing, graph building, both Dijkstra variants, convergence (pruned → baseline as τ → 0), probability consistency, edge cases, both generators, probability normalisation regression, k-shortest simple paths, synthetic-dataset end-to-end pipeline, real-data loaders (RetailRocket + RecSys 2015), and the critical-τ finder:
 
 ```bash
 python -m pytest tests/ -v
@@ -327,9 +443,9 @@ python -m pytest tests/ -v
 
 ## Experimental Results
 
-**Verdict: Hypothesis supported.** Across all 1,800 pruned runs, every run that found a path returned the **exact same optimal path** as the baseline (0.00% optimality gap). The pruning is admissible — it either preserves the full optimal path or prunes it entirely, never producing a suboptimal result. The only cost is reduced reachability at aggressive τ values.
+**Verdict: Hypothesis supported.** Across all 1,800 pruned runs (synthetic) and 300 runs (real data), every run that found a path returned the **exact same optimal path** as the baseline (0.00% optimality gap). The pruning is admissible — it either preserves the full optimal path or prunes it entirely, never producing a suboptimal result.
 
-### Speedup by τ
+### Synthetic Data — Speedup by τ
 
 | τ | Median Speedup | Edges Explored | Path-Found Rate | Gap (when found) |
 |---|---------------|----------------|-----------------|------------------|
@@ -339,10 +455,31 @@ python -m pytest tests/ -v
 | 0.1 | 267.2× | 0.1% | 4.7% | 0.00% |
 | 0.5 | 866.3× | ~0% | 3.3% | 0.00% |
 
+### Real-Data Validation
+
+Three dataset configurations were tested (20 random source-target pairs × 5 τ values = 300 rows):
+
+| Dataset | Nodes | Edges | Best Speedup | Max Gap |
+|---------|-------|-------|-------------|--------|
+| RetailRocket (event-level funnel) | 3 | 9 | 1.8× | 0.00% |
+| RetailRocket (item-level, 50K sessions) | 44,711 | 101,528 | 12,768× | 0.00% |
+| RecSys 2015 (50K sessions) | 12,935 | 70,442 | 3,070× | 0.00% |
+
+<details>
+<summary>Detailed real-data analysis</summary>
+
+The real-data results confirm the hypothesis generalizes beyond synthetic graphs:
+- On **large real graphs** (RetailRocket-item, RecSys 2015), pruning delivers **3,000–12,000× speedups**
+- The event-level funnel (3 nodes) is too small for meaningful speedup, but still shows 0% gap
+- Path-found rates are low on real data because real transition probabilities are very small (most items are visited rarely), making even moderate τ values aggressive
+
+</details>
+
 ### Key Findings
 
-1. **180/180** configurations show statistically significant speedup (Wilcoxon signed-rank, p < 0.05)
-2. **100% exact optimality** — every path found by the pruned variant is identical to the baseline optimal path (0.00% gap)
-3. With properly normalised transition probabilities (Σ P(v|u) = 1), individual edge probabilities are small, making pruning aggressive and yielding speedups up to 866×
-4. The trade-off is **reachability, not accuracy**: at τ = 0.5 only 3.3% of runs find a path, but those that do are guaranteed optimal
+1. **180/180** synthetic configurations show statistically significant speedup (Wilcoxon signed-rank, p < 0.05)
+2. **100% exact optimality** — every path found by the pruned variant is identical to the baseline optimal path (0.00% gap), on both synthetic and real data
+3. With properly normalised transition probabilities (Σ P(v|u) = 1), individual edge probabilities are small, making pruning aggressive and yielding speedups up to 12,768× on real data
+4. The trade-off is **reachability, not accuracy**: at τ = 0.5 only 3.3% of synthetic runs find a path, but those that do are guaranteed optimal
 5. Both uniform and power-law distributions exhibit consistent behaviour — no distribution-specific asymmetry
+6. **Real-data validation** on RetailRocket and RecSys 2015 confirms the hypothesis is not an artifact of synthetic generation

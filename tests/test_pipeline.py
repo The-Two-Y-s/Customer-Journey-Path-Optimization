@@ -398,6 +398,87 @@ class TestRealDataPipeline(unittest.TestCase):
             )
 
 
+class TestRealDataLoaders(unittest.TestCase):
+    """Tests for the real-world dataset loaders."""
+
+    _rr_dir = Path(__file__).resolve().parent.parent / "data" / "real_dataset" / "retailrocket"
+    _rc_dir = Path(__file__).resolve().parent.parent / "data" / "real_dataset" / "recsys2015"
+
+    def test_retailrocket_event_level(self):
+        if not (self._rr_dir / "events.csv").exists():
+            self.skipTest("RetailRocket data not found")
+        from data.real_data_loader import load_retailrocket
+        df = load_retailrocket(data_dir=self._rr_dir, granularity="event", max_sessions=1000)
+        self.assertLessEqual(df["session_id"].nunique(), 1000)
+        self.assertTrue({"session_id", "state", "timestamp"}.issubset(df.columns))
+        transitions = extract_transitions(df)
+        self.assertGreater(len(transitions), 0)
+        _, probs = compute_transition_statistics(transitions)
+        for node, targets in probs.items():
+            self.assertAlmostEqual(sum(targets.values()), 1.0, places=8)
+
+    def test_retailrocket_item_level(self):
+        if not (self._rr_dir / "events.csv").exists():
+            self.skipTest("RetailRocket data not found")
+        from data.real_data_loader import load_retailrocket
+        df = load_retailrocket(data_dir=self._rr_dir, granularity="item", max_sessions=500)
+        transitions = extract_transitions(df)
+        _, probs = compute_transition_statistics(transitions)
+        graph = build_weighted_graph(probs)
+        self.assertGreater(len(graph), 1)
+
+    def test_retailrocket_dijkstra(self):
+        if not (self._rr_dir / "events.csv").exists():
+            self.skipTest("RetailRocket data not found")
+        from data.real_data_loader import load_retailrocket
+        df = load_retailrocket(data_dir=self._rr_dir, granularity="event", max_sessions=10000)
+        transitions = extract_transitions(df)
+        _, probs = compute_transition_statistics(transitions)
+        graph = build_weighted_graph(probs)
+        result = dijkstra(graph, "view", "transaction")
+        self.assertIn("transaction", result.dist)
+        path = reconstruct_path(result.parent, "view", "transaction")
+        self.assertEqual(path[0], "view")
+        self.assertEqual(path[-1], "transaction")
+
+    def test_recsys2015_loader(self):
+        if not (self._rc_dir / "yoochoose-clicks.dat").exists():
+            self.skipTest("RecSys 2015 data not found")
+        from data.real_data_loader import load_recsys2015
+        df = load_recsys2015(data_dir=self._rc_dir, max_sessions=1000)
+        self.assertLessEqual(df["session_id"].nunique(), 1000)
+        self.assertTrue({"session_id", "state", "timestamp"}.issubset(df.columns))
+        transitions = extract_transitions(df)
+        self.assertGreater(len(transitions), 0)
+
+    def test_recsys2015_dijkstra(self):
+        if not (self._rc_dir / "yoochoose-clicks.dat").exists():
+            self.skipTest("RecSys 2015 data not found")
+        from data.real_data_loader import load_recsys2015
+        df = load_recsys2015(data_dir=self._rc_dir, max_sessions=5000)
+        transitions = extract_transitions(df)
+        _, probs = compute_transition_statistics(transitions)
+        graph = build_weighted_graph(probs)
+        # Pick the most popular node and a reachable target
+        popular = max(graph, key=lambda n: len(graph[n]))
+        result = dijkstra(graph, popular, list(graph.keys())[-1])
+        self.assertGreater(result.metrics.nodes_explored, 0)
+
+    def test_pruned_optimality_on_real_data(self):
+        """Pruned Dijkstra must return the same cost as baseline when path is found."""
+        if not (self._rr_dir / "events.csv").exists():
+            self.skipTest("RetailRocket data not found")
+        from data.real_data_loader import load_retailrocket
+        df = load_retailrocket(data_dir=self._rr_dir, granularity="event", max_sessions=10000)
+        transitions = extract_transitions(df)
+        _, probs = compute_transition_statistics(transitions)
+        graph = build_weighted_graph(probs)
+        base = dijkstra(graph, "view", "transaction")
+        pruned = dijkstra_pruned(graph, "view", "transaction", tau=0.001)
+        if "transaction" in pruned.dist:
+            self.assertAlmostEqual(base.dist["transaction"], pruned.dist["transaction"], places=9)
+
+
 class TestCriticalTau(unittest.TestCase):
     """Verify the critical-tau finder."""
 
