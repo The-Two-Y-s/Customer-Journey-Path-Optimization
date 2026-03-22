@@ -135,8 +135,8 @@ def generate_erdos_renyi_graph(
         elif distribution == "power_law":
             # Inverse-CDF power-law with exponent alpha=2, x_min=0.01
             # P(X <= x) => x = x_min * (1 - U)^(-1/(alpha-1))
-            u_sample = rng.random()
-            p = min(0.01 * (1 - u_sample) ** (-1.0), 1.0)
+            rand_val = rng.random()
+            p = min(0.01 * (1 - rand_val) ** (-1.0), 1.0)
         else:
             raise ValueError(f"Unknown distribution: {distribution}")
         raw[u].append((v, p))
@@ -292,8 +292,8 @@ def generate_layered_graph(
             p = rng.uniform(0.01, 1.0)
         elif distribution == "power_law":
             # Inverse-CDF power-law with exponent alpha=2, x_min=0.01
-            u_sample = rng.random()
-            p = min(0.01 * (1 - u_sample) ** (-1.0), 1.0)
+            rand_val = rng.random()
+            p = min(0.01 * (1 - rand_val) ** (-1.0), 1.0)
         else:
             raise ValueError(f"Unknown distribution: {distribution}")
         raw[u].append((v, p))

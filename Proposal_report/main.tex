@@ -1,0 +1,211 @@
+\documentclass[12pt,a4paper]{report}
+
+% ================================================================
+%  AIT Master's Thesis Format – January 2026
+%  Forensically verified against Master_s_Thesis_Format_January_2026.docx
+%
+%  Verified specs:
+%   Paper:       A4, all margins = 1.000 inch
+%   Body font:   Times New Roman 12pt, justified, NO first-line indent
+%   Line spacing: 1.5x  (Word line=360 auto ≡ \setstretch{1.5})
+%   Chapter H1:  14pt Bold TNR, centred, "CHAPTER X  TITLE" on one line
+%   Section H2:  12pt Bold TNR, left
+%   Subsect H3:  12pt Bold Italic TNR, left
+%   Fig caption: 12pt Bold TNR, centred, below figure, "Figure X.X. …"
+%   Tbl caption: 12pt Normal TNR, centred, above table,  "Table X.X. …"
+%   Tables:      APA 3-line style — top+midrule+bottomrule, NO verticals,
+%                NO shading, all text TNR 12pt (header NOT bold)
+%   References:  APA author-year style
+% ================================================================
+
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{booktabs}          % \toprule \midrule \bottomrule (APA tables)
+\usepackage{enumitem}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% ---- AIT: Times New Roman ----
+\usepackage{mathptmx}
+
+% ---- AIT: A4, 1 inch all margins ----
+\usepackage[a4paper,
+            top=1in, bottom=1in, left=1in, right=1in,
+            headheight=14pt, headsep=0.2in, footskip=0.3in]{geometry}
+
+% ---- AIT: 1.5x line spacing (Word line=360 lineRule=auto) ----
+\usepackage{setspace}
+\setstretch{1.5}
+
+% ---- AIT: No paragraph indent, small skip between paragraphs ----
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+
+% ---- Colours ----
+\usepackage[table]{xcolor}
+\definecolor{nodeblue}{RGB}{52,120,190}
+\definecolor{nodeorange}{RGB}{230,120,30}
+\definecolor{nodegreen}{RGB}{60,160,80}
+\definecolor{arrowgray}{RGB}{100,100,100}
+\definecolor{boxblue}{RGB}{220,235,250}
+\definecolor{boxorange}{RGB}{255,235,210}
+\definecolor{boxgreen}{RGB}{210,245,220}
+\definecolor{boxred}{RGB}{255,220,220}
+\definecolor{boxgray}{RGB}{240,240,240}
+
+% ---- TikZ ----
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit,
+                backgrounds, calc, decorations.pathreplacing, shapes.multipart}
+
+\usepackage{hyperref}
+\hypersetup{colorlinks=false, hidelinks}
+
+% ================================================================
+%  AIT CAPTION FORMATTING (forensically verified)
+%
+%  Figure caption (Caption style in template):
+%    - TNR 12pt BOLD, centred, BELOW figure
+%    - "Figure X.X. Description" (dot after number)
+%
+%  Table title (TableTitle style in template):
+%    - TNR 12pt NOT bold, centred, ABOVE table
+%    - "Table X.X. Description" (dot after number)
+%    - Double-spaced (line=480 in Word) — use \doublespacing in caption
+% ================================================================
+
+\captionsetup[figure]{
+  font        = {normalsize, bf},
+  labelfont   = {normalsize, bf},
+  labelsep    = period,
+  justification = centering,
+  position    = below,
+  skip        = 6pt
+}
+\captionsetup[table]{
+  font        = normalsize,
+  labelfont   = normalsize,
+  labelsep    = period,
+  justification = centering,
+  position    = above,
+  skip        = 4pt
+}
+
+% ================================================================
+%  AIT HEADING FORMAT (verified from numbering XML)
+%
+%  Heading1: 14pt Bold TNR, centred — auto-prefix "CHAPTER X" 
+%            then title on SAME LINE (Word autonumber = "CHAPTER %1")
+%  Heading2: 12pt Bold TNR, left  — auto-prefix "X.X"
+%  Heading3: 12pt Bold Italic TNR, left — auto-prefix "X.X.X"
+% ================================================================
+\usepackage{titlesec}
+
+% Chapter: "CHAPTER X" on line 1, "TITLE" on line 2 — both centred 14pt bold
+% Matches AIT template screenshot: two-line display format
+\titleformat{\chapter}[display]
+  {\normalfont\fontsize{14}{17}\bfseries\centering}
+  {CHAPTER \thechapter}
+  {0pt}
+  {\MakeUppercase}
+\titlespacing*{\chapter}{0pt}{0pt}{24pt}
+
+% Section: "1.1  Title" — 12pt bold, left
+\titleformat{\section}
+  {\normalfont\fontsize{12}{14}\bfseries}
+  {\thesection\quad}
+  {0em}{}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+
+% Subsection: "1.1.1  Title" — 12pt bold italic, left
+\titleformat{\subsection}
+  {\normalfont\fontsize{12}{14}\bfseries\itshape}
+  {\thesubsection\quad}
+  {0em}{}
+\titlespacing*{\subsection}{0pt}{10pt}{3pt}
+
+% Subsubsection: "1.1.1.1  Title" — 12pt bold italic, left
+\titleformat{\subsubsection}
+  {\normalfont\fontsize{12}{14}\bfseries\itshape}
+  {\thesubsubsection\quad}
+  {0em}{}
+\titlespacing*{\subsubsection}{0pt}{8pt}{2pt}
+
+% ================================================================
+%  Page numbers: bottom centre (AIT footer)
+% ================================================================
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[C]{\thepage}
+\fancypagestyle{plain}{%
+  \fancyhf{}
+  \renewcommand{\headrulewidth}{0pt}
+  \fancyfoot[C]{\thepage}
+}
+
+% ================================================================
+%  Code block (single-spaced inside tcolorbox)
+% ================================================================
+\lstset{breaklines=true, basicstyle=\footnotesize\ttfamily, lineskip=0.4ex}
+\tcbuselibrary{listingsutf8}
+\tcolorboxenvironment{lstlisting}{
+  colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, arc=3pt
+}
+
+% ================================================================
+%  APA reference hanging indent helper
+% ================================================================
+\usepackage{natbib}
+\setlength{\bibhang}{0.5in}
+\setlength{\bibsep}{0pt}
+
+% ================================================================
+\begin{document}
+
+    \pagenumbering{roman}
+    \include{0_-_cover}
+    \include{1_-_abstract}
+
+    \clearpage
+    \phantomsection
+    \renewcommand{\contentsname}{%
+      \normalfont\fontsize{14}{17}\bfseries\MakeUppercase{Contents}}
+    \tableofcontents
+
+    \cleardoublepage
+    \pagenumbering{arabic}
+
+    \include{2_-_introduction}
+    \include{3_-_literature_review}
+    \include{4_-_methodology}
+    \include{4b_-_correctness}
+    \include{4c_-_complexity}
+    \include{5_-_results}
+    \include{6_-_conclusion}
+    \include{7_-_project_plan}
+
+    % ---- APA References ----
+    \pagestyle{plain}
+    \newpage
+    \phantomsection
+    \addcontentsline{toc}{chapter}{REFERENCES}
+    \renewcommand{\bibsection}{%
+      \chapter*{REFERENCES}%
+    }
+    \bibliographystyle{plainnat}
+    \bibliography{references}
+
+    % ---- Appendix ----
+    \include{8_-_appendix}
+
+\end{document}

@@ -1,5 +1,6 @@
 import math
 import unittest
+from pathlib import Path
 
 import pandas as pd
 
@@ -276,6 +277,125 @@ class TestLayeredGenerator(unittest.TestCase):
             n=100, avg_degree=5, distribution="power_law", seed=42
         )
         self.assertEqual(len(graph), 100)
+
+
+class TestProbabilityNormalization(unittest.TestCase):
+    """Regression test: every source node's outgoing probabilities must sum to 1."""
+
+    def _assert_normalised(self, graph, tolerance=1e-9):
+        for node, edges in graph.items():
+            if not edges:
+                continue
+            # Convert -log(p) weights back to probabilities
+            probs = [math.exp(-w) for _, w in edges]
+            total = sum(probs)
+            self.assertAlmostEqual(
+                total, 1.0, places=8,
+                msg=f"Node {node!r}: outgoing probs sum to {total}, expected 1.0",
+            )
+
+    def test_er_uniform_normalised(self):
+        graph = generate_erdos_renyi_graph(n=200, avg_degree=5, distribution="uniform", seed=42)
+        self._assert_normalised(graph)
+
+    def test_er_power_law_normalised(self):
+        graph = generate_erdos_renyi_graph(n=200, avg_degree=5, distribution="power_law", seed=42)
+        self._assert_normalised(graph)
+
+    def test_layered_uniform_normalised(self):
+        graph = generate_layered_graph(n=200, avg_degree=5, distribution="uniform", seed=42)
+        self._assert_normalised(graph)
+
+    def test_layered_power_law_normalised(self):
+        graph = generate_layered_graph(n=200, avg_degree=5, distribution="power_law", seed=42)
+        self._assert_normalised(graph)
+
+
+class TestKShortestSimplePaths(unittest.TestCase):
+    """Tests for k_shortest_simple_paths() in main.py."""
+
+    def setUp(self):
+        self.graph = {
+            "A": [("B", 1.0), ("C", 2.0)],
+            "B": [("D", 1.0), ("C", 0.5)],
+            "C": [("D", 1.0)],
+            "D": [],
+        }
+
+    def test_k1_matches_dijkstra_optimal(self):
+        from main import k_shortest_simple_paths
+        paths = k_shortest_simple_paths(self.graph, "A", "D", k=1)
+        result = dijkstra(self.graph, "A", "D")
+        self.assertEqual(len(paths), 1)
+        self.assertAlmostEqual(paths[0][0], result.dist["D"])
+
+    def test_k3_returns_ascending_cost(self):
+        from main import k_shortest_simple_paths
+        paths = k_shortest_simple_paths(self.graph, "A", "D", k=3)
+        self.assertGreaterEqual(len(paths), 2)
+        for i in range(len(paths) - 1):
+            self.assertLessEqual(paths[i][0], paths[i + 1][0])
+
+    def test_all_paths_are_simple(self):
+        from main import k_shortest_simple_paths
+        paths = k_shortest_simple_paths(self.graph, "A", "D", k=5)
+        for _, path in paths:
+            self.assertEqual(len(path), len(set(path)), f"Duplicate node in path {path}")
+
+    def test_disconnected_returns_empty(self):
+        from main import k_shortest_simple_paths
+        graph = {"A": [("B", 1.0)], "B": [], "C": [("D", 1.0)], "D": []}
+        paths = k_shortest_simple_paths(graph, "A", "D", k=3)
+        self.assertEqual(paths, [])
+
+    def test_k0_returns_empty(self):
+        from main import k_shortest_simple_paths
+        paths = k_shortest_simple_paths(self.graph, "A", "D", k=0)
+        self.assertEqual(paths, [])
+
+
+class TestRealDataPipeline(unittest.TestCase):
+    """End-to-end test using the synthetic journey dataset."""
+
+    def test_synthetic_dataset_end_to_end(self):
+        """Load the generated CSV, build graph, run both Dijkstra variants."""
+        csv_path = Path(__file__).resolve().parent.parent / "data" / "enhanced_synthetic_journey.csv"
+        if not csv_path.exists():
+            self.skipTest(f"Dataset not found at {csv_path}")
+
+        df = pd.read_csv(csv_path)
+        transitions = extract_transitions(df)
+        self.assertGreater(len(transitions), 0, "No transitions extracted")
+
+        _, probs = compute_transition_statistics(transitions)
+
+        # Verify normalisation on real data
+        for node, targets in probs.items():
+            total = sum(targets.values())
+            self.assertAlmostEqual(total, 1.0, places=8,
+                msg=f"Real data node {node!r}: probs sum to {total}")
+
+        graph = build_weighted_graph(probs)
+        self.assertIn("Home", graph, "Expected 'Home' node in graph")
+
+        result_base = dijkstra(graph, "Home", "Checkout")
+        self.assertIn("Checkout", result_base.dist, "Baseline should find Home->Checkout path")
+
+        path = reconstruct_path(result_base.parent, "Home", "Checkout")
+        self.assertGreater(len(path), 1)
+
+        prob = math.exp(-result_base.dist["Checkout"])
+        self.assertGreater(prob, 0)
+        self.assertLessEqual(prob, 1.0)
+
+        # Pruned with conservative tau should match
+        result_pruned = dijkstra_pruned(graph, "Home", "Checkout", tau=1e-10)
+        if "Checkout" in result_pruned.dist:
+            self.assertAlmostEqual(
+                result_base.dist["Checkout"],
+                result_pruned.dist["Checkout"],
+                places=9,
+            )
 
 
 class TestCriticalTau(unittest.TestCase):

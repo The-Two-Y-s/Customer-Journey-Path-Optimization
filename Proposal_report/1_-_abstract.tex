@@ -1,0 +1,12 @@
+\phantomsection
+\addcontentsline{toc}{chapter}{\bf ABSTRACT}
+
+\begin{center}
+    \large{\bf ABSTRACT}
+\end{center}
+
+This project addresses the problem of identifying optimal conversion paths in large-scale customer journey graphs. User interaction sequences are modeled as a directed weighted graph $G=(V,E)$, where edge weights encode the negative log-probability of each state transition, enabling maximum-probability path search to be solved as a shortest-path problem using Dijkstra's algorithm.
+
+Two algorithms are proposed and analyzed. The \textbf{Baseline Dijkstra} algorithm provides globally optimal solutions in $O(|E|\log|V|)$ time. The \textbf{Probability-Pruned Dijkstra} extends the baseline with a threshold parameter $\tau$ that discards low-probability partial paths during traversal, reducing the effective search space to $O(|E'|\log|V|)$ with $|E'|\leq|E|$ while converging to the baseline as $\tau\to 0$.
+
+Both algorithms are evaluated on synthetic graphs up to 50,000 nodes across varying edge densities and probability distributions. The project provides formal correctness arguments, theoretical complexity analysis, and a fully specified empirical evaluation plan measuring runtime, peak memory usage, and solution quality. Results are expected to demonstrate a controllable efficiency--optimality trade-off, with the pruned algorithm achieving meaningful speedups at small optimality cost for moderate threshold values.

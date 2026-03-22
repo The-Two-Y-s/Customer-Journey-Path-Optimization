@@ -1,0 +1,51 @@
+\chapter{CORRECTNESS ARGUMENT PLAN}\label{chap:correctness}
+
+This chapter outlines the approach that will be used to argue the correctness of both the baseline Dijkstra algorithm and the probability-pruned Dijkstra algorithm. Since this is a proposal, full formal proofs are not presented; instead, the key invariants, proof strategies, and verification plans are identified.
+
+\section{Correctness of the Log-Probability Transformation}
+
+\textbf{Claim:} The path $P^*$ that minimizes $\sum_{(u,v)\in P} -\log\,p(u,v)$ is identical to the path that maximizes $\prod_{(u,v)\in P} p(u,v)$.
+
+\textbf{Proof sketch:} The negative logarithm $-\log(\cdot)$ is a strictly monotone decreasing function on $(0,1]$~\citep{cormen2009}. Therefore, for any two paths $P_1$ and $P_2$:
+\[
+\prod_{(u,v)\in P_1} p(u,v) \;>\; \prod_{(u,v)\in P_2} p(u,v)
+\;\iff\;
+\sum_{(u,v)\in P_1} -\log\,p(u,v) \;<\; \sum_{(u,v)\in P_2} -\log\,p(u,v)
+\]
+This follows directly from applying $-\log$ to both sides and reversing the inequality (since $-\log$ is decreasing). The transformation is therefore \emph{order-preserving}: the ranking of paths by probability is identical to the ranking by log-cost, so maximizing probability is equivalent to minimizing log-cost~\citep{manning2008nlp,viterbi1967error}. Non-negativity of weights ($w(u,v) \geq 0$ since $p(u,v) \in (0,1]$) will be verified formally during implementation.
+
+\section{Correctness of Baseline Dijkstra}\label{sec:correctness_baseline}
+
+\textbf{Algorithm paradigm:} Dijkstra's algorithm is a greedy algorithm~\citep{cormen2009}. Its correctness rests on a \textbf{greedy invariant} maintained throughout execution.
+
+\textbf{Key invariant:} At any point during the algorithm, for every node $u$ that has been extracted from the priority queue, $\text{dist}[u]$ is the true shortest-path distance from $s$ to $u$ in the transformed graph.
+
+\textbf{Proof plan:} The invariant will be established by induction on the number of extracted nodes~\citep{cormen2009,dijkstra1959}:
+\begin{enumerate}
+    \item \textbf{Base case:} The source node $s$ is extracted first with $\text{dist}[s] = 0$, which is trivially correct.
+    \item \textbf{Inductive step:} Assume all previously extracted nodes satisfy the invariant. When node $u$ is extracted, suppose for contradiction that there exists a shorter path $s \leadsto u$ through some unextracted node $x$. Since all edge weights are non-negative, the distance through $x$ to $u$ must be $\geq \text{dist}[x] \geq \text{dist}[u]$ (by the priority queue ordering), which contradicts the assumption. Therefore $\text{dist}[u]$ is optimal at extraction~\citep{cormen2009}.
+    \item \textbf{Termination:} The algorithm terminates when the target $t$ is extracted or the queue is empty, at which point the invariant guarantees optimality of $\text{dist}[t]$.
+\end{enumerate}
+
+\textbf{Correctness of path recovery:} The path $P^*$ is reconstructed from the \texttt{parent} array by backtracking from $t$ to $s$. Correctness of this reconstruction follows from the fact that each parent pointer is set only when a strictly shorter path is found, so the chain of parent pointers forms a valid shortest-path tree~\citep{cormen2009}.
+
+\section{Correctness of Probability-Pruned Dijkstra}
+
+\textbf{Claim for $\tau = 0$:} When $\tau = 0$, $T = -\log(0^+) = +\infty$, so the pruning condition $\text{dist}[u] > T$ is never triggered and the algorithm is identical to the baseline. Full correctness follows from Section~\ref{sec:correctness_baseline}.
+
+\textbf{Convergence claim for $\tau \to 0$:} As $\tau$ decreases toward 0, $T = -\log(\tau)$ increases toward $+\infty$, and the pruning condition eliminates progressively fewer edges. In the limit, all edges are explored and the result converges exactly to the baseline optimal solution.
+
+\textbf{Approximation behavior for $\tau > 0$:} For $\tau > 0$, the algorithm may prune the optimal path if its cumulative probability falls below $\tau$. This is an intentional approximation: if the optimal path has probability $\Pi^* < \tau$, then the algorithm may return a sub-optimal path or report failure. This behavior will be empirically characterized through the optimality gap metric $\Delta$ defined in Section~\ref{sec:expdesign}.
+
+\textbf{Proof plan for approximation:} No formal approximation bound is claimed for $\tau > 0$; correctness in the approximate sense will be established empirically by comparing pruned outputs to baseline outputs across all experimental configurations (Section~\ref{sec:expdesign}).
+
+\section{Verification Strategy}
+
+All correctness claims will be validated through:
+\begin{enumerate}
+    \item \textbf{Manual trace:} On the small example graph (Figure~\ref{fig:journey_graph}), both algorithms will be traced step-by-step to verify that $\text{dist}[\text{CK}] = -\log(0.7) - \log(0.6) - \log(0.8) \approx 1.091$ and that the path LP$\to$SR$\to$PP$\to$CK is returned.
+    \item \textbf{Invariant checking:} An optional debug mode will assert the greedy invariant after every extraction during testing.
+    \item \textbf{Convergence testing:} The pruned algorithm will be run with $\tau \in \{0.5, 0.1, 0.01, 0.001, 0\}$ on the same graph instances to confirm monotone convergence to the baseline solution.
+    \item \textbf{Probability consistency check:} For all returned paths, $\exp(-C^*)$ will be verified to equal $\prod_{(u,v)\in P^*} p(u,v)$ within floating-point precision.
+    \item \textbf{Edge case testing:} Disconnected graphs (no $s$-to-$t$ path), single-node graphs, and graphs with probability-1 edges will be tested.
+\end{enumerate}

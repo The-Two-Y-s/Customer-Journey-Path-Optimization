@@ -13,7 +13,18 @@ Transition probabilities are converted to non-negative edge weights:
 
 `w(u,v) = -log(p(u,v))`
 
-This lets us run shortest-path search (Dijkstra) to recover the highest-probability path. A **Probability-Pruned Dijkstra** variant prunes partial paths whose cumulative probability falls below a threshold τ, trading optimality for speed.
+This lets us run shortest-path search (Dijkstra) to recover the highest-probability path. A **Probability-Pruned Dijkstra** variant prunes partial paths whose cumulative probability falls below a threshold τ, trading reachability for speed.
+
+### Hypothesis
+
+> **Probability-Pruned Dijkstra provides meaningful speedup over baseline Dijkstra while preserving path optimality at conservative threshold τ values.**
+
+Specifically, we expect that:
+1. Pruning significantly reduces the number of edges explored, yielding large speedups.
+2. When the pruned algorithm finds a path, it returns the **exact same optimal path** as the baseline (0% optimality gap).
+3. The only cost of pruning is reduced reachability — at aggressive τ values, the optimal path may be pruned entirely, so no path is returned.
+
+See [Experimental Results](#experimental-results) for the verdict.
 
 > **Markov assumption:** Transition probabilities are memoryless — P(next page | current page) is independent of the pages visited earlier in the session. This is a standard simplifying assumption in clickstream analysis; real user behaviour may exhibit history-dependent patterns.
 
@@ -30,7 +41,7 @@ This lets us run shortest-path search (Dijkstra) to recover the highest-probabil
 │   ├── graph_builder.py              # Weighted graph construction
 │   └── preprocessing.py              # Clickstream data ingestion
 ├── tests/
-│   └── test_pipeline.py              # 24 unit tests
+│   └── test_pipeline.py              # 34 unit tests
 ├── results/
 │   ├── experiment_results.csv        # 2,160-row experiment output
 │   └── img/                          # Saved plot images from analysis
@@ -49,6 +60,54 @@ This lets us run shortest-path search (Dijkstra) to recover the highest-probabil
 5. Run **Baseline Dijkstra** (Algorithm 1) for the optimal path.
 6. Optionally run **Probability-Pruned Dijkstra** (Algorithm 2) with threshold `τ`.
 7. Report path, probability Π\* = exp(−C\*), and performance metrics.
+
+### Probability Assignment
+
+Transition probabilities are assigned differently depending on the data source:
+
+**Real / Clickstream Data** (`src/preprocessing.py`):  
+For every source page `u`, count how many times each outgoing transition `u → v` appears in the session logs, then normalise:
+
+$$P(v \mid u) = \frac{\text{count}(u \to v)}{\sum_{w} \text{count}(u \to w)}$$
+
+This produces a valid conditional distribution where outgoing probabilities from each node sum to 1.
+
+**Synthetic Graph Generators** (`data/graph_generator.py`):  
+For each source node `u`, raw edge weights are drawn from the chosen distribution:
+- **Uniform:** each raw weight ~ U(0.01, 1)
+- **Power-law:** each raw weight via inverse-CDF Pareto (α = 2, x_min = 0.01)
+
+The raw weights are then normalised per source node:
+
+$$P(v \mid u) = \frac{\text{raw}(u \to v)}{\sum_{w} \text{raw}(u \to w)}$$
+
+This ensures `Σ_v P(v|u) = 1` for every node, matching the real-data pipeline.
+
+### Why -log(p) Works
+
+The probability of a complete path `s → v₁ → v₂ → … → t` is the product of its edge probabilities:
+
+$$P(\text{path}) = \prod_{i} P(v_{i+1} \mid v_i)$$
+
+Applying `-log` converts the product into a sum:
+
+$$-\log P(\text{path}) = \sum_{i} \bigl(-\log P(v_{i+1} \mid v_i)\bigr)$$
+
+Since all `P(v|u) ∈ (0, 1]`, each `-log(p)` is non-negative, so Dijkstra's non-negative-weight requirement is satisfied. **Minimising the sum of `-log(p)` weights is equivalent to maximising the path probability.**
+
+### Pruning Cases
+
+The threshold `τ` defines the minimum acceptable path probability. It is converted to log-space as `T = -log(τ)`. During search, if a partial path's cumulative cost exceeds `T`, pruning kicks in and that path is abandoned. This produces three distinct outcomes:
+
+| Case | Condition | Result |
+|------|-----------|--------|
+| **Optimal path preserved** | Optimal path probability ≥ τ | Pruned Dijkstra returns the exact same path as baseline (0% gap) with significant speedup |
+| **Path pruned entirely** | Optimal path probability < τ | No path found — the threshold is too aggressive for this graph |
+| **Suboptimal path** | (theoretically possible) | Never observed in practice — pruning either keeps the full optimal path or removes it entirely |
+
+> **Why no suboptimal paths?** Dijkstra settles nodes in non-decreasing cost order. The pruning threshold `T` acts as a uniform upper bound: any node settled with cost ≤ T receives its true shortest-path distance, because all cheaper alternatives were already explored. Thus the pruned algorithm either finds the optimal path intact (when its cost ≤ T) or misses the target entirely (when the cheapest s-t path costs > T) — it can never return a worse path.
+
+In our experiments, the pruning is **all-or-nothing**: across 1,800 pruned runs, every run that found a path returned the exact optimal path (0.00% gap). The only trade-off is reduced reachability — at aggressive τ values (e.g., τ = 0.5), only 3.3% of runs find a path because most optimal paths have probability well below 0.5.
 
 ## Installation
 
@@ -194,7 +253,7 @@ Nodes are distributed evenly across stages. Edges go primarily forward (up to +2
 
 ### Probability Normalization
 
-Both generators **normalise outgoing edge probabilities per source node** so that `Σ_v P(v|u) = 1` for every node `u`. Raw values are drawn from the chosen distribution (uniform or power-law), then divided by their per-node sum to form a valid conditional distribution. This matches the real-data pipeline in `src/preprocessing.py` and ensures the `-log(p)` transformation produces meaningful shortest-path weights.
+Both generators normalise outgoing edge probabilities per source node so that `Σ_v P(v|u) = 1`. See [Probability Assignment](#probability-assignment) for the full details and formulas.
 
 ## Critical-τ Finder
 
@@ -246,15 +305,11 @@ The default matrix (2 graph types × 3 sizes × 3 degrees × 2 distributions × 
 5. **Memory scaling** — peak memory vs |V|, baseline vs pruned
 6. **Statistical testing** — Wilcoxon signed-rank test (paired by run) with significance counts
 
-Key findings from the experiments:
-- **180/180** configurations show statistically significant speedups (Wilcoxon signed-rank, p < 0.05)
-- At τ = 0.01, pruned Dijkstra explores only ~1.4% of baseline edges (median 29× speedup)
-- Both uniform and power-law distributions show consistent speedup behaviour (~10% path-found rate, ~90× median speedup)
-- Pruning is admissible: 0.00% optimality gap across all runs that found a path
+All plots are saved to `results/img/`. See [Experimental Results](#experimental-results) for the full findings.
 
 ## Testing
 
-24 unit tests covering preprocessing, graph building, both Dijkstra variants, convergence (pruned → baseline as τ → 0), probability consistency, edge cases, both generators, and the critical-τ finder:
+34 unit tests covering preprocessing, graph building, both Dijkstra variants, convergence (pruned → baseline as τ → 0), probability consistency, edge cases, both generators, probability normalisation regression, k-shortest simple paths, real-dataset end-to-end pipeline, and the critical-τ finder:
 
 ```bash
 python -m pytest tests/ -v
@@ -262,9 +317,7 @@ python -m pytest tests/ -v
 
 ## Experimental Results
 
-**Hypothesis:** Probability-Pruned Dijkstra provides meaningful speedup over the baseline while preserving path optimality at conservative τ values.
-
-**Verdict: Supported.** The pruning is *admissible* — across all 1,800 pruned runs, every run that found a path returned the **exact same optimal path** as the baseline (0.00% optimality gap). The only cost is reduced reachability at aggressive τ values.
+**Verdict: Hypothesis supported.** Across all 1,800 pruned runs, every run that found a path returned the **exact same optimal path** as the baseline (0.00% optimality gap). The pruning is admissible — it either preserves the full optimal path or prunes it entirely, never producing a suboptimal result. The only cost is reduced reachability at aggressive τ values.
 
 ### Speedup by τ
 
@@ -276,9 +329,10 @@ python -m pytest tests/ -v
 | 0.1 | 267.2× | 0.1% | 4.7% | 0.00% |
 | 0.5 | 866.3× | ~0% | 3.3% | 0.00% |
 
-### Key findings
+### Key Findings
 
-- **180/180** configurations show statistically significant speedup (Wilcoxon signed-rank, p < 0.05)
-- **100% exact optimality** — every path found by the pruned variant is identical to the baseline optimal path
-- With properly normalised transition probabilities (Σ P(v|u) = 1), individual edge probabilities are smaller, making pruning more aggressive and yielding higher speedups
-- The trade-off is **all-or-nothing**: the pruning either preserves the full optimal path or prunes it entirely — it never returns a suboptimal path
+1. **180/180** configurations show statistically significant speedup (Wilcoxon signed-rank, p < 0.05)
+2. **100% exact optimality** — every path found by the pruned variant is identical to the baseline optimal path (0.00% gap)
+3. With properly normalised transition probabilities (Σ P(v|u) = 1), individual edge probabilities are small, making pruning aggressive and yielding speedups up to 866×
+4. The trade-off is **reachability, not accuracy**: at τ = 0.5 only 3.3% of runs find a path, but those that do are guaranteed optimal
+5. Both uniform and power-law distributions exhibit consistent behaviour — no distribution-specific asymmetry

@@ -1,0 +1,53 @@
+\chapter{CONCLUSION}
+
+\section{Summary}
+
+This proposal presents an algorithmic workflow process for \textit{Customer Journey Path Optimization}, addressing the problem of identifying the most probable conversion path in large directed navigation graphs derived from user interaction data. The core formulation transforms the probabilistic path optimization problem into a shortest-path problem via the negative log-probability weight transformation~\citep{viterbi1967error,manning2008nlp}, enabling Dijkstra's algorithm~\citep{dijkstra1959} to be applied with correctness and complexity guarantees.
+
+Two algorithms are proposed: a \textbf{baseline Dijkstra} that guarantees globally optimal solutions in $O(|E|\log|V|)$ time~\citep{cormen2009}, and a \textbf{probability-pruned Dijkstra} that extends the baseline with a threshold $\tau$ to discard low-probability partial paths during traversal. The pruned algorithm is expected to reduce execution time and peak memory usage by shrinking the effective search space and controlling priority queue growth, while converging exactly to the baseline as $\tau \to 0$.
+
+\section{Expected Contributions}
+
+The five contributions below are stated in terms of what is \emph{novel or distinctive} about this work relative to the gaps identified in the literature review (Chapter~2).
+
+\begin{enumerate}
+
+    \item \textbf{Unified probabilistic path optimization framework for customer journey graphs.}
+    While existing work addresses shortest-path computation~\citep{dijkstra1959,cormen2009}, Markov chain modeling~\citep{norris1998markov}, and sequential pattern mining~\citep{pei2001prefixspan} as separate problems, this project integrates all three within a single algorithmic framework tailored to e-commerce conversion path analysis. This unification---combining the log-probability shortest-path formulation with threshold-controlled pruning---has not been studied in the context of navigation graph optimization.
+
+    \item \textbf{Probability-threshold pruning as a principled approximation strategy.}
+    Unlike heuristic approaches such as A*~\citep{hart1968astar} (which require an admissible heuristic over log-probability weights) or beam search (which provides no optimality guarantee), the proposed pruning strategy is parameter-controlled, deterministic, and formally guaranteed to converge to the optimal solution as $\tau \to 0$. This provides a more principled efficiency--optimality trade-off curve than existing approximation methods.
+
+    \item \textbf{Empirical characterization of the time--memory--optimality trade-off.}
+    Existing studies of large-scale graph systems~\citep{malewicz2010pregel,sahu2020scaling} focus on distributed scalability. This project provides a controlled, single-machine empirical analysis of how input size, edge density, and probability distribution jointly affect execution time, peak memory usage, and solution quality for both algorithms---a gap in the current experimental literature on navigation graph optimization.
+
+    \item \textbf{Validated complexity analysis across three input scales.}
+    The theoretical $O(|E|\log|V|)$ time and $O(|V|+|E|)$ space bounds~\citep{cormen2009} will be empirically validated across small, medium, and large graph instances, confirming that the complexity analysis holds in practice and identifying the threshold at which hardware constraints become binding.
+
+    \item \textbf{Reproducible experimental framework for algorithm comparison on navigation graphs.}
+    A fully specified simulation environment (Table~\ref{table:simenv}), standardized metrics including peak memory usage, and a synthetic graph generator with controlled structural parameters will be released as a reproducible benchmark, enabling future work to extend or compare against these results.
+
+\end{enumerate}
+
+\section{Anticipated Limitations}
+
+\begin{itemize}
+    \item \textbf{No formal approximation guarantee for $\tau > 0$:} The optimality gap is evaluated empirically; no worst-case bound is provided. Future work may derive a bound as a function of $\tau$ and the probability distribution~\citep{cormen2009}.
+    \item \textbf{Limited benefit in dense or uniform graphs:} Pruning provides less search-space reduction when edge densities are high or transition probabilities are nearly uniform, as fewer paths fall below the threshold.
+    \item \textbf{Hardware constraints:} Graphs approaching 50,000 nodes may reach RAM limits, potentially restricting the upper end of scalability experiments.
+    \item \textbf{Single source--target pair:} Multi-query or all-pairs extensions are outside the current scope.
+\end{itemize}
+
+\section{Future Directions}
+
+\begin{itemize}
+    \item \textbf{Formal approximation bounds:} Characterizing the optimality gap as a function of $\tau$ and graph structure~\citep{cormen2009}.
+    \item \textbf{Adaptive threshold selection:} Automatic $\tau$ tuning based on observed probability distribution statistics.
+    \item \textbf{Bidirectional search:} Combining pruned Dijkstra with bidirectional expansion to further reduce the search frontier~\citep{cormen2009}.
+    \item \textbf{Frequent journey pattern mining:} Integrating PrefixSpan~\citep{pei2001prefixspan} to identify common navigation paths alongside optimal path computation.
+    \item \textbf{Dynamic graphs:} Extending the framework to handle time-varying transition probabilities~\citep{norris1998markov}.
+\end{itemize}
+
+\section{Concluding Remarks}
+
+This project proposes a principled, efficient, and empirically evaluable approach to probabilistic path optimization in customer journey graphs. By combining the log-probability transformation~\citep{viterbi1967error}, Dijkstra's algorithm~\citep{dijkstra1959}, threshold-based pruning, and a fully specified experimental framework, the work addresses a genuine gap in the algorithmic literature on navigation graph analysis and contributes both theoretical clarity and practical benchmarking infrastructure for future research.

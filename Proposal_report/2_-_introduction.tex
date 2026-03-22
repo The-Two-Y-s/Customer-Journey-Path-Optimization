@@ -1,0 +1,31 @@
+\chapter{INTRODUCTION: PROBLEM DESCRIPTION AND MOTIVATION}
+
+\section{Background of the Study}
+
+Understanding how users navigate through digital systems---such as e-commerce websites, mobile applications, and customer support platforms---is essential for improving conversion rates, user satisfaction, customer retention, and operational efficiency. User interaction data captures detailed behavioural patterns that reflect how users interact with different system components. Customer journeys, represented as sequences of interaction states (e.g., \emph{Landing $\rightarrow$ Browse $\rightarrow$ Product $\rightarrow$ Cart $\rightarrow$ Checkout}), provide a structured framework for analyzing these behaviours.
+
+Modern digital systems generate millions of user sessions and thousands of interaction states, forming large and complex navigation graphs across websites and online platforms. When aggregated, these journeys form large directed graphs with numerous states and transitions. The scale and complexity of such graphs make efficient computational analysis a necessity, motivating the use of algorithmic approaches grounded in graph theory and data mining.
+
+\section{Statement of the Problem}
+
+As the volume and complexity of user interaction data continue to grow, identifying meaningful and optimal customer journeys becomes increasingly challenging. From a business perspective, customer journey dynamics directly influence conversion rates, revenue generation, customer retention, and user satisfaction. Even small improvements in the probability of reaching a conversion state can result in significant financial gains at scale.
+
+Na\"{i}ve analytical methods, such as exhaustive path enumeration or simple frequency-based techniques, do not scale. In large graphs, the number of possible simple paths increases combinatorially, rendering exhaustive enumeration computationally infeasible. Furthermore, directly multiplying many small transition probabilities along a path leads to numerical underflow---a form of arithmetic precision loss that makes na\"{i}ve probability computation unreliable for longer paths.
+
+The key challenge is therefore to identify optimal customer journeys efficiently and numerically stably at scale. Core tasks include finding highest-probability conversion paths and analyzing scalability across large graphs, each posing distinct challenges in graph traversal, optimization, and algorithm design that require careful data structure selection.
+
+\section{Objectives}
+
+The objective of this study is to design and implement an efficient algorithmic framework for customer journey path optimization grounded in graph theory and classical algorithm design principles. Specifically, the project will model customer journey data as a directed weighted graph, where nodes represent interaction states and edges represent transition probabilities between states.
+
+The primary focus is to compute optimal conversion paths under probabilistic constraints. To achieve this, transition probabilities will be transformed into additive non-negative edge weights using the negative logarithm, enabling the application of Dijkstra's shortest-path algorithm for maximum-probability path computation. This transformation also addresses the numerical underflow problem by converting multiplicative probability products into additive sums. The project will implement Dijkstra's algorithm as a baseline approach and further propose an optimized probability-pruned search strategy that reduces the exploration of low-probability paths to improve computational efficiency.
+
+In addition to correctness, the project aims to formally analyze the theoretical time and space complexity of both the baseline and optimized algorithms. Empirical performance evaluations will be conducted on graphs of varying sizes and densities to examine scalability, runtime behaviour, and trade-offs between computational efficiency and path optimality. Through these analyses, the project seeks to demonstrate how careful algorithm design and data structure selection influence performance in large-scale navigation graphs.
+
+\noindent\textbf{Original contribution.} This study contributes a threshold-based pruning strategy integrated with Dijkstra's algorithm for probabilistic navigation graphs, evaluated through empirical complexity analysis and an explicit time--optimality trade-off characterization. Unlike heuristic approaches (A*) that require a problem-specific admissible heuristic, or rank-based methods (beam search) that provide no convergence guarantee, the proposed pruning is deterministic, requires no domain-specific heuristic, and formally converges to the globally optimal solution as $\tau \to 0$.
+
+A further objective is to identify the \emph{critical pruning threshold} $\tau_c$, defined as the value or narrow range of $\tau$ for which runtime improvement is maximized without causing a significant degradation in path quality. In this study, significance will be assessed empirically using the relative optimality gap $\Delta$ together with runtime speedup across all experimental configurations.
+
+\section{Target Users}
+
+The primary target users of this system include data analysts, product managers, and system designers working on digital platforms such as e-commerce websites, mobile applications, and customer support systems. The project is also intended for researchers and students interested in applying algorithm design and data structure concepts to real-world optimization problems. Insights derived from this work can support data-driven decision-making and contribute to improved system performance and user experience.

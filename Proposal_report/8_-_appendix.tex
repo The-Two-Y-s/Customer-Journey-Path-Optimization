@@ -1,0 +1,24 @@
+\chapter*{APPENDIX A: SOURCE CODE AVAILABILITY}
+\addcontentsline{toc}{chapter}{APPENDIX A: SOURCE CODE AVAILABILITY}
+
+The implementation of the proposed \textit{Customer Journey Path Optimization} framework was developed in \textbf{Python 3}. The repository contains the baseline Dijkstra algorithm with log-transformed probabilities, the proposed probability-pruned Dijkstra variant, the synthetic dataset generation scripts, and the experimental evaluation scripts used in this study.
+
+The complete source code is publicly available at:
+
+\begin{center}
+\textbf{\url{https://github.com/The-Two-Y-s/Customer-Journey-Path-Optimization}}
+\end{center}
+
+The repository includes:
+
+\begin{itemize}
+    \item Baseline Dijkstra implementation on log-transformed probability graphs
+    \item Probability-Pruned Dijkstra implementation
+    \item Synthetic graph generation module
+    \item Experiment execution and benchmarking scripts
+    \item Supporting utilities for evaluation and reproducibility
+\end{itemize}
+
+The implementation follows the same data structure choices described in this report, namely adjacency lists for sparse graph storage, a binary min-heap using Python's \texttt{heapq} for priority queue operations, and hash maps for distance tracking and path reconstruction.
+
+This repository is provided to ensure transparency, reproducibility, and ease of further extension of the proposed algorithms.
