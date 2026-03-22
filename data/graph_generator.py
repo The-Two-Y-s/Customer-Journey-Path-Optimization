@@ -55,7 +55,8 @@ def _ensure_connectivity(
     bridge = rng.choice(list(visited))
     if target not in adj.get(bridge, []):
         adj.setdefault(bridge, []).append(target)
-    return [(bridge, target)]
+        return [(bridge, target)]
+    return []
 
 
 def generate_erdos_renyi_graph(
