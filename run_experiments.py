@@ -2,11 +2,11 @@
 
 Runs both Baseline Dijkstra and Probability-Pruned Dijkstra across:
   - graph_type ∈ {erdos_renyi, layered}
-  - |V| ∈ {1_000, 5_000, 10_000}
+  - |V| ∈ {1_000, 5_000, 10_000}  (pass --sizes 50000 for larger)
   - d̄  ∈ {2, 5, 10}
   - distribution ∈ {uniform, power_law}
   - τ  ∈ {0, 0.001, 0.01, 0.05, 0.1, 0.5}
-  - ≥10 runs per configuration (fixed seeds for reproducibility)
+  - ≥10 runs per configuration (deterministic seeds via hashlib for reproducibility)
 
 Records all 7 evaluation metrics per run (§3.8.2):
   execution_time_ms, peak_memory_bytes, nodes_explored, edges_relaxed,
@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import math
 import sys
 import time
@@ -171,7 +172,7 @@ def run_experiments(
                         )
 
                         for run_idx in range(num_runs):
-                            seed = hash((run_idx, n, d, gtype, dist)) & 0xFFFFFFFF
+                            seed = int(hashlib.md5(f"{run_idx}_{n}_{d}_{gtype}_{dist}".encode()).hexdigest(), 16) & 0xFFFFFFFF
 
                             graph = gen_fn(
                                 n=n,

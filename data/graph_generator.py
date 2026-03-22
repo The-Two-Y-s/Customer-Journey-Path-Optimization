@@ -95,7 +95,6 @@ def generate_erdos_renyi_graph(
 
     # Build node labels
     nodes = [source] + [f"v{i}" for i in range(n - 2)] + [target]
-    node_set = set(nodes)
 
     # --- Scalable edge generation: sample ~avg_degree neighbours per node ---
     # Use index-based sampling to avoid building O(n) candidate lists.
