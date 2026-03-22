@@ -1,0 +1,124 @@
+\chapter{COMPLEXITY ANALYSIS AND EMPIRICAL VALIDATION}\label{chap:complexity}
+
+This chapter presents the formal time and space complexity of both algorithms and validates the theoretical bounds with actual experimental measurements.
+
+\section{Analytical Methodology}
+
+Complexity was analysed using the standard \textbf{operation-counting} approach~\citep{cormen2009}: (1) identify all operations (heap insertions, extractions, edge relaxations), (2) count the maximum number of each as a function of $|V|$ and $|E|$, (3) multiply by per-operation cost, and (4) verify empirically.
+
+\section{Time Complexity}
+
+\subsection{Baseline Dijkstra}
+
+\begin{enumerate}
+    \item \textbf{Initialization:} Setting $\mathit{dist}[v]=\infty$ and $\mathit{parent}[v]=\texttt{NIL}$ for all $v$ costs $O(|V|)$.
+    \item \textbf{Priority queue insertions:} Each node is inserted initially once and re-inserted (lazy) at most once per incoming edge. Total insertions $\leq |V|+|E|$. Each costs $O(\log|V|)$ (binary heap sift-up). Total: $O(|E|\log|V|)$.
+    \item \textbf{Extract-min operations:} Total extractions $\leq |V|+|E|$, each $O(\log|V|)$. Total: $O(|E|\log|V|)$.
+    \item \textbf{Edge relaxations:} For each settled node $u$, all $\deg(u)$ outgoing edges are examined. Across the full algorithm: $\sum_{u\in V}\deg(u)=|E|$. Each relaxation costs $O(1)$ (comparison + hash map lookup). Total: $O(|E|)$.
+\end{enumerate}
+
+\[
+T_{\text{baseline}} = O(|E|\log|V|)
+\]
+
+In sparse graphs where $|E|=O(|V|)$, this simplifies to $O(|V|\log|V|)$.
+
+\textit{Note:} A Fibonacci heap would yield $O(|E|+|V|\log|V|)$~\citep{fredman1987fibonacci}, but binary heaps provide better constant factors in practice.
+
+\subsection{Probability-Pruned Dijkstra}
+
+\begin{enumerate}
+    \item \textbf{Worst case ($\tau=0$):} Identical to the baseline: $O(|E|\log|V|)$.
+    \item \textbf{Expected case ($\tau>0$):} Let $|E'|\leq|E|$ denote edges surviving the threshold. Pruned edges are checked in $O(1)$ without heap insertion. The expected complexity is:
+    \[
+    T_{\text{pruned}} = O(|E'|\log|V|),\quad |E'|\leq|E|
+    \]
+    \item \textbf{Pruning ratio:} Define $\rho = 1 - |E'|/|E|$. Higher $\tau$ increases $\rho$, reducing runtime.
+\end{enumerate}
+
+\subsection{Empirical Time Validation}
+
+Table~\ref{table:time_by_size} shows measured wall-clock times at $\tau=0.01$ across graph sizes.
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}rrrrr@{}}
+\toprule
+$|V|$ & \textbf{Baseline (ms)} & \textbf{Pruned (ms)} & \textbf{Wall Speedup} & \textbf{Edge Speedup} \\
+\midrule
+1,000  & 0.64 & 0.058 & 11.0$\times$ & 30.6$\times$ \\
+5,000  & 3.60 & 0.064 & 55.8$\times$ & 104.9$\times$ \\
+10,000 & 7.25 & 0.064 & 89.1$\times$ & 173.9$\times$ \\
+\bottomrule
+\end{tabular}
+\caption[Execution time scaling by graph size]{Median execution time at $\tau=0.01$. Baseline time scales roughly linearly with $|V|$ (consistent with $O(|V|\log|V|)$ for sparse graphs). Pruned time remains nearly constant because the threshold eliminates most of the graph.}
+\label{table:time_by_size}
+\end{table}
+
+The baseline times scale as $0.64 \to 3.60 \to 7.25$ ms for $|V|=1{,}000 \to 5{,}000 \to 10{,}000$, closely matching the $O(|V|\log|V|)$ prediction for sparse graphs ($|E|=O(|V|)$). The pruned algorithm's nearly constant time confirms that $|E'|$ grows much slower than $|E|$ as the graph scales.
+
+\section{Space Complexity}
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Data Structure} & \textbf{Space} & \textbf{Purpose} \\
+\midrule
+Adjacency list & $O(|V|+|E|)$ & Graph representation \\
+Distance map $\mathit{dist}[v]$ & $O(|V|)$ & Shortest path estimates \\
+Parent map $\mathit{parent}[v]$ & $O(|V|)$ & Path reconstruction \\
+Priority queue (heap) & $O(|V|+|E|)$ worst case & Node ordering \\
+\midrule
+\textbf{Total} & $\mathbf{O(|V|+|E|)}$ & \\
+\bottomrule
+\end{tabular}
+\caption[Space complexity breakdown]{Space complexity breakdown. Identical for both algorithms.}
+\label{table:space_complexity}
+\end{table}
+
+The pruning threshold $\tau$ adds no asymptotic space overhead. In practice, the pruned algorithm uses less peak memory because fewer heap entries are created.
+
+\subsection{Empirical Memory Validation}
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}rrrr@{}}
+\toprule
+$|V|$ & \textbf{Baseline Peak (KB)} & \textbf{Pruned Peak (KB)} & \textbf{Reduction} \\
+\midrule
+1,000  & 65.9 & 5.2 & 12.7$\times$ \\
+5,000  & 329.7 & 5.5 & 59.9$\times$ \\
+10,000 & 676.4 & 5.5 & 123.0$\times$ \\
+\bottomrule
+\end{tabular}
+\caption[Peak memory scaling by graph size]{Peak memory at $\tau=0.01$. Baseline memory scales linearly with $|V|$ (confirming $O(|V|)$ for sparse graphs). Pruned memory is essentially constant due to aggressive pruning.}
+\label{table:memory_by_size}
+\end{table}
+
+Baseline peak memory (65.9 KB $\to$ 329.7 KB $\to$ 676.4 KB) scales linearly with $|V|$, confirming the $O(|V|+|E|)$ bound. The pruned algorithm's constant $\approx5.5$~KB at all sizes demonstrates that only a small frontier is ever materialized.
+
+\section{Summary of Complexity}
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Algorithm} & \textbf{Time (worst)} & \textbf{Time (expected)} & \textbf{Space} \\
+\midrule
+Baseline Dijkstra & $O(|E|\log|V|)$ & $O(|E|\log|V|)$ & $O(|V|+|E|)$ \\
+Pruned ($\tau=0$) & $O(|E|\log|V|)$ & $O(|E|\log|V|)$ & $O(|V|+|E|)$ \\
+Pruned ($\tau>0$) & $O(|E|\log|V|)$ & $O(|E'|\log|V|)$ & $O(|V|+|E|)$ \\
+\bottomrule
+\end{tabular}
+\caption[Complexity summary]{Complexity summary. Pruning reduces expected time without affecting worst-case or space bounds.}
+\label{table:complexity_summary}
+\end{table}
+
+\noindent\textbf{Key empirical findings:}
+Baseline wall-clock time scales as $O(|V|\log|V|)$ for sparse graphs, matching theory. Pruned wall-clock time is nearly constant across graph sizes at fixed $\tau$, confirming that $|E'| \ll |E|$. Peak memory scales linearly for the baseline, while pruned memory is effectively constant. Edge-relaxation speedups (up to 2,124$\times$) exceed wall-clock speedups (up to 881$\times$), the difference attributable to fixed Python overhead per function call.

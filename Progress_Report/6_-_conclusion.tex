@@ -1,0 +1,27 @@
+\chapter{CONCLUSION AND FUTURE WORK}\label{chap:conclusion}
+
+\section{Summary of Contributions}
+
+This project investigated the effectiveness of probability-based pruning for shortest-path search in customer journey graphs. Two algorithms were implemented, tested, and compared: a baseline Dijkstra algorithm on log-probability-transformed graphs ($O(|E|\log|V|)$) and a probability-pruned Dijkstra variant with a tunable threshold $\tau$ ($O(|E'|\log|V|)$, $|E'|\leq|E|$).
+
+The following contributions were demonstrated.
+
+The pruning mechanism yields substantial speedups with zero quality loss. On synthetic benchmarks (2,160 rows), wall-clock speedups range from $3.6\times$ at $\tau=0.001$ to $881\times$ at $\tau=0.5$, with edge-relaxation speedups reaching $2{,}124\times$. On real-world item-level graphs, a maximum speedup of $29{,}820\times$ was recorded. In every case where a path was found, the optimality gap was exactly $0.0000\%$.
+
+Formal correctness was established through five theorems: log-transform order preservation, baseline optimality, convergence at $\tau=0$, conditional optimality, and the all-or-nothing property. All five were confirmed empirically across 2,460 experiment rows.
+
+A scalable and reproducible experimental framework was constructed, incorporating deterministic \texttt{hashlib.md5} seeding, separate timing and memory measurement passes, two graph generators (Erd\H{o}s--R\'{e}nyi and layered), and two real-world datasets (RetailRocket and RecSys~2015 YOOCHOOSE). A comprehensive test suite of 40 unit tests validates correctness.
+
+Finally, the reachability--speed trade-off was characterised in detail. Increasing $\tau$ yields faster search but reduces path-found rates, from 28.6\% at $\tau=0.001$ to 3.9\% at $\tau=0.5$ on synthetic data. This trade-off is inherent and well understood. Real-world graphs exhibited additional reachability limitations due to natural session fragmentation.
+
+\section{Limitations}
+
+Several limitations of the current work should be acknowledged. The model operates on a fixed graph snapshot, whereas real e-commerce platforms exhibit time-varying transition probabilities driven by seasonal trends, A/B tests, and user behaviour drift. The first-order Markov assumption ($P(\text{next}|\text{current})$) does not capture session-level history effects; for instance, users who arrived via search may behave differently from those who arrived via advertisement.
+
+Real-data experiments revealed that large item-level graphs yield very low path-found rates even under the baseline, suggesting that random source--target pair selection may not reflect realistic query patterns in production systems. Additionally, all experiments were conducted on a single machine using a single thread; the algorithm has not been evaluated in distributed or multi-threaded settings.
+
+\section{Future Work}
+
+Several directions merit further investigation. The framework could be extended to support \textbf{dynamic graph updates}, enabling incremental edge weight adjustments as new clickstream data arrives without rebuilding the full graph. Replacing first-order transitions with \textbf{higher-order or variable-length Markov chains} would capture richer user behaviour patterns. \textbf{Adaptive $\tau$ selection} methods---such as heuristics or binary search calibrated to a target path-found rate or maximum acceptable runtime---would reduce the need for manual threshold tuning.
+
+Beyond single-objective optimisation, a \textbf{multi-objective} formulation incorporating probability, revenue, and user satisfaction through Pareto-optimal path search could yield more actionable business insights. \textbf{Integration with recommendation systems} would allow discovered optimal paths to inform journey-aware recommendations that guide users toward conversion. Finally, adapting the algorithm for \textbf{distributed graph processing frameworks} (e.g., Apache Giraph, GraphX) would enable application to web-scale graphs.

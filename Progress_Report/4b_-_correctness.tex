@@ -1,0 +1,115 @@
+\chapter{CORRECTNESS PROOFS AND VALIDATION}\label{chap:correctness}
+
+This chapter provides formal correctness proofs for both algorithms and presents the empirical validation results that confirm theoretical guarantees.
+
+\section{Correctness of the Log-Probability Transformation}
+
+\begin{theorem}[Order-Preserving Log Transform]\label{thm:log_transform}
+The path $P^*$ that minimizes $\sum_{(u,v)\in P} -\log\,p(u,v)$ is identical to the path that maximizes $\prod_{(u,v)\in P} p(u,v)$.
+\end{theorem}
+
+\begin{proof}
+The negative logarithm $f(x)=-\log(x)$ is a strictly monotone decreasing function on $(0,1]$~\citep{cormen2009}. For any two paths $P_1,P_2$ from $s$ to $t$:
+\begin{align}
+\prod_{(u,v)\in P_1} p(u,v) > \prod_{(u,v)\in P_2} p(u,v) &\iff \log\!\Bigl(\prod_{(u,v)\in P_1} p(u,v)\Bigr) > \log\!\Bigl(\prod_{(u,v)\in P_2} p(u,v)\Bigr) \nonumber\\
+&\iff \sum_{(u,v)\in P_1} \log\,p(u,v) > \sum_{(u,v)\in P_2} \log\,p(u,v) \nonumber\\
+&\iff \sum_{(u,v)\in P_1} -\log\,p(u,v) < \sum_{(u,v)\in P_2} -\log\,p(u,v) \nonumber
+\end{align}
+
+Since $p(u,v)\in(0,1]$, we have $w(u,v)=-\log\,p(u,v)\geq 0$, satisfying Dijkstra's non-negativity requirement. The transformation is order-preserving: maximizing path probability is equivalent to minimizing log-cost~\citep{manning1999nlp,viterbi1967error}.
+\end{proof}
+
+\section{Correctness of Baseline Dijkstra}\label{sec:correctness_baseline}
+
+\begin{theorem}[Baseline Dijkstra Optimality]\label{thm:baseline_optimal}
+When Algorithm~1 terminates, $\mathit{dist}[t]$ equals the true shortest-path distance $\delta(s,t)$ in the log-transformed graph.
+\end{theorem}
+
+\begin{proof}
+The proof proceeds by induction on the number of nodes extracted from the priority queue~\citep{cormen2009,dijkstra1959}.
+
+\textbf{Invariant.} At all times, for every extracted node $u$: $\mathit{dist}[u] = \delta(s,u)$.
+
+\textbf{Base case.} The source $s$ is extracted first with $\mathit{dist}[s]=0=\delta(s,s)$.
+
+\textbf{Inductive step.} Assume the invariant holds for all $k$ previously extracted nodes. Let $u$ be the $(k+1)$-th node extracted with tentative distance $\mathit{dist}[u]$. Suppose for contradiction that there exists a shorter path $s \leadsto x \leadsto u$ where $x$ is not yet extracted. Since all edge weights are non-negative:
+\begin{enumerate}
+    \item[(i)] $\delta(s,x) \geq \mathit{dist}[u]$ (otherwise $x$ would have been extracted before $u$).
+    \item[(ii)] $\delta(s,x) + w(x,u) \geq \delta(s,x) \geq \mathit{dist}[u]$.
+\end{enumerate}
+This contradicts the assumption that a shorter path exists through $x$. Therefore $\mathit{dist}[u] = \delta(s,u)$.
+
+\textbf{Termination.} The algorithm terminates when $t$ is extracted (early-exit) or the queue becomes empty. The invariant guarantees $\mathit{dist}[t] = \delta(s,t)$ at extraction.
+
+\textbf{Path reconstruction.} Each \texttt{parent[v]} pointer is set only when a strictly shorter path to $v$ is found, forming a shortest-path tree. Backtracking from $t$ to $s$ via parent pointers yields $P^*$.
+\end{proof}
+
+\section{Correctness of Probability-Pruned Dijkstra}
+
+\subsection{Convergence at $\tau = 0$}
+
+\begin{theorem}[Convergence]\label{thm:convergence}
+When $\tau = 0$, Algorithm~2 is identical to Algorithm~1.
+\end{theorem}
+
+\begin{proof}
+When $\tau = 0$, the pruning threshold becomes $T = -\log(0^+) = +\infty$. The pruning condition $\mathit{new\_cost} > T$ is never satisfied since all finite costs are $< +\infty$. Therefore no edge is pruned, and every code path of Algorithm~2 behaves identically to Algorithm~1. Correctness follows directly from Theorem~\ref{thm:baseline_optimal}.
+\end{proof}
+
+\subsection{Conditional Optimality for $\tau > 0$}
+
+\begin{theorem}[Conditional Optimality]\label{thm:conditional}
+If the optimal path $P^*$ has probability $\Pi^* = \prod_{(u,v)\in P^*}p(u,v) \geq \tau$, then Algorithm~2 returns $P^*$ with $\Delta = 0\%$.
+\end{theorem}
+
+\begin{proof}
+If $\Pi^* \geq \tau$, then $C^* = -\log(\Pi^*) \leq -\log(\tau) = T$. Since Dijkstra processes paths in non-decreasing cost order~\citep{cormen2009}, every prefix of $P^*$ has cost $\leq C^* \leq T$. No edge on the optimal path triggers the pruning condition. The algorithm therefore explores the exact same set of optimal-path nodes as the baseline, and by Theorem~\ref{thm:baseline_optimal}, returns $P^*$ with optimality gap $\Delta = 0\%$.
+\end{proof}
+
+\subsection{All-or-Nothing Property}
+
+\begin{theorem}[All-or-Nothing]\label{thm:all_or_nothing}
+Algorithm~2 either returns the globally optimal path (identical to the baseline) or reports no path found. It never returns a sub-optimal path.
+\end{theorem}
+
+\begin{proof}
+Suppose Algorithm~2 returns a path $P'$ from $s$ to $t$. Since the pruning check ($\mathit{new\_cost} > T$) only skips edges---it does not alter edge weights or the priority queue ordering---the settled-node invariant from Theorem~\ref{thm:baseline_optimal} holds for all nodes explored by the pruned algorithm. Therefore, among all paths that survive the threshold, $P'$ minimises log-cost. If $P^*$ also survives (Theorem~\ref{thm:conditional}), then $P' = P^*$. If $P^*$ is pruned, then $t$ is unreachable in the pruned subgraph and no path is returned.
+
+In either case, the algorithm never returns a sub-optimal path: the gap $\Delta$ is exactly 0\% whenever a path is found.
+\end{proof}
+
+\section{Empirical Validation Results}
+
+All five correctness properties were verified experimentally.
+
+Across 2,160 synthetic experiment rows and 300 real-data rows, the optimality gap was measured as $\Delta = |C^*_{\text{baseline}} - C^*_{\text{pruned}}| / C^*_{\text{baseline}} \times 100\%$. The result was $\Delta = 0.0000\%$ for every configuration in which both algorithms found a path (171 of 180 synthetic configurations with $\tau > 0$; 79 of 300 real-data rows), confirming Theorem~\ref{thm:all_or_nothing} empirically.
+
+Convergence testing showed that at $\tau = 0.001$ the pruned algorithm found paths in 28.6\% of configurations, decreasing to 5.8\% at $\tau = 0.01$ and 3.9\% at $\tau = 0.5$. In all path-found cases the returned path was identical to the baseline optimal path, confirming monotone convergence to the baseline solution as $\tau \to 0$.
+
+Probability consistency was verified by comparing $\exp(-C^*)$ against $\prod_{(u,v)\in P^*} p(u,v)$ for all returned paths; relative error remained below $10^{-12}$ in every case.
+
+The test suite includes 40 automated tests covering disconnected source--target pairs (pruned returns \texttt{None}), single-node graphs, complete graphs and star topologies, and real-world graphs with high sparsity. All 40 tests pass.
+
+Finally, the five-node example graph (Figure~\ref{fig:journey_graph}) was traced manually:
+\[
+C^*(\text{LP}\to\text{SR}\to\text{PP}\to\text{CK}) = -\log(0.7)-\log(0.6)-\log(0.8) \approx 1.091
+\]
+Both algorithms returned this path and cost, confirming correctness on the reference instance.
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{3.8cm}p{4cm}p{5.5cm}@{}}
+\toprule
+\textbf{Property} & \textbf{Theoretical} & \textbf{Empirical Confirmation} \\
+\midrule
+Log transform (Thm~\ref{thm:log_transform}) & Order-preserving & All paths consistent ($<10^{-12}$ error) \\
+Baseline optimal (Thm~\ref{thm:baseline_optimal}) & $\mathit{dist}[t]=\delta(s,t)$ & 2,160 rows verified \\
+Convergence (Thm~\ref{thm:convergence}) & Identical at $\tau=0$ & Byte-identical output \\
+Conditional optimal (Thm~\ref{thm:conditional}) & $\Delta=0$ when $\Pi^*\geq\tau$ & $\Delta=0.0000\%$ on all found paths \\
+All-or-nothing (Thm~\ref{thm:all_or_nothing}) & Never sub-optimal & 0 sub-optimal results in 2,460 rows \\
+\bottomrule
+\end{tabular}
+\caption[Correctness validation summary]{Summary of correctness properties with theoretical basis and empirical confirmation across all experimental configurations.}
+\label{table:correctness_summary}
+\end{table}

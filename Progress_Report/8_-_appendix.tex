@@ -1,0 +1,20 @@
+\chapter*{APPENDIX A: SOURCE CODE AVAILABILITY}
+\addcontentsline{toc}{chapter}{APPENDIX A: SOURCE CODE AVAILABILITY}
+
+The implementation of the \textit{Customer Journey Path Optimization} framework was developed in \textbf{Python~3.13}. The repository contains the baseline Dijkstra algorithm with log-transformed probabilities, the proposed probability-pruned Dijkstra variant, synthetic and real-data generation pipelines, the critical-$\tau$ analysis module, experimental evaluation scripts, and a comprehensive test suite.
+
+The complete source code is publicly available at:
+
+\begin{center}
+\textbf{\url{https://github.com/The-Two-Y-s/Customer-Journey-Path-Optimization}}
+\end{center}
+
+\noindent The repository is organised into the following components.
+
+The \textbf{core algorithms} (\texttt{src/dijkstra.py}) implement both the baseline Dijkstra with lazy deletion and the probability-pruned variant with threshold-based edge elimination; both return structured result objects containing the optimal path, log-cost, path probability, and five performance metrics (nodes explored, edges relaxed, max priority queue size, execution time, peak memory). The \textbf{graph construction} module (\texttt{src/graph\_builder.py}) builds a directed weighted graph from preprocessed transition data using an adjacency-list representation with $O(|V|+|E|)$ space complexity, while the \textbf{preprocessing} module (\texttt{src/preprocessing.py}) ingests raw clickstream data in two CSV formats (direct transitions and session-based event streams) and computes maximum-likelihood transition probabilities. A \textbf{critical-$\tau$ analysis} module (\texttt{src/critical\_tau.py}) implements an adaptive binary-search sweep to identify the largest pruning threshold $\tau^*$ that preserves path optimality for a given source--target pair.
+
+On the data side, \textbf{synthetic graph generators} (\texttt{data/graph\_generator.py}) produce Erd\H{o}s--R\'{e}nyi sparse random graphs and layered stage-based customer journey graphs, both with BFS connectivity guarantees, per-node probability normalisation, and deterministic seeding via \texttt{hashlib.md5}. \textbf{Real-data loaders} (\texttt{data/real\_data\_loader.py}) parse RetailRocket (event-level and item-level granularity) and RecSys~2015 YOOCHOOSE clickstream datasets. \textbf{Experiment runners} (\texttt{run\_experiments.py}, \texttt{run\_real\_experiments.py}) execute the full parameter matrix---2,160 synthetic configurations and 300 real-data configurations---with separate timing and memory measurement passes.
+
+An \textbf{analysis notebook} (\texttt{analysis.ipynb}) generates all plots and statistical tests (Wilcoxon signed-rank) from the experiment CSV files. Finally, the \textbf{test suite} (\texttt{tests/test\_pipeline.py}) comprises 40 unit and integration tests covering algorithm correctness, graph generator properties, probability consistency, $k$-shortest simple paths, real-data loader integration, and the critical-$\tau$ finder; all tests pass under Python~3.13.3 with pytest~9.0.2.
+
+\noindent The implementation follows the data structure choices described in this report: adjacency lists for sparse graph storage, a binary min-heap (\texttt{heapq}) for priority queue operations, and hash maps for distance tracking and path reconstruction. Installation instructions, reproduction commands, and usage details are documented in the repository README. This repository is provided to ensure transparency, reproducibility, and ease of further extension of the proposed algorithms.
