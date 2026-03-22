@@ -53,7 +53,8 @@ def _ensure_connectivity(
 
     # Bridge a reachable node to target
     bridge = rng.choice(list(visited))
-    adj.setdefault(bridge, []).append(target)
+    if target not in adj.get(bridge, []):
+        adj.setdefault(bridge, []).append(target)
     return [(bridge, target)]
 
 
@@ -127,8 +128,10 @@ def generate_erdos_renyi_graph(
         if distribution == "uniform":
             p = rng.uniform(0.01, 1.0)
         elif distribution == "power_law":
-            # Inverse-CDF of power-law: P(X<=x) = x^alpha, alpha=2
-            p = max(rng.random() ** 2, 0.01)
+            # Inverse-CDF power-law with exponent alpha=2, x_min=0.01
+            # P(X <= x) => x = x_min * (1 - U)^(-1/(alpha-1))
+            u_sample = rng.random()
+            p = min(0.01 * (1 - u_sample) ** (-1.0), 1.0)
         else:
             raise ValueError(f"Unknown distribution: {distribution}")
 
@@ -233,7 +236,9 @@ def generate_layered_graph(
 
         chosen: set[str] = set()
         attempts = 0
-        max_attempts = out_deg * 10  # avoid infinite loop on tiny pools
+        # Scale max_attempts by the total pool size to handle small stages
+        available_pool_size = len(all_nodes) - 1  # exclude self
+        max_attempts = max(out_deg * 10, available_pool_size)
 
         while len(chosen) < out_deg and attempts < max_attempts:
             attempts += 1
@@ -242,7 +247,12 @@ def generate_layered_graph(
                 prev_stage = rng.randint(0, u_stage - 1)
                 pool = stage_nodes[prev_stage]
             else:
-                fwd_stage = min(u_stage + rng.randint(0, 1), num_stages - 1)
+                # Allow forward edges to same stage, next, or further stages
+                # (wider range avoids starvation when nearby stages are small)
+                fwd_stage = min(
+                    u_stage + rng.randint(0, min(2, num_stages - 1 - u_stage)),
+                    num_stages - 1,
+                )
                 pool = stage_nodes[fwd_stage]
 
             if not pool:
@@ -264,7 +274,9 @@ def generate_layered_graph(
         if distribution == "uniform":
             p = rng.uniform(0.01, 1.0)
         elif distribution == "power_law":
-            p = max(rng.random() ** 2, 0.01)
+            # Inverse-CDF power-law with exponent alpha=2, x_min=0.01
+            u_sample = rng.random()
+            p = min(0.01 * (1 - u_sample) ** (-1.0), 1.0)
         else:
             raise ValueError(f"Unknown distribution: {distribution}")
         graph[u].append((v, -math.log(p)))

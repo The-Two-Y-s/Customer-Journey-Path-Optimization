@@ -86,11 +86,12 @@ def dijkstra_pruned(graph, start, goal, tau=0.01):
 
         for neighbor, weight in graph.get(node, []):
             new_cost = cost + weight
-            metrics.edges_relaxed += 1
 
             # PRUNE: cumulative log-cost exceeds threshold
             if new_cost > T:
                 continue
+
+            metrics.edges_relaxed += 1
 
             if neighbor not in dist or new_cost < dist[neighbor]:
                 dist[neighbor] = new_cost
@@ -114,5 +115,7 @@ def reconstruct_path(parent, start, goal):
     while cur != start:
         cur = parent[cur]
         path.append(cur)
+        if len(path) > len(parent) + 1:
+            raise RuntimeError("Cycle detected in parent map during path reconstruction")
     path.reverse()
     return path

@@ -13,7 +13,9 @@ Transition probabilities are converted to non-negative edge weights:
 
 `w(u,v) = -log(p(u,v))`
 
-This lets us run shortest-path search (Dijkstra) to recover the highest-probability path.
+This lets us run shortest-path search (Dijkstra) to recover the highest-probability path. A **Probability-Pruned Dijkstra** variant prunes partial paths whose cumulative probability falls below a threshold τ, trading optimality for speed.
+
+> **Markov assumption:** Transition probabilities are memoryless — P(next page | current page) is independent of the pages visited earlier in the session. This is a standard simplifying assumption in clickstream analysis; real user behaviour may exhibit history-dependent patterns.
 
 ## Project Structure
 ```text
@@ -22,16 +24,17 @@ This lets us run shortest-path search (Dijkstra) to recover the highest-probabil
 │   ├── synthetic_data_generator.py   # Markov-chain clickstream generator
 │   └── graph_generator.py            # ER & Layered graph generators
 ├── src/
-│   ├── critical_tau.py               # Critical-τ finder
+│   ├── critical_tau.py               # Critical-τ finder (adaptive sweep)
 │   ├── dijkstra.py                   # Baseline & Pruned Dijkstra
-│   ├── graph_builder.py
-│   └── preprocessing.py
+│   ├── graph_builder.py              # Weighted graph construction
+│   └── preprocessing.py              # Clickstream data ingestion
 ├── tests/
-│   └── test_pipeline.py
+│   └── test_pipeline.py              # 24 unit tests
 ├── run_experiments.py                # Full experiment matrix runner
-├── analysis.ipynb
-├── main.py
-├── PROJECT_STATUS.md
+├── analysis.ipynb                    # Results analysis (6 plots + stats)
+├── experiment_results.csv            # 2,160-row experiment output
+├── main.py                           # CLI entry point
+├── requirements.txt
 └── README.md
 ```
 
@@ -43,6 +46,14 @@ This lets us run shortest-path search (Dijkstra) to recover the highest-probabil
 5. Run **Baseline Dijkstra** (Algorithm 1) for the optimal path.
 6. Optionally run **Probability-Pruned Dijkstra** (Algorithm 2) with threshold `τ`.
 7. Report path, probability Π\* = exp(−C\*), and performance metrics.
+
+## Installation
+
+```bash
+pip install -r requirements.txt
+```
+
+Dependencies: `pandas`, `numpy`, `matplotlib`, `scipy` (for statistical testing in the notebook).
 
 ## Input Data Formats
 `src/preprocessing.py` supports two formats:
@@ -142,13 +153,13 @@ Metrics:
 ```
 
 ## Algorithms
-- **Baseline Dijkstra** (Algorithm 1): Standard Dijkstra with lazy-deletion stale-entry check. Complexity: `O((V + E) log V)`.
-- **Probability-Pruned Dijkstra** (Algorithm 2): Prunes partial paths whose cumulative probability falls below threshold τ. Same worst-case complexity but explores fewer nodes in practice.
+- **Baseline Dijkstra** (Algorithm 1): Standard Dijkstra with lazy-deletion (stale-entry skip). Complexity: `O((V + E) log V)`.
+- **Probability-Pruned Dijkstra** (Algorithm 2): Converts threshold τ to log-space (`T = -log(τ)`) and skips any edge relaxation where cumulative cost exceeds T. Same worst-case complexity but explores far fewer nodes/edges in practice (experiments show ~27% of baseline edges relaxed at τ = 0.1, with up to 8,000× speedup on power-law graphs).
 
 ## Graph Generators
 
 Two generators in `data/graph_generator.py` produce controlled graphs for experiments.
-Both use O(n·d) scalable edge sampling and guarantee source-target connectivity.
+Both use O(n·d) scalable edge sampling and guarantee source-target connectivity via BFS + bridge edge.
 
 ### Erdős–Rényi Generator
 Random directed graph for algorithm stress-testing:
@@ -161,7 +172,7 @@ graph = generate_erdos_renyi_graph(
 )
 ```
 
-Parameters: `n` (vertices), `avg_degree`, `distribution` (`"uniform"` or `"power_law"`), `source`, `target`, `seed`.
+Parameters: `n` (vertices), `avg_degree`, `distribution` (`"uniform"` for U(0.01, 1) or `"power_law"` for inverse-CDF Pareto with α=2, x_min=0.01), `source`, `target`, `seed`.
 
 ### Layered (Stage-Based) Generator
 Funnel-shaped graph mimicking a real customer journey (Awareness → Interest → Consideration → Intent → Conversion):
@@ -176,7 +187,7 @@ graph = generate_layered_graph(
 )
 ```
 
-Nodes are distributed evenly across stages. Edges go primarily forward (next stage) with a configurable `backward_prob` for same-stage or backward links.
+Nodes are distributed evenly across stages. Edges go primarily forward (up to +2 stages) with a configurable `backward_prob` for backward links modeling user loops.
 
 ## Critical-τ Finder
 
@@ -204,19 +215,40 @@ Customize with CLI flags:
 
 ```bash
 python run_experiments.py --graph-types erdos_renyi layered \
-    --sizes 1000 5000 10000 50000 \
+    --sizes 1000 5000 10000 \
     --degrees 2 5 10 \
     --distributions uniform power_law \
     --taus 0 0.001 0.01 0.05 0.1 0.5 \
     --runs 10 --output experiment_results.csv
 ```
 
-Results are saved to CSV with columns: `graph_type`, `n`, `avg_degree`, `distribution`, `seed`, `tau`, `baseline_time_s`, `pruned_time_s`, `baseline_mem_bytes`, `pruned_mem_bytes`, `baseline_nodes`, `pruned_nodes`, `baseline_edges`, `pruned_edges`, `baseline_maxpq`, `pruned_maxpq`, `gap_pct`.
+Each configuration generates one baseline row (τ = 0) and one row per non-zero τ. Timing and memory are measured in **separate passes** (tracemalloc is not active during timing) to avoid instrumentation overhead corrupting the stopwatch. Seeds are deterministic per `(run, n, d, graph_type, distribution)`.
+
+Output CSV columns: `graph_type`, `graph_size`, `avg_degree`, `distribution`, `tau`, `run`, `seed`, `algorithm`, `execution_time_ms`, `peak_memory_bytes`, `nodes_explored`, `edges_relaxed`, `max_pq_size`, `path_cost`, `path_probability`, `path_length`, `path_found`, `optimality_gap_pct`.
+
+The default matrix (2 graph types × 3 sizes × 3 degrees × 2 distributions × 6 τ values × 10 runs) produces **2,160 rows**.
+
+## Analysis Notebook
+
+`analysis.ipynb` loads `experiment_results.csv` and produces:
+
+1. **Speedup vs τ** — per graph type, size, and distribution
+2. **Optimality gap vs τ** — shows accuracy trade-off
+3. **Scalability** — execution time vs |V| (log-log scale), baseline vs pruned
+4. **Critical τ\* heatmap** — largest τ preserving < 5% optimality gap
+5. **Memory scaling** — peak memory vs |V|, baseline vs pruned
+6. **Statistical testing** — Wilcoxon signed-rank test (paired by run) with significance counts
+
+Key findings from the experiments:
+- 151/180 configurations show statistically significant speedups (p < 0.05)
+- At τ = 0.1, pruned Dijkstra explores ~20% of baseline edges
+- Power-law graphs yield the largest speedups (up to 8,000×) because most edge probabilities are very small
+- Uniform-distribution graphs retain higher path-found rates across all τ values
 
 ## Testing
 
-24 unit tests covering the full pipeline:
+24 unit tests covering preprocessing, graph building, both Dijkstra variants, convergence (pruned → baseline as τ → 0), probability consistency, edge cases, both generators, and the critical-τ finder:
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py"
+python -m pytest tests/ -v
 ```

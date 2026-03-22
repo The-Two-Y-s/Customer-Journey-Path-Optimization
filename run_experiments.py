@@ -40,7 +40,7 @@ from src.dijkstra import dijkstra, dijkstra_pruned, reconstruct_path
 # Default experimental parameters (§3.8.3)
 # ---------------------------------------------------------------------------
 DEFAULT_GRAPH_TYPES = ["erdos_renyi", "layered"]
-DEFAULT_SIZES = [1_000, 5_000, 10_000, 50_000]
+DEFAULT_SIZES = [1_000, 5_000, 10_000]
 DEFAULT_DEGREES = [2, 5, 10]
 DEFAULT_DISTRIBUTIONS = ["uniform", "power_law"]
 DEFAULT_TAUS = [0, 0.001, 0.01, 0.05, 0.1, 0.5]
@@ -68,26 +68,33 @@ CSV_HEADER = [
     "path_cost",
     "path_probability",
     "path_length",
+    "path_found",
     "optimality_gap_pct",
 ]
 
 
 def _run_single(graph, source, target, tau, baseline_prob):
-    """Run one algorithm invocation with timing and memory measurement.
+    """Run one algorithm invocation with timing and memory measured separately.
+
+    Timing is measured without tracemalloc overhead; memory is measured in a
+    second pass so that tracing instrumentation does not corrupt the stopwatch.
 
     Returns a dict of metric values.
     """
     is_pruned = tau > 0
-
-    tracemalloc.start()
-    t0 = time.perf_counter()
-
+    _algo = dijkstra_pruned if is_pruned else dijkstra
+    _kwargs = dict(graph=graph, start=source, goal=target)
     if is_pruned:
-        result = dijkstra_pruned(graph, source, target, tau=tau)
-    else:
-        result = dijkstra(graph, source, target)
+        _kwargs["tau"] = tau
 
+    # --- Pass 1: timing (no tracemalloc) ---
+    t0 = time.perf_counter()
+    result = _algo(**_kwargs)
     t1 = time.perf_counter()
+
+    # --- Pass 2: memory (separate run) ---
+    tracemalloc.start()
+    _algo(**_kwargs)
     _, peak_mem = tracemalloc.get_traced_memory()
     tracemalloc.stop()
 
@@ -103,9 +110,12 @@ def _run_single(graph, source, target, tau, baseline_prob):
         prob = 0.0
         path_len = 0
 
-    # Optimality gap vs baseline
-    if baseline_prob is not None and baseline_prob > 0:
+    # Optimality gap vs baseline (only meaningful when both paths exist)
+    path_found = path_len > 0
+    if baseline_prob is not None and baseline_prob > 0 and path_found:
         gap = abs(baseline_prob - prob) / baseline_prob * 100
+    elif baseline_prob is not None and baseline_prob > 0 and not path_found:
+        gap = 100.0  # sentinel: no path found by pruned variant
     else:
         gap = 0.0
 
@@ -119,6 +129,7 @@ def _run_single(graph, source, target, tau, baseline_prob):
         "path_cost": round(cost, 6),
         "path_probability": round(prob, 10),
         "path_length": path_len,
+        "path_found": int(path_found),
         "optimality_gap_pct": round(gap, 6),
     }
 
@@ -159,7 +170,7 @@ def run_experiments(
                         )
 
                         for run_idx in range(num_runs):
-                            seed = run_idx * 1000 + n + d
+                            seed = hash((run_idx, n, d, gtype, dist)) & 0xFFFFFFFF
 
                             graph = gen_fn(
                                 n=n,
@@ -227,7 +238,7 @@ def parse_args():
         type=int,
         nargs="+",
         default=None,
-        help="Graph sizes |V| to test (default: 1000 5000 10000 50000)",
+        help="Graph sizes |V| to test (default: 1000 5000 10000)",
     )
     p.add_argument(
         "--degrees",
