@@ -74,7 +74,7 @@ CSV_HEADER = [
 ]
 
 
-def _run_single(graph, source, target, tau, baseline_prob):
+def _run_single(graph, source, target, tau, baseline_cost):
     """Run one algorithm invocation with timing and memory measured separately.
 
     Timing is measured without tracemalloc overhead; memory is measured in a
@@ -111,11 +111,11 @@ def _run_single(graph, source, target, tau, baseline_prob):
         prob = 0.0
         path_len = 0
 
-    # Optimality gap vs baseline (only meaningful when both paths exist)
+    # Optimality gap vs baseline (cost-based to avoid FP rounding noise)
     path_found = path_len > 0
-    if baseline_prob is not None and baseline_prob > 0 and path_found:
-        gap = abs(baseline_prob - prob) / baseline_prob * 100
-    elif baseline_prob is not None and baseline_prob > 0 and not path_found:
+    if baseline_cost is not None and baseline_cost < float("inf") and path_found:
+        gap = abs(cost - baseline_cost) / baseline_cost * 100 if baseline_cost > 0 else 0.0
+    elif baseline_cost is not None and baseline_cost < float("inf") and not path_found:
         gap = 100.0  # sentinel: no path found by pruned variant
     else:
         gap = 0.0
@@ -132,6 +132,7 @@ def _run_single(graph, source, target, tau, baseline_prob):
         "path_length": path_len,
         "path_found": int(path_found),
         "optimality_gap_pct": round(gap, 6),
+        "_raw_cost": cost,  # unrounded, for baseline comparison
     }
 
 
@@ -184,8 +185,8 @@ def run_experiments(
                             )
 
                             # --- Baseline (tau=0) ---
-                            baseline_metrics = _run_single(graph, "s", "t", tau=0, baseline_prob=None)
-                            baseline_prob = baseline_metrics["path_probability"]
+                            baseline_metrics = _run_single(graph, "s", "t", tau=0, baseline_cost=None)
+                            baseline_raw_cost = baseline_metrics.pop("_raw_cost")
 
                             row_base = {
                                 "graph_type": gtype,
@@ -204,8 +205,9 @@ def run_experiments(
                                 if tau == 0:
                                     continue
                                 pruned_metrics = _run_single(
-                                    graph, "s", "t", tau=tau, baseline_prob=baseline_prob
+                                    graph, "s", "t", tau=tau, baseline_cost=baseline_raw_cost
                                 )
+                                pruned_metrics.pop("_raw_cost", None)
                                 row_pruned = {
                                     "graph_type": gtype,
                                     "graph_size": n,

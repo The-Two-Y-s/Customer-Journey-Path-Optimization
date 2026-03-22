@@ -3,29 +3,32 @@
 **Project:** Customer Journey Path Optimization
 **Course:** AT70.02 Algorithm Design and Analysis, Asian Institute of Technology
 **Team:** The Two Y's -- Aye Khin Khin Hpone (Yolanda Lim) st125970, Yosakorn Sirisoot st126512
-**Date:** March 8, 2026
+**Date:** March 22, 2026
 
 ---
 
 ## 1. What Has Been Done
 
-The full implementation phase of the project is complete. Both algorithms described in the report (Baseline Dijkstra and Probability-Pruned Dijkstra) are implemented, tested, and runnable from the command line. The experiment infrastructure is built and ready to execute the full parameter matrix described in Chapter 3.8 of the report.
+The full implementation, experimentation, and validation phases of the project are complete. Both algorithms (Baseline Dijkstra and Probability-Pruned Dijkstra) are implemented, tested, and evaluated across synthetic and real-world datasets. Results confirm the hypothesis.
 
 ### Completed milestones:
 
 - Core algorithm implementation (Algorithms 1 and 2 from the report)
 - Log-probability weight transformation (w(u,v) = -log(p(u,v)))
 - Stale-entry lazy deletion in both algorithms
-- Pruning threshold tau with log-space comparison
+- Pruning threshold τ with log-space comparison
 - DijkstraMetrics dataclass collecting all 7 evaluation metrics per run
 - CLI with --tau parameter, printing path probability and optimality gap
-- Timing via time.perf_counter() and memory via tracemalloc (as specified in Table 3.4)
-- Erdos-Renyi sparse graph generator scalable to |V| = 50,000 (O(n·d) index-based sampling)
-- Layered (stage-based) graph generator with 5-stage customer funnel and backward edges
-- Critical-tau finder with adaptive sweep centered on baseline path probability
-- Experiment runner script covering the full parameter matrix with graph_type dimension
-- 24 unit tests passing, including convergence, probability consistency, edge-case, generator, and critical-tau tests
-- README and PROJECT_STATUS aligned with current implementation
+- Timing via time.perf_counter() and memory via tracemalloc (separate passes)
+- Erdős–Rényi sparse graph generator scalable to |V| = 50,000 (O(n·d) sampling)
+- Layered (stage-based) graph generator with 5-stage funnel and backward edges
+- Critical-τ finder with adaptive sweep (110% probe + wall-clock speedup)
+- Synthetic experiment runner (2,160 rows across full parameter matrix)
+- Real-data experiment runner (300 rows across RetailRocket + RecSys 2015)
+- Analysis notebook (5 plots + Wilcoxon signed-rank tests)
+- 40 unit tests passing (pytest), including convergence and edge-case coverage
+- Deterministic seeds via hashlib.md5 for cross-process reproducibility
+- Cost-based optimality gap calculation (eliminates FP rounding noise)
 
 ---
 
@@ -35,142 +38,122 @@ The full implementation phase of the project is complete. Both algorithms descri
 
 | File | Purpose |
 |------|---------|
-| `src/dijkstra.py` | Core algorithms. Contains `dijkstra()` (Algorithm 1: Baseline Dijkstra with stale-entry check) and `dijkstra_pruned()` (Algorithm 2: Probability-Pruned Dijkstra with threshold tau). Also contains `reconstruct_path()` for backtracking through the parent map. Both functions return a `DijkstraResult` dataclass containing `dist`, `parent`, and `DijkstraMetrics` (nodes_explored, edges_relaxed, max_pq_size). Uses only `heapq` and `math` from the standard library. |
-| `src/preprocessing.py` | Data ingestion. `extract_transitions()` reads a CSV dataframe and extracts (source, target) transition pairs. Supports two input formats: explicit source/target columns, or session_id + state event streams ordered by step or timestamp. `compute_transition_statistics()` computes transition counts and MLE conditional probabilities P(target given source). |
-| `src/graph_builder.py` | Graph construction. `build_weighted_graph()` takes a transition probability dictionary and builds a weighted adjacency list where each edge weight is -log(p(u,v)). Ensures sink nodes (nodes with no outgoing edges) are present in the adjacency map to prevent KeyError during traversal. |
-| `main.py` | CLI entry point. Loads CSV data (or auto-generates synthetic data if the file is missing), builds the graph, and runs Dijkstra. Supports `--source`, `--target`, `--k` (top-k paths), `--tau` (pruning threshold), and `--output` (graph image). When tau > 0, runs both baseline and pruned algorithms and prints the optimality gap. Reports execution time, peak memory, nodes explored, edges relaxed, max PQ size, path cost, and path probability for each run. |
+| `src/dijkstra.py` | Core algorithms. `dijkstra()` (baseline) and `dijkstra_pruned()` (threshold-pruned). `edges_relaxed` counts all edges examined (baseline) or edges surviving τ (pruned). Uses `heapq` and `math`. |
+| `src/preprocessing.py` | `extract_transitions()` supports source/target and session_id/state CSV formats. `compute_transition_statistics()` computes MLE probabilities. |
+| `src/graph_builder.py` | `build_weighted_graph()` builds adjacency list with -log(p) edges. Ensures sink nodes exist. |
+| `src/critical_tau.py` | `find_critical_tau()` identifies largest τ* preserving optimality. Adaptive sweep with 110% probe. Reports both node-count and wall-clock speedup. |
+| `main.py` | CLI entry point with --source, --target, --k, --tau, --output flags. |
 
-### Data Generation
+### Data Generation & Loading
 
 | File | Purpose |
 |------|---------|
-| `data/synthetic_data_generator.py` | Markov-chain clickstream generator. `SyntheticJourneyGenerator` produces realistic customer journey data with states like Home, Search, Product_Trousers, Cart, Checkout, Exit. Generates a CSV with session_id, step, source, target, category, price, location, and timestamp columns. Used to produce the default `enhanced_synthetic_journey.csv` dataset. |
-| `data/graph_generator.py` | Erdos-Renyi and Layered directed graph generators for controlled experiments. `generate_erdos_renyi_graph()` creates random graphs with configurable |V|, average out-degree, probability distribution (uniform or power-law), and fixed random seed. `generate_layered_graph()` creates funnel-shaped graphs with stages (Awareness → Interest → Consideration → Intent → Conversion), forward-biased edges, and configurable backward probability. Both generators guarantee s-t connectivity via BFS check and bridge repair. Both scale to |V| = 50,000 using O(n·d) sampling (index-based for ER, rejection sampling for layered). |
+| `data/synthetic_data_generator.py` | Markov-chain clickstream generator → `enhanced_synthetic_journey.csv`. |
+| `data/graph_generator.py` | Erdős–Rényi and Layered generators. O(n·d) sampling, BFS connectivity guarantee, per-node probability normalisation. |
+| `data/real_data_loader.py` | `load_retailrocket()` (event/item granularity) and `load_recsys2015()` loaders. |
 
 ### Experiment Infrastructure
 
 | File | Purpose |
 |------|---------|
-| `run_experiments.py` | Experiment runner. Executes both algorithms across the full parameter matrix from Section 3.8.3 of the report: graph_type in {erdos_renyi, layered}, |V| in {1000, 5000, 10000, 50000}, d_avg in {2, 5, 10}, distribution in {uniform, power_law}, tau in {0, 0.001, 0.01, 0.05, 0.1, 0.5}, with 10 or more runs per configuration. Records all metrics (including graph_type) to a CSV file. Supports CLI flags to run subsets (--graph-types, --sizes, --degrees, --distributions, --taus, --runs). |
+| `run_experiments.py` | Synthetic experiment matrix: 2 graph types × 3 sizes × 3 degrees × 2 distributions × 6 τ × 10 runs = 2,160 rows. Separate timing/memory passes. hashlib.md5 seeds. Cost-based gap. |
+| `run_real_experiments.py` | Real-data experiments: 3 datasets × 20 pairs × 5 τ = 300 rows. |
+| `analysis.ipynb` | Results analysis: 5 plots + Wilcoxon statistical tests → `results/img/`. |
 
 ### Tests
 
 | File | Purpose |
 |------|---------|
-| `tests/test_pipeline.py` | 24 unit tests covering the full pipeline. Organized into 9 test classes: TestPreprocessing (3 tests for transition extraction and probability computation), TestGraphAndDijkstra (5 tests for graph building, baseline Dijkstra, pruned Dijkstra, and missing-sink handling), TestConvergence (1 test verifying pruned algorithm converges to baseline as tau approaches 0), TestProbabilityConsistency (1 test verifying exp(-C*) equals the product of edge probabilities along the path), TestEdgeCases (3 tests for disconnected graphs, single-node graphs, and probability-1 edges), TestGraphGenerator (3 tests for ER graph size, connectivity guarantee, and power-law distribution), TestLayeredGenerator (5 tests for size, connectivity, stage labels, DAG mode, and power-law), TestCriticalTau (3 tests for ER graph, layered graph, and unreachable target). |
-
-### Configuration and Documentation
-
-| File | Purpose |
-|------|---------|
-| `README.md` | Project documentation. Describes the team, algorithms, CLI usage, graph generators, critical-tau finder, experiment runner, example output, and how to run tests. |
-| `PROJECT_STATUS.md` | This file. Tracks implementation progress, file inventory, test results, and next steps. |
-| `.gitignore` | Excludes __pycache__, .pyc files, generated CSV data, experiment results, output images, and the PDF report. |
-| `analysis.ipynb` | Jupyter notebook (exists in repo, not yet populated with experiment analysis). |
-
-### Additional Source Modules
-
-| File | Purpose |
-|------|---------|
-| `src/critical_tau.py` | Critical-tau finder. `find_critical_tau()` identifies the largest pruning threshold tau* that preserves optimality (gap < tolerance) while maximizing speedup. Uses an adaptive tau sweep centered on the baseline path probability (`_adaptive_tau_sweep(baseline_prob)` generates fractions at 10%–110% of baseline). Returns a `CriticalTauResult` with critical_tau, max_speedup, per-tau profiles, and baseline metrics. Works correctly even on sparse/power-law graphs with very low path probabilities. |
+| `tests/test_pipeline.py` | 40 unit tests across 11 test classes covering preprocessing, graph building, both Dijkstra variants, convergence (including edges_relaxed), probability consistency, edge cases, both generators, probability normalisation, k-shortest paths, real-data loaders, and critical-τ finder. |
 
 ---
 
 ## 3. Current Test Results
 
 ```
-Ran 24 tests in 0.017s
-
-OK
+40 passed in 5.41s
 ```
 
-All 24 tests pass. The tests cover:
+All 40 tests pass (pytest). Coverage includes:
 - Preprocessing: both CSV formats, probability computation
-- Graph building: negative-log weight transform
-- Baseline Dijkstra: optimal path, missing sink nodes, metrics collection
-- Pruned Dijkstra: same-path guarantee at low tau, pruning at high tau
-- Convergence: pruned approaches baseline as tau approaches 0 (Section 4.4 item 3)
-- Probability consistency: exp(-C*) matches edge probability product (Section 4.4 item 4)
-- Edge cases: disconnected graph, single node, probability-1 edges (Section 4.4 item 5)
-- ER graph generator: correct size, s-t connectivity, power-law support
-- Layered graph generator: correct size, connectivity, stage labels, DAG structure, power-law
-- Critical-tau finder: correct threshold on ER and layered graphs, unreachable target handling
+- Graph building: -log transform, missing sink nodes
+- Baseline & Pruned Dijkstra: optimal path, metrics, τ pruning
+- Convergence: pruned → baseline as τ → 0 (costs and edges_relaxed)
+- Probability consistency: exp(-C*) = Π edge probs along path
+- Edge cases: disconnected graph, single node, probability-1 edges
+- Erdős–Rényi generator: size, connectivity, power-law
+- Layered generator: size, connectivity, stages, DAG mode, power-law
+- Probability normalisation: outgoing probs sum to 1 (both generators × both distributions)
+- k-shortest simple paths: k=1 matches Dijkstra, ascending cost, disconnected
+- Real-data loaders: RetailRocket + RecSys 2015 loading, Dijkstra on real graphs
+- Critical-τ finder: ER/Layered graphs, unreachable target
 
 ---
 
-## 4. What Has Been Verified Against the Report
+## 4. Experimental Results Summary
+
+### Synthetic Data (2,160 rows)
+
+| τ | Median Speedup | Edges Examined (% of baseline) | Path-Found Rate | Gap (when found) |
+|---|---------------|----------------|-----------------|------------------|
+| 0.001 | 8.8× | 11.4% | 28.6% | 0.00% |
+| 0.01 | 82.1× | 1.2% | 5.8% | 0.00% |
+| 0.05 | 374.4× | 0.3% | 4.7% | 0.00% |
+| 0.1 | 790.8× | 0.1% | 4.4% | 0.00% |
+| 0.5 | 2,124× | ~0% | 3.9% | 0.00% |
+
+- **180/180** configurations show statistically significant speedup (Wilcoxon, p < 0.05)
+- **0/171** found paths have non-zero optimality gap
+
+### Real-Data Validation (300 rows)
+
+| Dataset | Nodes | Edges | Best Speedup | Path-Found Rate | Max Gap |
+|---------|-------|-------|-------------|-----------------|--------|
+| RetailRocket (event-level) | 3 | 9 | 4.9× | 78% | 0.00% |
+| RetailRocket (item-level) | 44,711 | 101,528 | 27,693× | 1% | 0.00% |
+| RecSys 2015 | 12,935 | 70,442 | 4,191× | 0% | 0.00% |
+
+Massive speedups on large real graphs come primarily from early termination (pruning discards everything quickly). Low path-found rates confirm that real transition probabilities are very small.
+
+### Verdict
+
+**Hypothesis supported.** Pruning is admissible — it either preserves the optimal path exactly (0% gap) or prunes it entirely. The trade-off is reachability, not accuracy.
+
+---
+
+## 5. What Has Been Verified Against the Report
 
 | Report Requirement | Status |
 |--------------------|--------|
 | Algorithm 1 pseudocode (baseline Dijkstra) | Implemented and matches |
-| Algorithm 2 pseudocode (pruned Dijkstra with tau) | Implemented and matches |
+| Algorithm 2 pseudocode (pruned Dijkstra with τ) | Implemented and matches |
 | Stale-entry lazy deletion check | Implemented |
-| Pruning condition: new_dist > T where T = -log(tau) | Implemented |
-| Data structures: adjacency list, binary min-heap (heapq), hash maps | Implemented |
-| time.perf_counter() for timing | Implemented |
-| tracemalloc for peak memory | Implemented |
+| Pruning condition: new_dist > T where T = -log(τ) | Implemented |
+| Data structures: adjacency list, binary min-heap, hash maps | Implemented |
+| time.perf_counter() for timing | Implemented (separate pass) |
+| tracemalloc for peak memory | Implemented (separate pass) |
 | All 7 evaluation metrics (Section 3.8.2) | Collected and recorded |
-| Optimality gap formula (Section 3.8.2) | Implemented |
-| Fixed random seeds per configuration | Implemented |
-| 10 or more runs per configuration | Configured (default = 10) |
-| Custom sparse graph generator (Table 3.4) | Implemented (Erdos-Renyi + Layered) |
-| Layered stage-based graph generator | Implemented (5 stages, backward edges) |
-| Critical-tau finder with adaptive sweep | Implemented |
-| Parameter matrix: graph_type, |V|, d_avg, distribution, tau (Section 3.8.3) | Configured in run_experiments.py |
-| Convergence verification (Section 4.4 item 3) | Tested |
-| Probability consistency check (Section 4.4 item 4) | Tested |
+| Optimality gap formula (Section 3.8.2) | Implemented (cost-based) |
+| Fixed random seeds per configuration | hashlib.md5 (deterministic) |
+| ≥ 10 runs per configuration | 10 runs per config |
+| Custom sparse graph generator (Table 3.4) | Erdős–Rényi + Layered |
+| Layered stage-based graph generator | 5 stages, backward edges |
+| Critical-τ finder with adaptive sweep | 110% probe, wall-clock speedup |
+| Parameter matrix (Section 3.8.3) | Full matrix executed (2,160 rows) |
+| Real-data validation | RetailRocket + RecSys 2015 (300 rows) |
+| Convergence verification (Section 4.4 item 3) | Tested (costs + edges_relaxed) |
+| Probability consistency (Section 4.4 item 4) | Tested |
 | Edge-case testing (Section 4.4 item 5) | Tested |
 
 ---
 
-## 5. Project Stage
+## 6. Project Stage
 
 Based on the report's project timeline (Chapter 8, Figure 8.1):
 
-- **Weeks 1-4 (Implementation): COMPLETE.** Both algorithms are implemented, tested, and validated for correctness.
-- **Weeks 4-7 (Testing and Experimentation): READY TO START.** The experiment runner is built and verified. The parameter matrix matches the report. Execution of the full experiment matrix has not yet been run.
-- **Weeks 7-10 (Analysis, Writing, Presentation): NOT STARTED.** Depends on experiment results.
-
----
-
-## 6. Next Steps
-
-### Step 1: Run the full experiment matrix
-
-```bash
-python run_experiments.py
-```
-
-This will execute approximately 48 configurations (2 graph types × 4 sizes × 3 degrees × 2 distributions) with 6 tau values each, repeated 10 times per configuration. Results are saved to `experiment_results.csv`.
-
-For a quick partial run first:
-
-```bash
-python run_experiments.py --graph-types erdos_renyi --sizes 1000 5000 --runs 3
-```
-
-Both generators scale to 50,000 nodes in under 400ms, so the full matrix is feasible.
-
-### Step 2: Analyze results in analysis.ipynb
-
-Load `experiment_results.csv` into the Jupyter notebook and produce all figures and tables described in the report:
-
-- Table 6.1: Mean execution time and peak memory per graph size (baseline vs pruned at tau=0.01), with standard deviation
-- Figure 6.1: tau-sensitivity curves (runtime speedup and optimality gap vs tau)
-- Scalability plot: log(execution_time) vs log(|V|) on log-log axes, verify slope matches O(|E| log |V|) theoretical bound
-- Search-space reduction: nodes explored and edges relaxed, baseline vs pruned across sizes
-- Max PQ size comparison
-- Distribution effect: uniform vs power-law pruning effectiveness comparison
-- Time-memory-optimality trade-off curve
-- Critical-tau analysis: baseline probability vs tau* per graph type and size
-- Layered vs ER comparison: structural effect on pruning effectiveness
-
-### Step 3: Manual trace verification
-
-Trace both algorithms on the five-node example graph from Figure 3.2 and Table 3.2 of the report (LP, SR, PP, CK, AB) to confirm the step-by-step dist[] values match:
-
-- LP=0, SR=0.36, PP=0.87, CK=1.09, AB=2.48
-- Optimal path: LP -> SR -> PP -> CK with probability 0.336
+- **Weeks 1-4 (Implementation): COMPLETE.**
+- **Weeks 4-7 (Testing and Experimentation): COMPLETE.** Full synthetic (2,160 rows) and real-data (300 rows) experiments executed and analysed.
+- **Weeks 7-10 (Analysis, Writing, Presentation): IN PROGRESS.** Analysis notebook populated. Results written up. Final report and presentation remaining.
 
 ---
 
@@ -178,7 +161,7 @@ Trace both algorithms on the five-node example graph from Figure 3.2 and Table 3
 
 ```bash
 # Run unit tests
-python -m unittest discover -s tests -p "test_*.py" -v
+python -m pytest tests/ -v
 
 # Run CLI with baseline only
 python main.py
@@ -189,9 +172,15 @@ python main.py --tau 0.01
 # Run CLI with top-3 paths
 python main.py --k 3
 
-# Run full experiment matrix (both graph types, 10 runs per config)
+# Run full synthetic experiment matrix (2,160 rows)
 python run_experiments.py
 
 # Run quick subset for testing
 python run_experiments.py --graph-types erdos_renyi --sizes 1000 --runs 2
+
+# Run real-data experiments (300 rows)
+python run_real_experiments.py
+
+# Run analysis notebook
+jupyter notebook analysis.ipynb
 ```
