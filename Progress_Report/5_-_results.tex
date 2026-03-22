@@ -31,9 +31,11 @@ Speedups scale monotonically with $\tau$, ranging from $3.6\times$ wall-clock at
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\textwidth]{plot1_speedup_vs_tau.png}
-\caption[Speedup vs.\ pruning threshold $\tau$]{Wall-clock speedup (baseline time / pruned time) as a function of the pruning threshold $\tau$ for Erd\H{o}s--R\'{e}nyi (left) and layered (right) graphs. Each line represents a unique combination of graph size $|V|$ and edge-weight distribution. The logarithmic $x$-axis spans $\tau \in [0.001, 0.5]$. Speedup increases monotonically with $\tau$ across all configurations, confirming that more aggressive pruning yields proportionally faster search. Erd\H{o}s--R\'{e}nyi graphs achieve higher speedups than layered graphs because their uniformly random connectivity exposes more low-probability edges to pruning. Larger graphs (higher $|V|$) consistently produce steeper speedup curves, reflecting the greater fraction of the search space that the threshold eliminates when the graph is larger.}
+\caption[Speedup vs.\ pruning threshold $\tau$]{Wall-clock speedup as a function of $\tau$ for Erd\H{o}s--R\'{e}nyi (left) and layered (right) graphs.}
 \label{fig:speedup_vs_tau}
 \end{figure}
+
+Figure~\ref{fig:speedup_vs_tau} plots the wall-clock speedup ratio (baseline time divided by pruned time) against the pruning threshold $\tau$ on a logarithmic $x$-axis spanning $\tau \in [0.001, 0.5]$. Each line represents a unique combination of graph size $|V|$ and edge-weight distribution. Speedup increases monotonically with $\tau$ across all configurations, confirming that more aggressive pruning yields proportionally faster search. Erd\H{o}s--R\'{e}nyi graphs consistently achieve higher speedups than layered graphs because their uniformly random connectivity exposes a larger fraction of low-probability edges to the threshold. In contrast, the layered generator's built-in forward bias toward the target means that many edges carry relatively high probability and therefore survive pruning. Larger graphs (higher $|V|$) produce steeper speedup curves, reflecting the greater absolute fraction of the search space that the threshold eliminates as the graph grows.
 
 \subsection{Speedup vs.\ Graph Size $|V|$}
 
@@ -60,9 +62,11 @@ Baseline execution time scales linearly with $|V|$ ($0.58 \to 2.69 \to 5.64$~ms 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\textwidth]{plot5_memory_scaling.png}
-\caption[Peak memory scaling by graph size]{Peak memory consumption (KB, log scale) as a function of graph size $|V|$ (log scale) for both algorithms on Erd\H{o}s--R\'{e}nyi (left) and layered (right) graphs at $\tau=0.01$. Solid lines with circle markers represent baseline Dijkstra; dashed lines with triangle markers represent pruned Dijkstra. Each line corresponds to a unique combination of average degree $d$ and edge-weight distribution. Baseline memory scales linearly with $|V|$ (from $\approx$84~KB at $|V|=1{,}000$ to $\approx$662~KB at $|V|=10{,}000$), consistent with the $O(|V|+|E|)$ theoretical bound. Pruned memory remains effectively constant at $\approx$4.5~KB across all graph sizes, demonstrating that the threshold restricts the explored frontier to a small, fixed-size region regardless of the total graph size. The gap between the two sets of curves widens with $|V|$, indicating that the memory advantage of pruning becomes more pronounced as the graph grows.}
+\caption[Peak memory scaling by graph size]{Peak memory (KB) vs.\ graph size $|V|$ at $\tau=0.01$ for baseline and pruned Dijkstra.}
 \label{fig:memory_scaling}
 \end{figure}
+
+Figure~\ref{fig:memory_scaling} displays peak memory consumption on log--log axes for Erd\H{o}s--R\'{e}nyi (left) and layered (right) graphs at $\tau=0.01$. Solid lines with circle markers represent baseline Dijkstra; dashed lines with triangle markers represent the pruned variant. Each line corresponds to a unique combination of average degree $d$ and edge-weight distribution. Baseline memory scales linearly with $|V|$---from approximately 84~KB at $|V|=1{,}000$ to approximately 662~KB at $|V|=10{,}000$---consistent with the $O(|V|+|E|)$ theoretical bound. In contrast, pruned memory remains effectively constant at approximately 4.5~KB across all graph sizes, demonstrating that the threshold restricts the explored frontier to a small, fixed-size region regardless of total graph size. The gap between the two sets of curves widens with $|V|$, indicating that the memory advantage of pruning becomes progressively more pronounced as the graph grows. This constant-memory behaviour makes the pruned algorithm particularly attractive for deployment on memory-constrained systems.
 
 \subsection{Speedup by Graph Type}
 
