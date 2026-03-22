@@ -16,66 +16,70 @@
 \newlabel{fig:journey_graph}{{3.2}{12}{Example customer journey graph}{figure.caption.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.2.2}Probabilistic Path Objective and Outputs}{12}{subsection.3.2.2}\protected@file@percent }
 \citation{cormen2009}
+\citation{retailrocket2015}
+\citation{bucklin2003clickstream}
+\@writefile{toc}{\contentsline {paragraph}{Concrete worked example: RetailRocket event-level funnel.}{13}{subsection.3.2.2}\protected@file@percent }
 \citation{erdosrenyi1960}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.3}Constraints and Assumptions}{13}{subsection.3.2.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.3}Data Generation and Preprocessing}{13}{section.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.1}Synthetic Data Generation}{13}{subsection.3.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.3}Constraints and Assumptions}{14}{subsection.3.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.3}Data Generation and Preprocessing}{14}{section.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.1}Synthetic Data Generation}{14}{subsection.3.3.1}\protected@file@percent }
 \citation{retailrocket2015}
 \citation{retailrocket2015}
 \citation{recsys2015}
-\newlabel{lst:er_gen}{{3.1}{14}{Core edge sampling from the ER generator (\texttt {data/graph\_generator.py})}{lstlisting.3.1}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {3.1}{\ignorespaces Core edge sampling from the ER generator (\texttt  {data/graph\_generator.py})}}{14}{lstlisting.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.2}Real-World Clickstream Data}{14}{subsection.3.3.2}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {3.1}{\ignorespaces Real-world dataset summary}}{14}{table.caption.6}\protected@file@percent }
-\newlabel{table:real_datasets}{{3.1}{14}{Real-world dataset summary}{table.caption.6}{}}
+\newlabel{lst:er_gen}{{3.1}{15}{Core edge sampling from the ER generator (\texttt {data/graph\_generator.py})}{lstlisting.3.1}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {3.1}{\ignorespaces Core edge sampling from the ER generator (\texttt  {data/graph\_generator.py})}}{15}{lstlisting.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.2}Real-World Clickstream Data}{15}{subsection.3.3.2}\protected@file@percent }
 \citation{cormen2009}
+\@writefile{lot}{\contentsline {table}{\numberline {3.1}{\ignorespaces Real-world dataset summary}}{16}{table.caption.6}\protected@file@percent }
+\newlabel{table:real_datasets}{{3.1}{16}{Real-world dataset summary}{table.caption.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.3}Preprocessing and Input Formats}{16}{subsection.3.3.3}\protected@file@percent }
 \citation{dijkstra1959}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3.3}Preprocessing and Input Formats}{15}{subsection.3.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.4}Graph Construction}{15}{section.3.4}\protected@file@percent }
-\newlabel{lst:graph_build}{{3.2}{15}{Graph construction (\texttt {src/graph\_builder.py})}{lstlisting.3.2}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {3.2}{\ignorespaces Graph construction (\texttt  {src/graph\_builder.py})}}{15}{lstlisting.3.2}\protected@file@percent }
 \citation{dijkstra1959,cormen2009}
+\@writefile{toc}{\contentsline {section}{\numberline {3.4}Graph Construction}{17}{section.3.4}\protected@file@percent }
+\newlabel{lst:graph_build}{{3.2}{17}{Graph construction (\texttt {src/graph\_builder.py})}{lstlisting.3.2}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {3.2}{\ignorespaces Graph construction (\texttt  {src/graph\_builder.py})}}{17}{lstlisting.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.5}Algorithmic Approaches}{17}{section.3.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.1}Baseline Algorithm: Dijkstra's Shortest Path}{17}{subsection.3.5.1}\protected@file@percent }
 \citation{cormen2009}
 \citation{dijkstra1959}
-\@writefile{toc}{\contentsline {section}{\numberline {3.5}Algorithmic Approaches}{16}{section.3.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.1}Baseline Algorithm: Dijkstra's Shortest Path}{16}{subsection.3.5.1}\protected@file@percent }
-\@writefile{loa}{\contentsline {algocf}{\numberline {1}{\ignorespaces Dijkstra on Transformed Probabilities~\citep  {dijkstra1959,cormen2009}}}{16}{algocf.1}\protected@file@percent }
-\newlabel{alg:baseline}{{1}{16}{Baseline Algorithm: Dijkstra's Shortest Path}{algocf.1}{}}
-\@writefile{toc}{\contentsline {subsubsection}{Worked Example}{17}{AlgoLine.1.20}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {3.2}{\ignorespaces Dijkstra dist trace}}{17}{table.caption.7}\protected@file@percent }
-\newlabel{table:dijkstra_trace}{{3.2}{17}{Dijkstra dist trace}{table.caption.7}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.2}Optimized Algorithm: Probability-Pruned Dijkstra}{17}{subsection.3.5.2}\protected@file@percent }
-\@writefile{loa}{\contentsline {algocf}{\numberline {2}{\ignorespaces Probability-Pruned Dijkstra}}{18}{algocf.2}\protected@file@percent }
-\newlabel{alg:pruned}{{2}{18}{Optimized Algorithm: Probability-Pruned Dijkstra}{algocf.2}{}}
-\@writefile{toc}{\contentsline {subsubsection}{The \texttt  {edges\_relaxed} Metric}{19}{AlgoLine.2.24}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {3.3}{\ignorespaces edges\_relaxed semantics}}{19}{table.caption.8}\protected@file@percent }
-\newlabel{table:edges_relaxed}{{3.3}{19}{edges\_relaxed semantics}{table.caption.8}{}}
-\@writefile{toc}{\contentsline {subsubsection}{Actual Python Implementation}{19}{table.caption.8}\protected@file@percent }
-\newlabel{lst:pruned_impl}{{3.3}{19}{Pruned Dijkstra implementation (\texttt {src/dijkstra.py})}{lstlisting.3.3}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {3.3}{\ignorespaces Pruned Dijkstra implementation (\texttt  {src/dijkstra.py})}}{19}{lstlisting.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.3}Algorithm Comparison}{20}{subsection.3.5.3}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {3.3}{\ignorespaces Algorithm decision-flow comparison}}{20}{figure.caption.9}\protected@file@percent }
-\newlabel{fig:algo_flowchart}{{3.3}{20}{Algorithm decision-flow comparison}{figure.caption.9}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.4}Critical-$\tau $ Finder}{20}{subsection.3.5.4}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {3.4}{\ignorespaces Algorithm comparison}}{21}{table.caption.10}\protected@file@percent }
-\newlabel{table:algo_compare}{{3.4}{21}{Algorithm comparison}{table.caption.10}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.5}$k$-Shortest Simple Paths}{21}{subsection.3.5.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.6}Data Structures}{21}{section.3.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.6.1}Adjacency List}{21}{subsection.3.6.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.6.2}Binary Min-Heap (Priority Queue)}{21}{subsection.3.6.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.6.3}Hash Maps (Dictionaries)}{22}{subsection.3.6.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.7}Experimental Design}{22}{section.3.7}\protected@file@percent }
-\newlabel{sec:expdesign}{{3.7}{22}{Experimental Design}{section.3.7}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.1}Simulation Environment}{22}{subsection.3.7.1}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {3.5}{\ignorespaces Simulation environment}}{22}{table.caption.11}\protected@file@percent }
-\newlabel{table:simenv}{{3.5}{22}{Simulation environment}{table.caption.11}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.2}Evaluation Metrics}{22}{subsection.3.7.2}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {3.6}{\ignorespaces Experimental parameter matrix}}{23}{table.caption.12}\protected@file@percent }
-\newlabel{table:param_matrix}{{3.6}{23}{Experimental parameter matrix}{table.caption.12}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.3}Experimental Parameters}{23}{subsection.3.7.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.4}Experimental Controls}{23}{subsection.3.7.4}\protected@file@percent }
+\@writefile{loa}{\contentsline {algocf}{\numberline {1}{\ignorespaces Dijkstra on Transformed Probabilities~\citep  {dijkstra1959,cormen2009}}}{18}{algocf.1}\protected@file@percent }
+\newlabel{alg:baseline}{{1}{18}{Baseline Algorithm: Dijkstra's Shortest Path}{algocf.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{Worked Example}{18}{AlgoLine.1.20}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.2}{\ignorespaces Dijkstra dist trace}}{19}{table.caption.7}\protected@file@percent }
+\newlabel{table:dijkstra_trace}{{3.2}{19}{Dijkstra dist trace}{table.caption.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.2}Optimized Algorithm: Probability-Pruned Dijkstra}{19}{subsection.3.5.2}\protected@file@percent }
+\@writefile{loa}{\contentsline {algocf}{\numberline {2}{\ignorespaces Probability-Pruned Dijkstra}}{20}{algocf.2}\protected@file@percent }
+\newlabel{alg:pruned}{{2}{20}{Optimized Algorithm: Probability-Pruned Dijkstra}{algocf.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{The \texttt  {edges\_relaxed} Metric}{21}{AlgoLine.2.24}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.3}{\ignorespaces edges\_relaxed semantics}}{21}{table.caption.8}\protected@file@percent }
+\newlabel{table:edges_relaxed}{{3.3}{21}{edges\_relaxed semantics}{table.caption.8}{}}
+\@writefile{toc}{\contentsline {subsubsection}{Actual Python Implementation}{21}{table.caption.8}\protected@file@percent }
+\newlabel{lst:pruned_impl}{{3.3}{21}{Pruned Dijkstra implementation (\texttt {src/dijkstra.py})}{lstlisting.3.3}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {3.3}{\ignorespaces Pruned Dijkstra implementation (\texttt  {src/dijkstra.py})}}{21}{lstlisting.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.3}Algorithm Comparison}{22}{subsection.3.5.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.3}{\ignorespaces Algorithm decision-flow comparison}}{22}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:algo_flowchart}{{3.3}{22}{Algorithm decision-flow comparison}{figure.caption.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.4}Critical-$\tau $ Finder}{22}{subsection.3.5.4}\protected@file@percent }
+\newlabel{sec:critical_tau}{{3.5.4}{22}{Critical-$\tau $ Finder}{subsection.3.5.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.4}{\ignorespaces Algorithm comparison}}{23}{table.caption.10}\protected@file@percent }
+\newlabel{table:algo_compare}{{3.4}{23}{Algorithm comparison}{table.caption.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.5}$k$-Shortest Simple Paths}{23}{subsection.3.5.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.6}Data Structures}{23}{section.3.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6.1}Adjacency List}{23}{subsection.3.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6.2}Binary Min-Heap (Priority Queue)}{24}{subsection.3.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6.3}Hash Maps (Dictionaries)}{24}{subsection.3.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.7}Experimental Design}{24}{section.3.7}\protected@file@percent }
+\newlabel{sec:expdesign}{{3.7}{24}{Experimental Design}{section.3.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.1}Simulation Environment}{24}{subsection.3.7.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.5}{\ignorespaces Simulation environment}}{24}{table.caption.11}\protected@file@percent }
+\newlabel{table:simenv}{{3.5}{24}{Simulation environment}{table.caption.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.2}Evaluation Metrics}{24}{subsection.3.7.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.3}Experimental Parameters}{25}{subsection.3.7.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.6}{\ignorespaces Experimental parameter matrix}}{25}{table.caption.12}\protected@file@percent }
+\newlabel{table:param_matrix}{{3.6}{25}{Experimental parameter matrix}{table.caption.12}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.4}Experimental Controls}{25}{subsection.3.7.4}\protected@file@percent }
 \@setckpt{4_-_methodology}{
-\setcounter{page}{24}
+\setcounter{page}{26}
 \setcounter{equation}{0}
 \setcounter{enumi}{2}
 \setcounter{enumii}{0}

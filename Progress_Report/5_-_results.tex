@@ -1,6 +1,6 @@
 \chapter{EXPERIMENTAL RESULTS AND ANALYSIS}\label{chap:results}
 
-This chapter presents the results of the full experimental evaluation. Section~\ref{sec:synth_results} covers the 2,160-row synthetic benchmark; Section~\ref{sec:real_results} covers the 300-row real-data validation on RetailRocket and RecSys~2015.
+This chapter presents the results of the full experimental evaluation and evaluates the central hypothesis: whether probability-based pruning can deliver meaningful speedup without sacrificing path optimality. Section~\ref{sec:synth_results} covers the 2,160-row synthetic benchmark; Section~\ref{sec:real_results} covers the 300-row real-data validation on RetailRocket and RecSys~2015.
 
 \section{Synthetic Experiment Results}\label{sec:synth_results}
 
@@ -106,7 +106,27 @@ Uniform                & 84.3$\times$ & 29.2$\times$ \\
 
 Both distributions achieve comparable wall-clock speedups ($\sim$30$\times$). Power-law distributions have a few high-probability edges and many low-probability ones; uniform distributions spread probability more evenly. The pruning mechanism is effective in both cases.
 
+\subsection{Scalability: Log--Log Analysis}
+
+Figure~\ref{fig:scalability} presents execution time as a function of graph size on log--log axes, providing a direct visual test of the theoretical complexity bounds.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{plot3_scalability.png}
+\caption[Scalability log--log]{Execution time vs.\ graph size $|V|$ on log--log axes for baseline (solid) and pruned (dashed) Dijkstra at $\tau=0.01$. Baseline exhibits near-linear scaling; pruned time remains nearly flat.}
+\label{fig:scalability}
+\end{figure}
+
+Baseline execution time increases approximately linearly with $|V|$ on log--log axes, consistent with the $O(|V|\log|V|)$ bound for sparse graphs. In contrast, the pruned algorithm's execution time is nearly constant across all graph sizes, visually confirming that $|E'|$ grows much slower than $|E|$.
+
 \subsection{Optimality Gap Analysis}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{plot2_optimality_gap_vs_tau.png}
+\caption[Optimality gap vs.\ $\tau$]{Optimality gap $\Delta$ vs.\ pruning threshold $\tau$. The gap is exactly $0.0000\%$ across all path-found rows, confirming the all-or-nothing property.}
+\label{fig:optimality_gap}
+\end{figure}
 
 A critical finding is the \textbf{zero optimality gap} across all experiments:
 
@@ -115,6 +135,19 @@ A critical finding is the \textbf{zero optimality gap} across all experiments:
 \]
 
 This confirms Theorem~\ref{thm:all_or_nothing} (All-or-Nothing): whenever the pruned algorithm returns a path, it is the globally optimal path. The cost-based gap formula (not probability-based) eliminates floating-point rounding noise involved in $\exp(-C^*)$ conversion. Using probability-based differences would have introduced \texttt{1e-15}-scale noise that has no algorithmic significance.
+
+\subsection{Critical-$\tau$ Heatmap}
+
+Figure~\ref{fig:critical_tau_heatmap} visualises the critical pruning threshold $\tau^*$ across configurations, showing the largest $\tau$ that still preserves the optimal path for each combination of graph type, size, and distribution.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{plot4_critical_tau_heatmap.png}
+\caption[Critical-$\tau$ heatmap]{Heatmap of the critical pruning threshold $\tau^*$ by configuration. Warmer colours indicate higher $\tau^*$ (more aggressive pruning possible without losing the optimal path).}
+\label{fig:critical_tau_heatmap}
+\end{figure}
+
+The heatmap reveals that smaller, denser graphs tolerate higher $\tau^*$ values (more aggressive pruning) because their paths tend to have higher cumulative probabilities. Layered graphs generally support higher $\tau^*$ than Erd\H{o}s--R\'{e}nyi graphs, consistent with their forward-biased structure toward the target.
 
 \section{Real-Data Experiment Results}\label{sec:real_results}
 
@@ -181,8 +214,14 @@ RecSys 2015                  & 100 / 100 &   0 / 100   & Baseline reachable; all
 
 In synthetic graphs, the BFS connectivity guarantee ensures the baseline always finds a path from $s$ to $t$. For the real-world datasets, the pair-selection procedure filters source--target pairs by baseline reachability, so the baseline always finds a path. The low pruned-found rates on item-level and session-level graphs reflect the aggressiveness of the $\tau$ threshold: the optimal path probability falls below $\tau$, causing all routes to be pruned even though the baseline can reach the target.
 
+\textbf{Practical implications of low reachability.} The 1\% path-found rate on RetailRocket item-level and 0\% on RecSys~2015 represent a significant practical limitation. In item-level graphs, transitions are extremely sparse: each item may have been observed transitioning to only a handful of other items across millions of sessions, yielding very low per-edge probabilities via MLE. The cumulative path probability therefore decays exponentially with path length, falling below even the most conservative $\tau$ value tested ($\tau=0.0001$). For RecSys~2015, the effect is more severe: session-based click transitions form a long-tailed graph where no tested $\tau$ preserved any complete $s\to t$ path. These results indicate that the pruned algorithm is most effective on dense, well-connected graphs or short-path queries where cumulative probabilities remain above $\tau$. For sparse item-level graphs, the critical-$\tau$ finder (Section~\ref{sec:critical_tau}) or probability smoothing at the preprocessing stage would be needed to make pruning viable in production.
+
 \section{Summary of Findings}
 
-The experimental evaluation yields several principal findings. Wall-clock speedups range from $3.6\times$ at $\tau=0.001$ to $881\times$ at $\tau=0.5$ on synthetic data, and reach up to $27{,}693\times$ on real-world item-level graphs. The optimality gap remained at exactly $\Delta = 0.0000\%$ across all 250 experiment rows in which both algorithms found a path (171 of 1,800 pruned synthetic rows; 79 of 300 real-data rows), confirming the all-or-nothing property established in Theorem~\ref{thm:all_or_nothing}. Wilcoxon signed-rank tests (paired by run) confirm that all 180 synthetic configurations exhibit statistically significant speedup ($p < 0.05$); no configuration failed the significance test.
+The experimental evaluation yields several principal findings. Wall-clock speedups range from $3.6\times$ at $\tau=0.001$ to $881\times$ at $\tau=0.5$ on synthetic data, and reach up to $27{,}693\times$ on real-world item-level graphs. The optimality gap remained at exactly $\Delta = 0.0000\%$ across all 250 experiment rows in which both algorithms found a path (171 of 1,800 pruned synthetic rows; 79 of 300 real-data rows), confirming the all-or-nothing property established in Theorem~\ref{thm:all_or_nothing}.
+
+\textbf{Statistical significance.} Wilcoxon signed-rank tests (one-sided, alternative: baseline $>$ pruned) were applied to all 180 unique synthetic configurations (each with 10 paired runs). All 180 tests rejected the null hypothesis at $\alpha = 0.05$, with $p$-values ranging from $9.77 \times 10^{-4}$ (the minimum attainable for $n=10$ paired observations) to $0.032$. The median $p$-value was $9.77 \times 10^{-4}$. No configuration failed the significance test, confirming that the speedup is not an artefact of measurement noise.
 
 Speedup grows with graph size---from $11\times$ at $|V|=1{,}000$ to $89\times$ at $|V|=10{,}000$ at fixed $\tau=0.01$---because larger graphs contain more pruneable edges. At the same time, higher $\tau$ values reduce path-found rates from 28.6\% at $\tau=0.001$ to 3.9\% at $\tau=0.5$ on synthetic data, demonstrating the inherent reachability--speed trade-off. Real-world graphs showed further reduced pruned-found rates due to aggressive thresholding on sparse session-based structures, yet the algorithm maintained zero optimality gap on all found paths and achieved substantial speedups on large graphs.
+
+\textbf{Practical business impact.} The $27{,}693\times$ speedup on the RetailRocket item-level graph (44,711 items) translates baseline query times of ${\sim}72$\,ms to $0.003$\,ms under pruning. For a team running daily journey analysis across all items, this reduction shifts path computation from a batch process into a real-time query, enabling interactive exploration of conversion funnels and on-the-fly evaluation of UI changes without waiting for overnight batch jobs.

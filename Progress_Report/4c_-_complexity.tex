@@ -29,14 +29,16 @@ In sparse graphs where $|E|=O(|V|)$, this simplifies to $O(|V|\log|V|)$.
 
 \begin{enumerate}
     \item \textbf{Worst case ($\tau=0$):} Identical to the baseline: $O(|E|\log|V|)$.
-    \item \textbf{Expected case ($\tau>0$):} Let $|E'|\leq|E|$ denote edges surviving the threshold. Pruned edges are checked in $O(1)$ without heap insertion. The expected complexity is:
+    \item \textbf{Empirically observed case ($\tau>0$):} Let $|E'|\leq|E|$ denote edges surviving the threshold. Pruned edges are checked in $O(1)$ without heap insertion. The observed complexity is:
     \[
     T_{\text{pruned}} = O(|E'|\log|V|),\quad |E'|\leq|E|
     \]
+    This bound is not formally proven in the worst case---$|E'|$ depends on the input graph's probability distribution and the chosen $\tau$---but is consistently confirmed by the empirical measurements in Section~\ref{sec:empirical_time}.
     \item \textbf{Pruning ratio:} Define $\rho = 1 - |E'|/|E|$. Higher $\tau$ increases $\rho$, reducing runtime.
 \end{enumerate}
 
 \subsection{Empirical Time Validation}
+\label{sec:empirical_time}
 
 Table~\ref{table:time_by_size} shows measured wall-clock times at $\tau=0.01$ across graph sizes.
 
@@ -109,14 +111,14 @@ Baseline peak memory (83.9 KB $\to$ 349.6 KB $\to$ 662.3 KB) scales linearly wit
 \small
 \begin{tabular}{@{}lccc@{}}
 \toprule
-\textbf{Algorithm} & \textbf{Time (worst)} & \textbf{Time (expected)} & \textbf{Space} \\
+\textbf{Algorithm} & \textbf{Time (worst)} & \textbf{Time (empirical)} & \textbf{Space} \\
 \midrule
 Baseline Dijkstra & $O(|E|\log|V|)$ & $O(|E|\log|V|)$ & $O(|V|+|E|)$ \\
 Pruned ($\tau=0$) & $O(|E|\log|V|)$ & $O(|E|\log|V|)$ & $O(|V|+|E|)$ \\
 Pruned ($\tau>0$) & $O(|E|\log|V|)$ & $O(|E'|\log|V|)$ & $O(|V|+|E|)$ \\
 \bottomrule
 \end{tabular}
-\caption[Complexity summary]{Complexity summary. Pruning reduces expected time without affecting worst-case or space bounds.}
+\caption[Complexity summary]{Complexity summary. Pruning reduces empirically observed time without affecting worst-case or space bounds. The empirical bound $O(|E'|\log|V|)$ is consistently confirmed by experiment (Section~\ref{sec:empirical_time}) but depends on the input distribution.}
 \label{table:complexity_summary}
 \end{table}
 

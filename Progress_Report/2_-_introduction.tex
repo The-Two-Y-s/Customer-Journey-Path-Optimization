@@ -14,6 +14,8 @@ Na\"{i}ve analytical methods, such as exhaustive path enumeration or simple freq
 
 The key challenge is therefore to identify optimal customer journeys efficiently and numerically stably at scale. Core tasks include finding highest-probability conversion paths and analyzing scalability across large graphs, each posing distinct challenges in graph traversal, optimization, and algorithm design that require careful data structure selection.
 
+Maximising path probability is equivalent to optimising for the most likely conversion sequence. In an e-commerce context, the highest-probability path from a landing page to checkout represents the conversion funnel that customers naturally follow. Identifying this path allows businesses to reduce friction along the dominant route, prioritise UI investments on the states that carry the most traffic, and design nudges that align with observed user behaviour rather than assumed behaviour. The term ``optimisation'' in the project title therefore refers not only to algorithmic speedup but also to the actionable business insight that optimal-path discovery enables.
+
 \section{Objectives}
 
 The objective of this study is to design and implement an efficient algorithmic framework for customer journey path optimization grounded in graph theory and classical algorithm design principles. Specifically, the project models customer journey data as a directed weighted graph, where nodes represent interaction states and edges represent transition probabilities between states.

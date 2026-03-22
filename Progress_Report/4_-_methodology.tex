@@ -130,15 +130,42 @@ Since $p(u,v) \in (0,1]$, it follows that $w(u,v) \geq 0$, satisfying Dijkstra's
 
 For a given source--target query, the system returns the optimal path $P^* = (v_0 = s, v_1, \ldots, v_k = t)$, the corresponding path probability $\Pi^* = \prod_{(u,v)\in P^*} p(u,v) = \exp(-C^*)$, and the log-cost $C^* = \sum_{(u,v)\in P^*} -\log\, p(u,v)$. Each run also records performance metrics---execution time, peak memory, nodes explored, edges relaxed, and maximum priority queue size---as well as the optimality gap $\Delta = |C^*_{\text{baseline}} - C^*_{\text{pruned}}| / C^*_{\text{baseline}} \times 100\%$.
 
+\paragraph{Concrete worked example: RetailRocket event-level funnel.}
+The RetailRocket dataset~\citep{retailrocket2015} yields a 3-node event-type graph whose MLE transition probabilities, computed from 2.7\,million events, provide a concrete illustration of the formulation:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lrl@{}}
+\toprule
+\textbf{Transition} & \textbf{Probability} & \textbf{Log-weight} \\
+\midrule
+view $\to$ addtocart    & $p = 0.041$ & $w = -\ln(0.041) = 3.20$ \\
+addtocart $\to$ transaction & $p = 0.226$ & $w = -\ln(0.226) = 1.49$ \\
+view $\to$ transaction (direct) & $p = 0.004$ & $w = -\ln(0.004) = 5.55$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Two candidate $s{\to}t$ paths exist from \emph{view} to \emph{transaction}:
+\begin{itemize}[nosep]
+  \item \textbf{Funnel path:} view $\to$ addtocart $\to$ transaction, $\Pi = 0.041 \times 0.226 = 0.0093$ (log-cost $4.69$).
+  \item \textbf{Direct skip:} view $\to$ transaction, $\Pi = 0.004$ (log-cost $5.55$).
+\end{itemize}
+Dijkstra selects the \emph{funnel path} because it has lower log-cost ($4.69 < 5.55$), equivalently higher probability ($0.93\% > 0.39\%$). This $2.4\times$ probability advantage quantifies the value of the add-to-cart step: users who add items to their cart are substantially more likely to complete a transaction than those who skip directly.
+
 \subsection{Constraints and Assumptions}
 
-The framework assumes graph sizes up to 50,000 nodes (hardware permitting), with experiments conducted on graphs of up to 10,000 nodes. Graphs are assumed to be sparse ($|E| = O(|V|)$) and stored using an adjacency-list representation requiring $O(|V|+|E|)$ space. All transition probabilities are strictly positive; zero-probability transitions are treated as non-existent edges. The customer journey graph may contain directed cycles; correctness is preserved because $w(u,v) \geq 0$ for all edges. Finally, a first-order \textbf{Markov assumption} is adopted: $P(\text{next} \mid \text{current})$ is independent of earlier states.
+The framework assumes graph sizes up to 50,000 nodes (hardware permitting), with experiments conducted on graphs of up to 10,000 nodes. Graphs are assumed to be sparse ($|E| = O(|V|)$) and stored using an adjacency-list representation requiring $O(|V|+|E|)$ space. All transition probabilities are strictly positive; zero-probability transitions are treated as non-existent edges. The customer journey graph may contain directed cycles; correctness is preserved because $w(u,v) \geq 0$ for all edges. Finally, a first-order \textbf{Markov assumption} is adopted: $P(\text{next} \mid \text{current})$ is independent of earlier states. This assumption is standard in clickstream modeling~\citep{bucklin2003clickstream} and is empirically supported by the observation that transition matrices estimated from session data yield stable, reproducible graph structures across independent subsamples. While higher-order dependencies exist (e.g., users arriving via search may navigate differently from those arriving via advertisement), the first-order model captures the dominant transition structure and keeps the state space tractable at $O(|V|)$ rather than $O(|V|^k)$ for order~$k$.
 
 \section{Data Generation and Preprocessing}
 
 \subsection{Synthetic Data Generation}
 
-Two graph generators were implemented in \texttt{data/graph\_generator.py}. The first is an \textbf{Erd\H{o}s--R\'{e}nyi sparse random generator}~\citep{erdosrenyi1960}, which creates $|V|$ nodes and samples directed edges with expected total $\bar{d} \cdot |V|$; transition probabilities are drawn from either a uniform $\mathcal{U}(0.01, 1.0)$ or a power-law ($\alpha=2$) distribution. The second is a \textbf{layered (stage-based) generator} in which nodes are distributed across five ordered stages (Awareness, Interest, Consideration, Intent, Conversion), edges proceed primarily forward (up to $+2$ stages), and a configurable \texttt{backward\_prob} parameter controls backward links.
+Two graph generators were implemented in \texttt{data/graph\_generator.py}.
+
+The first is an \textbf{Erd\H{o}s--R\'{e}nyi sparse random generator}~\citep{erdosrenyi1960}, which creates $|V|$ nodes and samples directed edges with expected total $\bar{d} \cdot |V|$; transition probabilities are drawn from either a uniform $\mathcal{U}(0.01, 1.0)$ or a power-law ($\alpha=2$) distribution. This generator produces graphs with uniformly random structure, serving as a controlled baseline for evaluating algorithmic behaviour without structural bias.
+
+The second is a \textbf{layered (stage-based) generator}, which models the funnel-shaped structure typical of real customer journeys. Nodes are distributed across five ordered stages---Awareness, Interest, Consideration, Intent, and Conversion---reflecting the standard e-commerce conversion funnel. Edges are sampled primarily in the forward direction (up to $+2$ stages ahead), ensuring that the dominant flow proceeds from awareness toward conversion. A configurable \texttt{backward\_prob} parameter (default~$0.1$) controls the fraction of backward links, modelling the common user behaviour of revisiting earlier stages (e.g., returning from a product page to browse). Transition probabilities for forward edges are drawn from $\mathcal{U}(0.3, 0.8)$, while backward edges receive lower probabilities from $\mathcal{U}(0.05, 0.3)$, reflecting the empirical observation that forward progression is more likely than backtracking. This layered design is the more application-relevant of the two generators, as it approximates the stage-wise structure observed in real clickstream data (Section~\ref{sec:real_results}).
 
 Both generators employ $O(n \cdot d)$ scalable edge sampling rather than $O(n^2)$ adjacency-matrix construction. A BFS-based connectivity guarantee ensures that if no $s \to t$ path exists after random sampling, bridge edges are added. Outgoing probabilities are normalised per node ($\sum_v p(u,v) = 1$), and deterministic seeding via \texttt{hashlib.md5} ensures cross-platform reproducibility.
 
@@ -190,6 +217,8 @@ Transition probabilities are estimated using maximum likelihood:
 \[
 \hat{p}(u,v) = \frac{\text{count}(u \to v)}{\displaystyle\sum_{w:\,(u,w)\in E} \text{count}(u \to w)}
 \]
+
+\noindent A consequence of MLE on sparse data is that nodes with very few observed transitions (e.g., items viewed only once or twice) receive high-variance probability estimates. In item-level graphs, where tens of thousands of items may each have only a handful of observations, many edges carry very low estimated probabilities. This contributes to the low path-found rates observed in item-level real-data experiments (Section~\ref{sec:real_results}): when most edge probabilities are small, even the baseline optimal path has a very low cumulative probability, making it more susceptible to pruning. Smoothing techniques such as Laplace (add-one) correction or Bayesian priors could mitigate this effect but were not applied in order to isolate the algorithmic contribution of pruning.
 
 \subsection{Preprocessing and Input Formats}
 
@@ -307,7 +336,7 @@ $T \leftarrow -\log(\tau)$\tcp*{pruning threshold in log-space}
 \end{algorithm}
 
 \noindent\textbf{Worst-case time complexity:} $O(|E| \log |V|)$ (when $\tau \to 0$).\\
-\textbf{Expected time complexity:} $O(|E'| \log |V|)$, $|E'| \leq |E|$.\\
+\textbf{Empirically observed time complexity:} $O(|E'| \log |V|)$, $|E'| \leq |E|$ (see Chapter~\ref{chap:complexity} for validation).\\
 \textbf{Space complexity:} $O(|V| + |E|)$.
 
 \subsubsection{The \texttt{edges\_relaxed} Metric}
@@ -325,7 +354,7 @@ Baseline & Every outgoing edge examined from a settled node & After computing \t
 Pruned & Every edge that \textbf{survived} the $\tau$ threshold & After the \texttt{if new\_cost > T: continue} check \\
 \bottomrule
 \end{tabular}
-\caption[edges\_relaxed semantics]{The \texttt{edges\_relaxed} metric definition. The difference $\text{baseline} - \text{pruned}$ measures exactly the work saved by pruning.}
+\caption[edges\_relaxed semantics]{The \texttt{edges\_relaxed} metric definition. Because the counter is placed at different points in the two algorithms, the baseline count includes all edge examinations whereas the pruned count includes only edges that survived the threshold check. This is an intentional design choice: the ratio $\text{baseline}/\text{pruned}$ directly quantifies the computational work eliminated by pruning, though readers should note that the two counts are not strictly comparable in absolute terms.}
 \label{table:edges_relaxed}
 \end{table}
 
@@ -465,6 +494,7 @@ Figure~\ref{fig:algo_flowchart} illustrates the decision-flow difference between
 \end{table}
 
 \subsection{Critical-$\tau$ Finder}
+\label{sec:critical_tau}
 
 A practical question is: \emph{what is the largest threshold $\tau^*$ that still preserves the optimal path?} The module \texttt{src/critical\_tau.py} answers this with an adaptive sweep centred on the baseline path probability.
 
@@ -544,6 +574,8 @@ Runs & 10 per config & Statistical reliability \\
 \caption[Experimental parameter matrix]{Full parameter matrix: $2 \times 3 \times 3 \times 2 \times 6 \times 10 = 2{,}160$ total rows.}
 \label{table:param_matrix}
 \end{table}
+
+The $\tau$ values were chosen to span three orders of magnitude, from conservative ($\tau = 0.001$, retaining paths with cumulative probability $\geq 0.1\%$) to aggressive ($\tau = 0.5$, retaining only paths with $\geq 50\%$ probability). The intermediate values $\{0.01, 0.05, 0.1\}$ sample the transition region where speedup gains accelerate but path-found rates begin to drop. $\tau = 0$ serves as the control condition (no pruning, identical to baseline). For practitioners seeking to choose $\tau$ on a specific graph, the \texttt{critical\_tau.py} module (Section~\ref{sec:critical_tau}) provides an adaptive sweep that probes fractions of the baseline optimal probability $\Pi^*$ to identify the largest $\tau$ that preserves the optimal path.
 
 \subsection{Experimental Controls}
 
