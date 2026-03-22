@@ -4,7 +4,7 @@
 
 The \textit{Customer Journey Path Optimization} system models user interactions as a directed weighted graph $G = (V, E)$, where each node $v \in V$ represents a discrete interaction state (e.g., \textit{Landing Page}, \textit{Search}, \textit{Product Page}, \textit{Cart}, \textit{Checkout}), and each directed edge $(u,v) \in E$ represents a user transition between states annotated with a transition probability $p(u,v) \in (0,1]$. The primary goal is to identify the most probable path from a designated source node $s$ to a target conversion node $t$.
 
-Figure~\ref{fig:system_workflow} presents the end-to-end workflow process. The workflow process is organized into five sequential components: (1) data generation and preprocessing, (2) graph construction, (3) baseline path optimization using Dijkstra's algorithm, (4) optimized path search using probability-pruned Dijkstra, and (5) experimental evaluation and comparative analysis.
+Figure~\ref{fig:system_workflow} presents the end-to-end workflow. It is organised into five sequential components: (1) data generation and preprocessing, (2) graph construction, (3) baseline path optimization using Dijkstra's algorithm, (4) optimized path search using probability-pruned Dijkstra, and (5) experimental evaluation and comparative analysis.
 
 Two algorithms were implemented and compared throughout this chapter. Algorithm~1 (Baseline Dijkstra on Log-Weights) applies standard Dijkstra's algorithm to the log-probability-transformed graph, guaranteeing globally optimal paths in $O(|E|\log|V|)$ time. Algorithm~2 (Probability-Pruned Dijkstra) extends Algorithm~1 with a pruning threshold $\tau$ that discards partial paths whose cumulative probability falls below $\tau$, reducing expected runtime to $O(|E'|\log|V|)$, $|E'| \leq |E|$, with convergence to Algorithm~1 as $\tau \to 0$.
 
@@ -154,8 +154,10 @@ def generate_erdos_renyi_graph(n, avg_degree, distribution, seed, ...):
             max(0, int(avg_degree) - 2), int(avg_degree) + 2)
         targets = rng.sample(other_nodes, min(num_edges, len(other_nodes)))
         for v in targets:
-            raw = rng.random() if distribution == "uniform" \
-                  else rng.paretovariate(2)
+            if distribution == "uniform":
+                raw = rng.uniform(0.01, 1.0)
+            else:  # power_law: inverse-CDF Pareto(alpha=2, x_min=0.01)
+                raw = min(0.01 * (1 - rng.random()) ** (-1.0), 1.0)
             graph[u][v] = raw
     _normalize_and_log_transform(graph)
     _ensure_connectivity(graph, source, target)
@@ -202,18 +204,19 @@ Both formats produce the same transition-count table from which MLE probabilitie
 
 \section{Graph Construction}
 
-The directed weighted graph is constructed from preprocessed session data using an \textbf{adjacency list} representation. Each node $u$ maps to a list of $(v,\; w(u,v))$ pairs, where $w(u,v) = -\log(\hat{p}(u,v))$. This provides $O(|V|+|E|)$ space complexity and efficient $O(\deg(u))$ neighbour iteration~\citep{cormen2009}.
+The directed weighted graph is constructed from the computed transition probabilities using an \textbf{adjacency list} representation. The function receives a nested dictionary mapping each source node to its targets and their probabilities, then converts each probability into a log-weight $w(u,v) = -\log(\hat{p}(u,v))$. This provides $O(|V|+|E|)$ space complexity and efficient $O(\deg(u))$ neighbour iteration~\citep{cormen2009}.
 
 \begin{lstlisting}[language=Python, caption={Graph construction (\texttt{src/graph\_builder.py})}, label=lst:graph_build]
-def build_weighted_graph(transitions_df, stats_df):
-    graph = {}
-    for _, row in stats_df.iterrows():
-        src, tgt = row["source"], row["target"]
-        prob = row["probability"]
-        weight = -math.log(prob)  # log-probability transform
-        graph.setdefault(src, {})[tgt] = weight
-        graph.setdefault(tgt, {})  # ensure sink nodes exist
-    return graph
+def build_weighted_graph(transition_probs):
+    graph = defaultdict(list)
+    for source, targets in transition_probs.items():
+        for target, prob in targets.items():
+            if prob <= 0:
+                continue
+            graph[source].append((target, -math.log(prob)))
+            if target not in graph:
+                graph[target] = []  # ensure sink nodes exist
+    return dict(graph)
 \end{lstlisting}
 
 \section{Algorithmic Approaches}
@@ -348,7 +351,7 @@ def dijkstra_pruned(graph, source, target, tau):
             continue  # stale entry
         metrics.nodes_explored += 1
         metrics.max_pq_size = max(metrics.max_pq_size, len(pq)+1)
-        for v, w in graph.get(u, {}).items():
+        for v, w in graph.get(u, []):
             new_cost = d + w
             if new_cost > T:
                 continue  # PRUNE
@@ -544,4 +547,4 @@ Runs & 10 per config & Statistical reliability \\
 
 \subsection{Experimental Controls}
 
-To ensure fair comparison, both algorithms run on identical graph instances using the same \texttt{hashlib.md5} seed. Execution is single-threaded to eliminate scheduling noise, and each configuration is repeated 10 times with median and standard deviation reported. Timing and memory are measured in separate passes so that \texttt{tracemalloc} overhead does not affect wall-clock measurements.
+To ensure fair comparison, both algorithms run on identical graph instances using the same \texttt{hashlib.md5} seed. Execution is single-threaded to eliminate scheduling noise, and each configuration is repeated 10 times with median values reported (median is preferred over mean for skewed runtime distributions). Timing and memory are measured in separate passes so that \texttt{tracemalloc} overhead does not affect wall-clock measurements.

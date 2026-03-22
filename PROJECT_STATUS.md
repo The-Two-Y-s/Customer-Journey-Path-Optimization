@@ -26,7 +26,7 @@ The full implementation, experimentation, and validation phases of the project a
 - Synthetic experiment runner (2,160 rows across full parameter matrix)
 - Real-data experiment runner (300 rows across RetailRocket + RecSys 2015)
 - Analysis notebook (5 plots + Wilcoxon signed-rank tests)
-- 40 unit tests passing (pytest), including convergence and edge-case coverage
+- 41 unit tests passing (pytest), including convergence and edge-case coverage
 - Deterministic seeds via hashlib.md5 for cross-process reproducibility
 - Cost-based optimality gap calculation (eliminates FP rounding noise)
 
@@ -64,17 +64,17 @@ The full implementation, experimentation, and validation phases of the project a
 
 | File | Purpose |
 |------|---------|
-| `tests/test_pipeline.py` | 40 unit tests across 11 test classes covering preprocessing, graph building, both Dijkstra variants, convergence (including edges_relaxed), probability consistency, edge cases, both generators, probability normalisation, k-shortest paths, real-data loaders, and critical-τ finder. |
+| `tests/test_pipeline.py` | 41 unit tests across 11 test classes covering preprocessing, graph building, both Dijkstra variants, convergence (including edges_relaxed and τ=0 equivalence), probability consistency, edge cases, both generators, probability normalisation, k-shortest paths, real-data loaders, and critical-τ finder. |
 
 ---
 
 ## 3. Current Test Results
 
 ```
-40 passed in 5.41s
+41 passed in 5.74s
 ```
 
-All 40 tests pass (pytest). Coverage includes:
+All 41 tests pass (pytest). Coverage includes:
 - Preprocessing: both CSV formats, probability computation
 - Graph building: -log transform, missing sink nodes
 - Baseline & Pruned Dijkstra: optimal path, metrics, τ pruning

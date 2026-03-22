@@ -503,6 +503,39 @@ class TestCriticalTau(unittest.TestCase):
         self.assertIsNone(result.critical_tau)
         self.assertEqual(len(result.profiles), 0)
 
+    # ------------------------------------------------------------------
+    # Theorem 3 (Convergence): tau=0 pruned == baseline
+    # ------------------------------------------------------------------
+    def test_pruned_tau_zero_matches_baseline(self):
+        """dijkstra_pruned with tau=0 must produce identical results to dijkstra."""
+        graph = generate_erdos_renyi_graph(
+            n=200, avg_degree=5, distribution="uniform", seed=99,
+            source="s", target="t",
+        )
+        res_base = dijkstra(graph, "s", "t")
+        res_prune = dijkstra_pruned(graph, "s", "t", tau=0)
+
+        # Identical shortest-path cost to target
+        self.assertAlmostEqual(
+            res_base.dist.get("t", math.inf),
+            res_prune.dist.get("t", math.inf),
+            places=12,
+        )
+        # Identical path reconstruction
+        path_base = reconstruct_path(res_base.parent, "s", "t")
+        path_prune = reconstruct_path(res_prune.parent, "s", "t")
+        self.assertEqual(path_base, path_prune)
+
+        # Identical node/edge metrics (tau=0 => T=inf => no pruning)
+        self.assertEqual(
+            res_base.metrics.nodes_explored,
+            res_prune.metrics.nodes_explored,
+        )
+        self.assertEqual(
+            res_base.metrics.edges_relaxed,
+            res_prune.metrics.edges_relaxed,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

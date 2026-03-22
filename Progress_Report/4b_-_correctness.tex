@@ -88,7 +88,7 @@ Convergence testing showed that at $\tau = 0.001$ the pruned algorithm found pat
 
 Probability consistency was verified by comparing $\exp(-C^*)$ against $\prod_{(u,v)\in P^*} p(u,v)$ for all returned paths; relative error remained below $10^{-12}$ in every case.
 
-The test suite includes 40 automated tests covering disconnected source--target pairs (pruned returns \texttt{None}), single-node graphs, complete graphs and star topologies, and real-world graphs with high sparsity. All 40 tests pass.
+The test suite includes 41 automated tests covering disconnected source--target pairs (pruned returns \texttt{None}), single-node graphs, complete graphs and star topologies, real-world graphs with high sparsity, and $\tau=0$ equivalence (Theorem~3). All 41 tests pass.
 
 Finally, the five-node example graph (Figure~\ref{fig:journey_graph}) was traced manually:
 \[

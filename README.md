@@ -413,7 +413,7 @@ Three dataset configurations (20 random source-target pairs × 5 τ values = 300
 
 ## Testing
 
-40 unit tests across 11 test classes:
+41 unit tests across 11 test classes:
 
 ```bash
 python -m pytest tests/ -v
@@ -453,7 +453,7 @@ python -m pytest tests/ -v
 │       ├── retailrocket/
 │       └── recsys2015/
 ├── tests/
-│   └── test_pipeline.py              # 40 unit tests
+│   └── test_pipeline.py              # 41 unit tests
 ├── results/
 │   ├── experiment_results.csv        # 2,160-row synthetic experiment output
 │   ├── real_data_results.csv         # 300-row real-data experiment output

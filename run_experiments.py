@@ -28,7 +28,6 @@ import argparse
 import csv
 import hashlib
 import math
-import sys
 import time
 import tracemalloc
 from pathlib import Path
