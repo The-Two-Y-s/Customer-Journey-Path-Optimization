@@ -52,6 +52,16 @@ See [Experimental Results](#experimental-results) for the verdict.
 └── README.md
 ```
 
+## Real Datasets
+
+The following real-world e-commerce datasets are used for evaluation (not included in the repository due to size — download them manually into `data/real_dataset/`):
+
+| Dataset | Description | Link |
+|---------|-------------|------|
+| **UCI eShop Clickstream** | Clickstream data for online shopping from a Polish e-commerce site (2008) | [UCI ML Repository](https://archive.ics.uci.edu/dataset/468/clickstream+data+for+online+shopping) |
+| **RecSys Challenge 2015** | YooChoose click and purchase sessions from a European e-commerce site | [Kaggle](https://www.kaggle.com/datasets/chadgostopp/recsys-challenge-2015) |
+| **RetailRocket E-Commerce** | User behaviour data (views, add-to-cart, transactions) from RetailRocket | [Kaggle](https://www.kaggle.com/datasets/retailrocket/ecommerce-dataset) |
+
 ## How It Works
 1. Load clickstream data from CSV.
 2. Extract transitions.
