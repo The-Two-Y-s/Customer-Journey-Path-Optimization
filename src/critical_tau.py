@@ -51,7 +51,9 @@ def _adaptive_tau_sweep(baseline_prob: float) -> list[float]:
     tau values as fractions of the baseline probability so that the sweep
     actually explores the interesting trade-off region.
     """
-    # Start with fractions of baseline: 10%, 30%, 50%, 70%, 90%, 95%, 99%, 100%, 110%
+    # Fractions of baseline probability to sweep.  The 1.10 (110%) entry
+    # intentionally probes *above* the optimal path probability to identify
+    # the cliff point where the pruned algorithm starts failing to find a path.
     fractions = [0.10, 0.30, 0.50, 0.70, 0.90, 0.95, 0.99, 1.0, 1.10]
     adaptive = sorted(set(round(baseline_prob * f, 10) for f in fractions))
     # Filter out zero or negative values

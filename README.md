@@ -314,8 +314,8 @@ Metrics:
 </details>
 
 ## Algorithms
-- **Baseline Dijkstra** (Algorithm 1): Standard Dijkstra with lazy-deletion (stale-entry skip). Complexity: `O((V + E) log V)`.
-- **Probability-Pruned Dijkstra** (Algorithm 2): Converts threshold τ to log-space (`T = -log(τ)`) and skips any edge relaxation where cumulative cost exceeds T. Same worst-case complexity but explores far fewer nodes/edges in practice (experiments show ~0.1% of baseline edges relaxed at τ = 0.1, with median speedups exceeding 200×).
+- **Baseline Dijkstra** (Algorithm 1): Standard Dijkstra with lazy-deletion (stale-entry skip). Complexity: `O((V + E) log V)`. The `edges_relaxed` metric counts every outgoing edge examined from each settled node.
+- **Probability-Pruned Dijkstra** (Algorithm 2): Converts threshold τ to log-space (`T = -log(τ)`) and discards any edge whose cumulative cost exceeds T before examining it. `edges_relaxed` counts only the edges that survive the τ threshold — the difference between baseline and pruned `edges_relaxed` is exactly the work saved by pruning. Same worst-case complexity but explores far fewer edges in practice (experiments show ~0.1% of baseline edges examined at τ = 0.1, with median speedups exceeding 200×).
 
 ## Graph Generators
 
@@ -374,7 +374,7 @@ print(result.critical_tau)       # e.g. 0.00069
 print(result.max_speedup_at_critical)  # e.g. 1.2x
 ```
 
-Uses an adaptive tau sweep centered on the baseline path probability, so it works correctly even on sparse/power-law graphs with very low path probabilities.
+Uses an adaptive tau sweep centered on the baseline path probability (including a 110% probe above the optimal to identify the cliff point where the path is lost), so it works correctly even on sparse/power-law graphs with very low path probabilities. Reports both node-count speedup and wall-clock speedup per τ value.
 
 ## Experiment Runner
 
@@ -396,7 +396,7 @@ python run_experiments.py --graph-types erdos_renyi layered \
     --runs 10 --output results/experiment_results.csv
 ```
 
-Each configuration generates one baseline row (τ = 0) and one row per non-zero τ. Timing and memory are measured in **separate passes** (tracemalloc is not active during timing) to avoid instrumentation overhead corrupting the stopwatch. Seeds are deterministic per `(run, n, d, graph_type, distribution)`.
+Each configuration generates one baseline row (τ = 0) and one row per non-zero τ. Timing and memory are measured in **separate passes** (tracemalloc is not active during timing) to avoid instrumentation overhead corrupting the stopwatch. Seeds are deterministic per `(run, n, d, graph_type, distribution)` using `hashlib.md5` for cross-process reproducibility.
 
 Output CSV columns: `graph_type`, `graph_size`, `avg_degree`, `distribution`, `tau`, `run`, `seed`, `algorithm`, `execution_time_ms`, `peak_memory_bytes`, `nodes_explored`, `edges_relaxed`, `max_pq_size`, `path_cost`, `path_probability`, `path_length`, `path_found`, `optimality_gap_pct`.
 
@@ -435,7 +435,7 @@ All plots are saved to `results/img/`. See [Experimental Results](#experimental-
 
 ## Testing
 
-40 unit tests covering preprocessing, graph building, both Dijkstra variants, convergence (pruned → baseline as τ → 0), probability consistency, edge cases, both generators, probability normalisation regression, k-shortest simple paths, synthetic-dataset end-to-end pipeline, real-data loaders (RetailRocket + RecSys 2015), and the critical-τ finder:
+40 unit tests covering preprocessing, graph building, both Dijkstra variants, convergence (pruned → baseline as τ → 0 — including `edges_relaxed` convergence), probability consistency, edge cases, both generators, probability normalisation regression, k-shortest simple paths, synthetic-dataset end-to-end pipeline, real-data loaders (RetailRocket + RecSys 2015), and the critical-τ finder:
 
 ```bash
 python -m pytest tests/ -v
@@ -443,11 +443,11 @@ python -m pytest tests/ -v
 
 ## Experimental Results
 
-**Verdict: Hypothesis supported.** Across all 1,800 pruned runs (synthetic) and 300 runs (real data), every run that found a path returned the **exact same optimal path** as the baseline (0.00% optimality gap). The pruning is admissible — it either preserves the full optimal path or prunes it entirely, never producing a suboptimal result.
+**Verdict: Hypothesis supported.** Across all 1,800 pruned runs (synthetic) and 300 runs (real data), every run that found a path returned the **exact same optimal path** as the baseline (0.00% optimality gap). The pruning is admissible — it either preserves the full optimal path or prunes it entirely, never producing a suboptimal result. **The real trade-off is path-found rate, not accuracy:** aggressive τ values yield massive speedups but reduce the chance of finding any path at all.
 
 ### Synthetic Data — Speedup by τ
 
-| τ | Median Speedup | Edges Explored | Path-Found Rate | Gap (when found) |
+| τ | Median Speedup | Edges Examined (% of baseline) | Path-Found Rate | Gap (when found) |
 |---|---------------|----------------|-----------------|------------------|
 | 0.001 | 3.6× | 11.2% | 31.4% | 0.00% |
 | 0.01 | 29.0× | 1.4% | 8.1% | 0.00% |

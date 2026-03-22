@@ -110,10 +110,6 @@ def load_recsys2015(
 
     df["state"] = df["item_id"].astype(str)
 
-    if max_sessions is not None:
-        keep = df["session_id"].unique()[:max_sessions]
-        df = df[df["session_id"].isin(set(keep))]
-
     return df[["session_id", "state", "timestamp"]].copy()
 
 
