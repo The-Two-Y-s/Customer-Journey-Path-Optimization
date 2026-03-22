@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.3.15)  23 MAR 2026 00:44
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.3.15)  23 MAR 2026 00:48
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1559,18 +1559,24 @@ lenge
 
  (8_-_appendix.tex
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <12> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 9.
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 7.
 
-Overfull \hbox (47.47597pt too wide) in paragraph at lines 16--17
-\T1/ptm/m/n/12 con-nec-tiv-ity guar-an-tees, per-node prob-a-bil-ity nor-mal-i-
-sa-tion, and de-ter-min-is-tic seed-ing via \T1/cmtt/m/n/12 hashlib.md5\T1/ptm/
-m/n/12 .
+Overfull \hbox (0.77885pt too wide) in paragraph at lines 17--18
+[]\T1/ptm/b/n/12 Synthetic gen-er-a-tors \T1/ptm/m/n/12 (\T1/cmtt/m/n/12 data/g
+raph_generator.py\T1/ptm/m/n/12 ) --- Erd®s--Rényi and lay-ered stage-
  []
 
-[47
+
+Overfull \hbox (11.80348pt too wide) in paragraph at lines 20--21
+[]\T1/ptm/b/n/12 Analysis note-book \T1/ptm/m/n/12 (\T1/cmtt/m/n/12 analysis.ip
+ynb\T1/ptm/m/n/12 ) --- gen-er-ates all plots and sta-tis-ti-cal tests (Wilcoxo
+n
+ []
+
+) [47
 
 
-]) [48] (main.aux (0_-_cover.aux) (1_-_abstract.aux) (8_-_appendix.aux))
+] (main.aux (0_-_cover.aux) (1_-_abstract.aux) (8_-_appendix.aux))
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
@@ -1579,8 +1585,8 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: 4A1ACF255A070F2613BBCA02B14706F6;17204.
  ) 
 Here is how much of TeX's memory you used:
- 39702 strings out of 467871
- 893924 string characters out of 5417417
+ 39701 strings out of 467871
+ 893917 string characters out of 5417417
  1671362 words of memory out of 5000000
  67581 multiletter control sequences out of 15000+600000
  724075 words of font info for 180 fonts, out of 8000000 for 9000
@@ -1604,9 +1610,9 @@ tmb8a.pfb><C:/Users/ASUS/AppData/Local/Programs/MiKTeX-v2/fonts/type1/urw/times
 /utmbi8a.pfb><C:/Users/ASUS/AppData/Local/Programs/MiKTeX-v2/fonts/type1/urw/ti
 mes/utmr8a.pfb><C:/Users/ASUS/AppData/Local/Programs/MiKTeX-v2/fonts/type1/urw/
 times/utmri8a.pfb>
-Output written on main.pdf (54 pages, 816338 bytes).
+Output written on main.pdf (53 pages, 814779 bytes).
 PDF statistics:
- 1336 PDF objects out of 1440 (max. 8388607)
- 304 named destinations out of 1000 (max. 500000)
+ 1332 PDF objects out of 1440 (max. 8388607)
+ 303 named destinations out of 1000 (max. 500000)
  700 words of extra memory for PDF output out of 10000 (max. 10000000)
 
