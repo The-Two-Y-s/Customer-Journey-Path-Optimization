@@ -22,7 +22,8 @@ This lets us run shortest-path search (Dijkstra) to recover the highest-probabil
 .
 ├── data/
 │   ├── synthetic_data_generator.py   # Markov-chain clickstream generator
-│   └── graph_generator.py            # ER & Layered graph generators
+│   ├── graph_generator.py            # ER & Layered graph generators
+│   └── enhanced_synthetic_journey.csv# Generated synthetic dataset
 ├── src/
 │   ├── critical_tau.py               # Critical-τ finder (adaptive sweep)
 │   ├── dijkstra.py                   # Baseline & Pruned Dijkstra
@@ -30,10 +31,11 @@ This lets us run shortest-path search (Dijkstra) to recover the highest-probabil
 │   └── preprocessing.py              # Clickstream data ingestion
 ├── tests/
 │   └── test_pipeline.py              # 24 unit tests
+├── results/
+│   ├── experiment_results.csv        # 2,160-row experiment output
+│   └── img/                          # Saved plot images from analysis
 ├── run_experiments.py                # Full experiment matrix runner
 ├── analysis.ipynb                    # Results analysis (5 plots + stats)
-├── experiment_results.csv            # 2,160-row experiment output
-├── img/                              # Saved plot images from analysis
 ├── main.py                           # CLI entry point
 ├── requirements.txt
 └── README.md
@@ -54,7 +56,7 @@ This lets us run shortest-path search (Dijkstra) to recover the highest-probabil
 pip install -r requirements.txt
 ```
 
-Dependencies: `pandas`, `numpy`, `matplotlib`, `scipy` (for statistical testing in the notebook).
+Dependencies: `pandas`, `numpy`, `matplotlib`, `scipy` (statistical testing), `pytest` (unit tests).
 
 ## Input Data Formats
 `src/preprocessing.py` supports two formats:
@@ -76,7 +78,7 @@ python main.py
 ```
 
 Default behavior:
-- Reads `enhanced_synthetic_journey.csv`.
+- Reads `data/enhanced_synthetic_journey.csv`.
 - If the file does not exist, auto-generates synthetic data using `data/synthetic_data_generator.py`.
 - Computes and prints the single optimal path from `Home` to `Checkout`.
 - Reports path probability, execution time, peak memory, and exploration metrics.
@@ -90,7 +92,7 @@ Runs both baseline and pruned Dijkstra side-by-side, printing the optimality gap
 
 3. Specify dataset and nodes
 ```bash
-python main.py --data enhanced_synthetic_journey.csv --source Home --target Checkout
+python main.py --data data/enhanced_synthetic_journey.csv --source Home --target Checkout
 ```
 
 4. Compute top-k paths
@@ -109,7 +111,7 @@ Note:
 ## CLI Arguments
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--data` | `enhanced_synthetic_journey.csv` | CSV path |
+| `--data` | `data/enhanced_synthetic_journey.csv` | CSV path |
 | `--source` | `Home` | Start node |
 | `--target` | `Checkout` | Target node |
 | `--k` | `1` | Number of paths (k>1 uses best-first k-shortest) |
@@ -155,7 +157,7 @@ Metrics:
 
 ## Algorithms
 - **Baseline Dijkstra** (Algorithm 1): Standard Dijkstra with lazy-deletion (stale-entry skip). Complexity: `O((V + E) log V)`.
-- **Probability-Pruned Dijkstra** (Algorithm 2): Converts threshold τ to log-space (`T = -log(τ)`) and skips any edge relaxation where cumulative cost exceeds T. Same worst-case complexity but explores far fewer nodes/edges in practice (experiments show ~27% of baseline edges relaxed at τ = 0.1, with up to 8,000× speedup on power-law graphs).
+- **Probability-Pruned Dijkstra** (Algorithm 2): Converts threshold τ to log-space (`T = -log(τ)`) and skips any edge relaxation where cumulative cost exceeds T. Same worst-case complexity but explores far fewer nodes/edges in practice (experiments show ~0.1% of baseline edges relaxed at τ = 0.1, with median speedups exceeding 200×).
 
 ## Graph Generators
 
@@ -190,6 +192,10 @@ graph = generate_layered_graph(
 
 Nodes are distributed evenly across stages. Edges go primarily forward (up to +2 stages) with a configurable `backward_prob` for backward links modeling user loops.
 
+### Probability Normalization
+
+Both generators **normalise outgoing edge probabilities per source node** so that `Σ_v P(v|u) = 1` for every node `u`. Raw values are drawn from the chosen distribution (uniform or power-law), then divided by their per-node sum to form a valid conditional distribution. This matches the real-data pipeline in `src/preprocessing.py` and ensures the `-log(p)` transformation produces meaningful shortest-path weights.
+
 ## Critical-τ Finder
 
 Finds the largest pruning threshold τ\* that preserves optimality (gap < tolerance) while maximizing speedup:
@@ -220,18 +226,18 @@ python run_experiments.py --graph-types erdos_renyi layered \
     --degrees 2 5 10 \
     --distributions uniform power_law \
     --taus 0 0.001 0.01 0.05 0.1 0.5 \
-    --runs 10 --output experiment_results.csv
+    --runs 10 --output results/experiment_results.csv
 ```
 
 Each configuration generates one baseline row (τ = 0) and one row per non-zero τ. Timing and memory are measured in **separate passes** (tracemalloc is not active during timing) to avoid instrumentation overhead corrupting the stopwatch. Seeds are deterministic per `(run, n, d, graph_type, distribution)`.
 
 Output CSV columns: `graph_type`, `graph_size`, `avg_degree`, `distribution`, `tau`, `run`, `seed`, `algorithm`, `execution_time_ms`, `peak_memory_bytes`, `nodes_explored`, `edges_relaxed`, `max_pq_size`, `path_cost`, `path_probability`, `path_length`, `path_found`, `optimality_gap_pct`.
 
-The default matrix (2 graph types × 3 sizes × 3 degrees × 2 distributions × 6 τ values × 10 runs) produces **2,160 rows**.
+The default matrix (2 graph types × 3 sizes × 3 degrees × 2 distributions × 6 τ values × 10 runs) produces **2,160 rows** saved to `results/experiment_results.csv`.
 
 ## Analysis Notebook
 
-`analysis.ipynb` loads `experiment_results.csv` and produces:
+`analysis.ipynb` loads `results/experiment_results.csv` and produces:
 
 1. **Speedup vs τ** — per graph type, size, and distribution
 2. **Optimality gap vs τ** — shows accuracy trade-off
@@ -241,10 +247,10 @@ The default matrix (2 graph types × 3 sizes × 3 degrees × 2 distributions × 
 6. **Statistical testing** — Wilcoxon signed-rank test (paired by run) with significance counts
 
 Key findings from the experiments:
-- 151/180 configurations show statistically significant speedups (p < 0.05)
-- At τ = 0.1, pruned Dijkstra explores ~20% of baseline edges
-- Power-law graphs yield the largest speedups (up to 8,000×) because most edge probabilities are very small
-- Uniform-distribution graphs retain higher path-found rates across all τ values
+- **180/180** configurations show statistically significant speedups (Wilcoxon signed-rank, p < 0.05)
+- At τ = 0.01, pruned Dijkstra explores only ~1.4% of baseline edges (median 29× speedup)
+- Both uniform and power-law distributions show consistent speedup behaviour (~10% path-found rate, ~90× median speedup)
+- Pruning is admissible: 0.00% optimality gap across all runs that found a path
 
 ## Testing
 
@@ -264,17 +270,15 @@ python -m pytest tests/ -v
 
 | τ | Median Speedup | Edges Explored | Path-Found Rate | Gap (when found) |
 |---|---------------|----------------|-----------------|------------------|
-| 0.001 | 3.7× | 26.9% | 49.2% | 0.00% |
-| 0.01 | 12.3× | 3.9% | 43.9% | 0.00% |
-| 0.05 | 50.5× | 0.4% | 36.7% | 0.00% |
-| 0.1 | 103.8× | 0.2% | 31.9% | 0.00% |
-| 0.5 | 327.6× | ~0% | 7.2% | 0.00% |
+| 0.001 | 3.6× | 11.2% | 31.4% | 0.00% |
+| 0.01 | 29.0× | 1.4% | 8.1% | 0.00% |
+| 0.05 | 138.7× | 0.3% | 5.3% | 0.00% |
+| 0.1 | 267.2× | 0.1% | 4.7% | 0.00% |
+| 0.5 | 866.3× | ~0% | 3.3% | 0.00% |
 
 ### Key findings
 
-- **151/180** configurations show statistically significant speedup (Wilcoxon signed-rank, p < 0.05)
+- **180/180** configurations show statistically significant speedup (Wilcoxon signed-rank, p < 0.05)
 - **100% exact optimality** — every path found by the pruned variant is identical to the baseline optimal path
-- **Power-law graphs** yield the largest speedups (median 194.5× at τ=0.01) because most edge probabilities are very small, making pruning highly effective
-- **Uniform-distribution graphs** retain much higher path-found rates (83.3% vs 4.4% at τ=0.01) since edge probabilities are more evenly spread
-- **Speedup scales with graph size**: 4.9× at |V|=1K → 45.5× at |V|=5K (τ=0.01)
+- With properly normalised transition probabilities (Σ P(v|u) = 1), individual edge probabilities are smaller, making pruning more aggressive and yielding higher speedups
 - The trade-off is **all-or-nothing**: the pruning either preserves the full optimal path or prunes it entirely — it never returns a suboptimal path

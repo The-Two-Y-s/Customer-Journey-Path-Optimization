@@ -141,7 +141,7 @@ def run_experiments(
     distributions=None,
     taus=None,
     num_runs=DEFAULT_RUNS,
-    output_path="experiment_results.csv",
+    output_path="results/experiment_results.csv",
 ):
     graph_types = graph_types or DEFAULT_GRAPH_TYPES
     sizes = sizes or DEFAULT_SIZES
@@ -153,6 +153,7 @@ def run_experiments(
     config_num = 0
 
     out = Path(output_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=CSV_HEADER)
         writer.writeheader()
@@ -268,8 +269,8 @@ def parse_args():
     )
     p.add_argument(
         "--output",
-        default="experiment_results.csv",
-        help="Output CSV path (default: experiment_results.csv)",
+        default="results/experiment_results.csv",
+        help="Output CSV path (default: results/experiment_results.csv)",
     )
     return p.parse_args()
 

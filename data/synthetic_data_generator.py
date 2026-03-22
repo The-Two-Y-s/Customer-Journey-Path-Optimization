@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import List, Dict, Any
 
 
@@ -139,7 +140,7 @@ def main():
     generator = SyntheticJourneyGenerator(avg_session_length=12)
     df = generator.generate(num_sessions=2000)
 
-    output_file = "enhanced_synthetic_journey.csv"
+    output_file = Path(__file__).resolve().parent / "enhanced_synthetic_journey.csv"
     df.to_csv(output_file, index=False)
 
     print(f"Success! Saved to {output_file}")

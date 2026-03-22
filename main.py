@@ -115,8 +115,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--data",
-        default="enhanced_synthetic_journey.csv",
-        help="Path to CSV clickstream data (default: enhanced_synthetic_journey.csv)",
+        default="data/enhanced_synthetic_journey.csv",
+        help="Path to CSV clickstream data (default: data/enhanced_synthetic_journey.csv)",
     )
     parser.add_argument("--source", default="Home", help="Start node")
     parser.add_argument("--target", default="Checkout", help="Target node")
@@ -147,7 +147,7 @@ def main() -> None:
         print(f"Dataset not found at {data_path}. Generating synthetic data...")
         generator = SyntheticJourneyGenerator(avg_session_length=12)
         df = generator.generate(num_sessions=2000)
-        data_path = Path("enhanced_synthetic_journey.csv")
+        data_path = Path("data/enhanced_synthetic_journey.csv")
         df.to_csv(data_path, index=False)
         print(f"Generated dataset at {data_path}")
 
