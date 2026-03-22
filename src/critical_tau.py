@@ -11,6 +11,7 @@ speedup is maximised without a significant drop in path accuracy."
 from __future__ import annotations
 
 import math
+import time
 from dataclasses import dataclass
 from typing import List
 
@@ -26,6 +27,7 @@ class TauProfile:
     path_probability: float
     optimality_gap_pct: float
     speedup_nodes: float  # baseline_nodes / pruned_nodes
+    speedup_wallclock: float  # baseline_time / pruned_time
 
 
 @dataclass
@@ -84,8 +86,10 @@ def find_critical_tau(
     """
     taus_input = taus  # save the user's explicit list (or None)
 
-    # Run baseline
+    # Run baseline with wall-clock timing
+    t0 = time.perf_counter()
     result_base = dijkstra(graph, source, target)
+    base_time = time.perf_counter() - t0
     if target not in result_base.dist:
         return CriticalTauResult(
             critical_tau=None,
@@ -108,7 +112,9 @@ def find_critical_tau(
     profiles: list[TauProfile] = []
 
     for tau in taus_list:
+        t0 = time.perf_counter()
         result_p = dijkstra_pruned(graph, source, target, tau=tau)
+        p_time = time.perf_counter() - t0
         p_nodes = result_p.metrics.nodes_explored
 
         if target in result_p.dist:
@@ -119,6 +125,7 @@ def find_critical_tau(
             gap = 100.0
 
         speedup = base_nodes / p_nodes if p_nodes > 0 else float("inf")
+        speedup_wc = base_time / p_time if p_time > 0 else float("inf")
 
         profiles.append(TauProfile(
             tau=tau,
@@ -127,6 +134,7 @@ def find_critical_tau(
             path_probability=p_prob,
             optimality_gap_pct=round(gap, 6),
             speedup_nodes=round(speedup, 4),
+            speedup_wallclock=round(speedup_wc, 4),
         ))
 
     # Find critical tau: largest tau where gap <= tolerance
