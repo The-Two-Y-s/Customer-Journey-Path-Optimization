@@ -91,11 +91,10 @@ def dijkstra_pruned(graph, start, goal, tau=0.01):
             if new_cost > T:
                 continue
 
-            metrics.edges_relaxed += 1
-
             if neighbor not in dist or new_cost < dist[neighbor]:
                 dist[neighbor] = new_cost
                 parent[neighbor] = node
+                metrics.edges_relaxed += 1
                 heapq.heappush(pq, (new_cost, neighbor))
                 if len(pq) > metrics.max_pq_size:
                     metrics.max_pq_size = len(pq)
