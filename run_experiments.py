@@ -2,7 +2,7 @@
 
 Runs both Baseline Dijkstra and Probability-Pruned Dijkstra across:
   - graph_type ∈ {erdos_renyi, layered}
-  - |V| ∈ {1_000, 5_000, 10_000, 50_000}
+  - |V| ∈ {1_000, 5_000, 10_000}
   - d̄  ∈ {2, 5, 10}
   - distribution ∈ {uniform, power_law}
   - τ  ∈ {0, 0.001, 0.01, 0.05, 0.1, 0.5}

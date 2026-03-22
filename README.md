@@ -31,7 +31,7 @@ This lets us run shortest-path search (Dijkstra) to recover the highest-probabil
 ├── tests/
 │   └── test_pipeline.py              # 24 unit tests
 ├── run_experiments.py                # Full experiment matrix runner
-├── analysis.ipynb                    # Results analysis (6 plots + stats)
+├── analysis.ipynb                    # Results analysis (5 plots + stats)
 ├── experiment_results.csv            # 2,160-row experiment output
 ├── main.py                           # CLI entry point
 ├── requirements.txt
@@ -196,7 +196,7 @@ Finds the largest pruning threshold τ\* that preserves optimality (gap < tolera
 ```python
 from src.critical_tau import find_critical_tau
 
-result = find_critical_tau(graph, source="0", target="99")
+result = find_critical_tau(graph, source="s", target="t")
 print(result.critical_tau)       # e.g. 0.00069
 print(result.max_speedup_at_critical)  # e.g. 1.2x
 ```
