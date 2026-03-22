@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.3.15)  23 MAR 2026 00:33
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.3.15)  23 MAR 2026 00:38
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1520,7 +1520,7 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 7.
 
-<plot1_speedup_vs_tau.png, id=958, 1004.0712pt x 351.2322pt>
+<plot1_speedup_vs_tau.png, id=948, 1004.0712pt x 351.2322pt>
 File: plot1_speedup_vs_tau.png Graphic file (type png)
 <use plot1_speedup_vs_tau.png>
 Package pdftex.def Info: plot1_speedup_vs_tau.png  used on input line 33.
@@ -1540,73 +1540,50 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 40.
 
 [35 <./plot1_speedup_vs_tau.png>]
-<plot5_memory_scaling.png, id=974, 1003.5894pt x 351.714pt>
+<plot5_memory_scaling.png, id=964, 1003.5894pt x 351.714pt>
 File: plot5_memory_scaling.png Graphic file (type png)
 <use plot5_memory_scaling.png>
 Package pdftex.def Info: plot5_memory_scaling.png  used on input line 64.
 (pdftex.def)             Requested size: 452.9679pt x 158.74747pt.
  [36 <./plot5_memory_scaling.png>]
-<plot3_scalability.png, id=984, 1003.5894pt x 351.714pt>
-File: plot3_scalability.png Graphic file (type png)
-<use plot3_scalability.png>
-Package pdftex.def Info: plot3_scalability.png  used on input line 115.
-(pdftex.def)             Requested size: 452.9679pt x 158.74747pt.
- [37 <./plot3_scalability.png>]
-<plot2_optimality_gap_vs_tau.png, id=993, 1004.0712pt x 351.2322pt>
-File: plot2_optimality_gap_vs_tau.png Graphic file (type png)
-<use plot2_optimality_gap_vs_tau.png>
-Package pdftex.def Info: plot2_optimality_gap_vs_tau.png  used on input line 12
-6.
-(pdftex.def)             Requested size: 452.9679pt x 158.44962pt.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 139.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\tau' on input line 139.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 139.
-
-<plot4_critical_tau_heatmap.png, id=996, 993.4716pt x 352.6776pt>
-File: plot4_critical_tau_heatmap.png Graphic file (type png)
-<use plot4_critical_tau_heatmap.png>
-Package pdftex.def Info: plot4_critical_tau_heatmap.png  used on input line 145
-.
-(pdftex.def)             Requested size: 452.9679pt x 160.79681pt.
-
-Overfull \hbox (39.73715pt too wide) in paragraph at lines 161--170
+Overfull \hbox (39.73715pt too wide) in paragraph at lines 128--137
  [][] 
  []
 
-[38 <./plot2_optimality_gap_vs_tau.png>]
-Overfull \hbox (0.94107pt too wide) in paragraph at lines 179--188
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+
+Overfull \hbox (0.94107pt too wide) in paragraph at lines 146--155
  [][] 
  []
 
-[39 <./plot4_critical_tau_heatmap.png>]
-Overfull \hbox (18.86717pt too wide) in paragraph at lines 201--211
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[37]
+Overfull \hbox (18.86717pt too wide) in paragraph at lines 168--178
  [][] 
  []
 
-[40]
-Overfull \hbox (0.93913pt too wide) in paragraph at lines 223--224
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[38]
+Overfull \hbox (0.93913pt too wide) in paragraph at lines 190--191
 []\T1/ptm/b/n/12 Statistical sig-nif-i-cance. \T1/ptm/m/n/12 Wilcoxon signed-ra
 nk tests (one-sided, al-ter-na-tive: base-line $\OML/ztmcm/m/it/12 >$ \T1/ptm/m
 /n/12 pruned)
  []
 
-)
-Overfull \hbox (2.40404pt too wide) in paragraph at lines 227--189
+[39])
+Overfull \hbox (2.40404pt too wide) in paragraph at lines 194--189
 []\T1/ptm/b/n/12 Practical busi-ness im-pact. \T1/ptm/m/n/12 The $\OT1/ztmcm/m/
 n/12 27[]693\OMS/ztmcm/m/n/12 ^^B$ \T1/ptm/m/n/12 speedup on the Re-tail-Rocket
  item-level graph (44,711
  []
 
-[41]
+[40]
 \openout2 = `6_-_conclusion.aux'.
 
  (6_-_conclusion.tex
@@ -1619,27 +1596,27 @@ s ($\OML/ztmcm/m/it/12 O\OT1/ztmcm/m/n/12 (\OMS/ztmcm/m/n/12 j\OML/ztmcm/m/it/1
 n/12 )$\T1/ptm/m/n/12 ) and a probability-
  []
 
-[42
+[41
 
 
 
 
-]) [43]
+]) [42]
 \openout2 = `7_-_project_plan.aux'.
 
  (7_-_project_plan.tex
 Chapter 8.
-<timeline.png, id=1040, 813.0375pt x 618.31pt>
+<timeline.png, id=1014, 813.0375pt x 618.31pt>
 File: timeline.png Graphic file (type png)
 <use timeline.png>
 Package pdftex.def Info: timeline.png  used on input line 11.
 (pdftex.def)             Requested size: 385.02547pt x 292.804pt.
-) [44
+) [43
 
 
 
 
- <./timeline.png>] [45] (main.bbl
+ <./timeline.png>] [44] (main.bbl
 Underfull \hbox (badness 1147) in paragraph at lines 18--24
 []\T1/ptm/m/n/12 David Ben-Shimon, Alexan-der Tsiki-novsky, Michael Fried-mann,
  Bracha Shapira, Lior
@@ -1651,11 +1628,11 @@ Underfull \hbox (badness 4981) in paragraph at lines 18--24
 lenge
  []
 
-[46
+[45
 
 
 
-]) [47]
+]) [46]
 \openout2 = `8_-_appendix.aux'.
 
  (8_-_appendix.tex
@@ -1668,10 +1645,10 @@ sa-tion, and de-ter-min-is-tic seed-ing via \T1/cmtt/m/n/12 hashlib.md5\T1/ptm/
 m/n/12 .
  []
 
-[48
+[47
 
 
-]) [49] (main.aux (0_-_cover.aux) (1_-_abstract.aux) (2_-_introduction.aux)
+]) [48] (main.aux (0_-_cover.aux) (1_-_abstract.aux) (2_-_introduction.aux)
 (3_-_literature_review.aux) (4_-_methodology.aux) (4b_-_correctness.aux)
 (4c_-_complexity.aux) (5_-_results.aux) (6_-_conclusion.aux)
 (7_-_project_plan.aux) (8_-_appendix.aux))
@@ -1680,13 +1657,13 @@ LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
  ***********
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: FD783E0EBE9679A65A5E4CBBDDD934FD;17570.
+(rerunfilecheck)             Checksum: 4A1ACF255A070F2613BBCA02B14706F6;17204.
  ) 
 Here is how much of TeX's memory you used:
- 39870 strings out of 467871
- 900603 string characters out of 5417417
- 1676564 words of memory out of 5000000
- 67711 multiletter control sequences out of 15000+600000
+ 39838 strings out of 467871
+ 899696 string characters out of 5417417
+ 1676400 words of memory out of 5000000
+ 67685 multiletter control sequences out of 15000+600000
  724075 words of font info for 180 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  84i,20n,116p,1791b,2062s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -1708,9 +1685,9 @@ tmb8a.pfb><C:/Users/ASUS/AppData/Local/Programs/MiKTeX-v2/fonts/type1/urw/times
 /utmbi8a.pfb><C:/Users/ASUS/AppData/Local/Programs/MiKTeX-v2/fonts/type1/urw/ti
 mes/utmr8a.pfb><C:/Users/ASUS/AppData/Local/Programs/MiKTeX-v2/fonts/type1/urw/
 times/utmri8a.pfb>
-Output written on main.pdf (55 pages, 1190015 bytes).
+Output written on main.pdf (54 pages, 816342 bytes).
 PDF statistics:
- 1363 PDF objects out of 1440 (max. 8388607)
- 310 named destinations out of 1000 (max. 500000)
- 731 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 1336 PDF objects out of 1440 (max. 8388607)
+ 304 named destinations out of 1000 (max. 500000)
+ 700 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -106,27 +106,7 @@ Uniform                & 84.3$\times$ & 29.2$\times$ \\
 
 Both distributions achieve comparable wall-clock speedups ($\sim$30$\times$). Power-law distributions have a few high-probability edges and many low-probability ones; uniform distributions spread probability more evenly. The pruning mechanism is effective in both cases.
 
-\subsection{Scalability: Log--Log Analysis}
-
-Figure~\ref{fig:scalability} presents execution time as a function of graph size on log--log axes, providing a direct visual test of the theoretical complexity bounds.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=\textwidth]{plot3_scalability.png}
-\caption[Scalability log--log]{Execution time vs.\ graph size $|V|$ on log--log axes for baseline (solid) and pruned (dashed) Dijkstra at $\tau=0.01$. Baseline exhibits near-linear scaling; pruned time remains nearly flat.}
-\label{fig:scalability}
-\end{figure}
-
-Baseline execution time increases approximately linearly with $|V|$ on log--log axes, consistent with the $O(|V|\log|V|)$ bound for sparse graphs. In contrast, the pruned algorithm's execution time is nearly constant across all graph sizes, visually confirming that $|E'|$ grows much slower than $|E|$.
-
 \subsection{Optimality Gap Analysis}
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=\textwidth]{plot2_optimality_gap_vs_tau.png}
-\caption[Optimality gap vs.\ $\tau$]{Optimality gap $\Delta$ vs.\ pruning threshold $\tau$. The gap is exactly $0.0000\%$ across all path-found rows, confirming the all-or-nothing property.}
-\label{fig:optimality_gap}
-\end{figure}
 
 A critical finding is the \textbf{zero optimality gap} across all experiments:
 
@@ -135,19 +115,6 @@ A critical finding is the \textbf{zero optimality gap} across all experiments:
 \]
 
 This confirms Theorem~\ref{thm:all_or_nothing} (All-or-Nothing): whenever the pruned algorithm returns a path, it is the globally optimal path. The cost-based gap formula (not probability-based) eliminates floating-point rounding noise involved in $\exp(-C^*)$ conversion. Using probability-based differences would have introduced \texttt{1e-15}-scale noise that has no algorithmic significance.
-
-\subsection{Critical-$\tau$ Heatmap}
-
-Figure~\ref{fig:critical_tau_heatmap} visualises the critical pruning threshold $\tau^*$ across configurations, showing the largest $\tau$ that still preserves the optimal path for each combination of graph type, size, and distribution.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=\textwidth]{plot4_critical_tau_heatmap.png}
-\caption[Critical-$\tau$ heatmap]{Heatmap of the critical pruning threshold $\tau^*$ by configuration. Warmer colours indicate higher $\tau^*$ (more aggressive pruning possible without losing the optimal path).}
-\label{fig:critical_tau_heatmap}
-\end{figure}
-
-The heatmap reveals that smaller, denser graphs tolerate higher $\tau^*$ values (more aggressive pruning) because their paths tend to have higher cumulative probabilities. Layered graphs generally support higher $\tau^*$ than Erd\H{o}s--R\'{e}nyi graphs, consistent with their forward-biased structure toward the target.
 
 \section{Real-Data Experiment Results}\label{sec:real_results}
 

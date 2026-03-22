@@ -71,20 +71,18 @@
 \contentsline {subsection}{\numberline {6.1.2}Speedup vs.\ Graph Size $|V|$}{35}{subsection.6.1.2}%
 \contentsline {subsection}{\numberline {6.1.3}Speedup by Graph Type}{36}{subsection.6.1.3}%
 \contentsline {subsection}{\numberline {6.1.4}Speedup by Probability Distribution}{37}{subsection.6.1.4}%
-\contentsline {subsection}{\numberline {6.1.5}Scalability: Log--Log Analysis}{37}{subsection.6.1.5}%
-\contentsline {subsection}{\numberline {6.1.6}Optimality Gap Analysis}{38}{subsection.6.1.6}%
-\contentsline {subsection}{\numberline {6.1.7}Critical-$\tau $ Heatmap}{38}{subsection.6.1.7}%
-\contentsline {section}{\numberline {6.2}Real-Data Experiment Results}{39}{section.6.2}%
-\contentsline {subsection}{\numberline {6.2.1}Datasets and Graph Statistics}{39}{subsection.6.2.1}%
-\contentsline {subsection}{\numberline {6.2.2}Real-Data Speedup Results}{39}{subsection.6.2.2}%
-\contentsline {subsection}{\numberline {6.2.3}Reachability Analysis}{40}{subsection.6.2.3}%
-\contentsline {section}{\numberline {6.3}Summary of Findings}{41}{section.6.3}%
-\contentsline {chapter}{\numberline {7}CONCLUSION AND FUTURE WORK}{42}{chapter.7}%
-\contentsline {section}{\numberline {7.1}Summary of Contributions}{42}{section.7.1}%
-\contentsline {section}{\numberline {7.2}Limitations}{43}{section.7.2}%
-\contentsline {section}{\numberline {7.3}Future Work}{43}{section.7.3}%
-\contentsline {chapter}{\numberline {8}PROJECT PLAN}{44}{chapter.8}%
-\contentsline {section}{\numberline {8.1}Project Timeline}{44}{section.8.1}%
-\contentsline {section}{\numberline {8.2}Milestones}{45}{section.8.2}%
-\contentsline {chapter}{REFERENCES}{46}{section*.31}%
-\contentsline {chapter}{APPENDIX A: SOURCE CODE AVAILABILITY}{48}{chapter*.33}%
+\contentsline {subsection}{\numberline {6.1.5}Optimality Gap Analysis}{37}{subsection.6.1.5}%
+\contentsline {section}{\numberline {6.2}Real-Data Experiment Results}{37}{section.6.2}%
+\contentsline {subsection}{\numberline {6.2.1}Datasets and Graph Statistics}{37}{subsection.6.2.1}%
+\contentsline {subsection}{\numberline {6.2.2}Real-Data Speedup Results}{38}{subsection.6.2.2}%
+\contentsline {subsection}{\numberline {6.2.3}Reachability Analysis}{38}{subsection.6.2.3}%
+\contentsline {section}{\numberline {6.3}Summary of Findings}{39}{section.6.3}%
+\contentsline {chapter}{\numberline {7}CONCLUSION AND FUTURE WORK}{41}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Summary of Contributions}{41}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Limitations}{42}{section.7.2}%
+\contentsline {section}{\numberline {7.3}Future Work}{42}{section.7.3}%
+\contentsline {chapter}{\numberline {8}PROJECT PLAN}{43}{chapter.8}%
+\contentsline {section}{\numberline {8.1}Project Timeline}{43}{section.8.1}%
+\contentsline {section}{\numberline {8.2}Milestones}{44}{section.8.2}%
+\contentsline {chapter}{REFERENCES}{45}{section*.28}%
+\contentsline {chapter}{APPENDIX A: SOURCE CODE AVAILABILITY}{47}{chapter*.30}%
