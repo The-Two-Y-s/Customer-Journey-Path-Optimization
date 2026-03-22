@@ -6,13 +6,13 @@ This project investigated the effectiveness of probability-based pruning for sho
 
 The following contributions were demonstrated.
 
-The pruning mechanism yields substantial speedups with zero quality loss. On synthetic benchmarks (2,160 rows), wall-clock speedups range from $3.6\times$ at $\tau=0.001$ to $881\times$ at $\tau=0.5$, with edge-relaxation speedups reaching $2{,}124\times$. On real-world item-level graphs, a maximum speedup of $29{,}820\times$ was recorded. In every case where a path was found, the optimality gap was exactly $0.0000\%$.
+The pruning mechanism yields substantial speedups with zero quality loss. On synthetic benchmarks (2,160 rows), wall-clock speedups range from $3.6\times$ at $\tau=0.001$ to $881\times$ at $\tau=0.5$, with edge-relaxation speedups reaching $2{,}124\times$. On real-world item-level graphs, a maximum speedup of $27{,}693\times$ was recorded. In every case where a path was found, the optimality gap was exactly $0.0000\%$.
 
 Formal correctness was established through five theorems: log-transform order preservation, baseline optimality, convergence at $\tau=0$, conditional optimality, and the all-or-nothing property. All five were confirmed empirically across 2,460 experiment rows.
 
 A scalable and reproducible experimental framework was constructed, incorporating deterministic \texttt{hashlib.md5} seeding, separate timing and memory measurement passes, two graph generators (Erd\H{o}s--R\'{e}nyi and layered), and two real-world datasets (RetailRocket and RecSys~2015 YOOCHOOSE). A comprehensive test suite of 40 unit tests validates correctness.
 
-Finally, the reachability--speed trade-off was characterised in detail. Increasing $\tau$ yields faster search but reduces path-found rates, from 28.6\% at $\tau=0.001$ to 3.9\% at $\tau=0.5$ on synthetic data. This trade-off is inherent and well understood. Real-world graphs exhibited additional reachability limitations due to natural session fragmentation.
+Finally, the reachability--speed trade-off was characterised in detail. Increasing $\tau$ yields faster search but reduces path-found rates, from 28.6\% at $\tau=0.001$ to 3.9\% at $\tau=0.5$ on synthetic data. This trade-off is inherent and well understood. On real-world graphs, the pruned algorithm's reachability was further limited by aggressive thresholding on sparse session-based structures.
 
 \section{Limitations}
 

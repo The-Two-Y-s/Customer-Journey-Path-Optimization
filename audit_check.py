@@ -1,257 +1,165 @@
-"""Temporary audit script to cross-check report claims against actual data."""
+"""Comprehensive audit: compute exact values for every table in the report."""
 import csv, statistics, math
 from collections import defaultdict
 
-# ============ SYNTHETIC RESULTS ============
 rows = list(csv.DictReader(open('results/experiment_results.csv')))
 pruned = [r for r in rows if r['algorithm'] == 'pruned']
 baseline = [r for r in rows if r['algorithm'] == 'baseline']
 
-print(f"Total rows: {len(rows)}")
-print(f"Baseline rows: {len(baseline)}, Pruned rows: {len(pruned)}")
-
-# 1. Path-found rates by tau
-tau_found = defaultdict(lambda: {'total': 0, 'found': 0})
-for r in pruned:
-    tau = r['tau']
-    tau_found[tau]['total'] += 1
-    if r['path_found'] == '1':
-        tau_found[tau]['found'] += 1
-
-print("\n=== PATH FOUND RATES BY TAU ===")
-for tau in sorted(tau_found.keys(), key=float):
-    d = tau_found[tau]
-    pct = d['found'] / d['total'] * 100
-    print(f"  tau={tau}: {d['found']}/{d['total']} = {pct:.1f}%")
-
-# 2. Optimality gap
-found_pruned = [r for r in pruned if r['path_found'] == '1' and float(r['optimality_gap_pct']) < 100]
-gaps = [float(r['optimality_gap_pct']) for r in found_pruned]
-print(f"\n=== OPTIMALITY GAP ===")
-print(f"Path-found pruned rows (gap < 100): {len(found_pruned)}")
-if gaps:
-    print(f"Max gap: {max(gaps):.6f}%")
-    print(f"Mean gap: {statistics.mean(gaps):.6f}%")
-
-all_found = sum(1 for r in pruned if r['path_found'] == '1')
-print(f"Total pruned rows with path_found=1: {all_found}")
-
-bl_found = sum(1 for r in baseline if r['path_found'] == '1')
-print(f"Baseline rows with path_found=1: {bl_found}/{len(baseline)}")
-
-# Group baseline by config key
 bl_map = {}
 for r in baseline:
     key = (r['graph_type'], r['graph_size'], r['avg_degree'], r['distribution'], r['run'])
     bl_map[key] = r
 
-# 3. Speedup by tau — ALL rows (not just path-found)
-print("\n=== SPEEDUP BY TAU — ALL ROWS (MEDIAN) ===")
+print("="*70)
+print("TABLE 5.1: SPEEDUP BY TAU (all rows)")
+print("="*70)
 for tau_val in ['0.001', '0.01', '0.05', '0.1', '0.5']:
     tau_rows = [r for r in pruned if r['tau'] == tau_val]
-    edge_speedups = []
-    wall_speedups = []
-    bl_times = []
-    pr_times = []
+    edge_sp, wall_sp, bl_times, pr_times = [], [], [], []
     for r in tau_rows:
         key = (r['graph_type'], r['graph_size'], r['avg_degree'], r['distribution'], r['run'])
         bl = bl_map.get(key)
         if bl:
-            bl_e = int(bl['edges_relaxed'])
-            pr_e = int(r['edges_relaxed'])
-            if pr_e > 0:
-                edge_speedups.append(bl_e / pr_e)
-            elif bl_e > 0:
-                edge_speedups.append(float('inf'))
-            bl_t = float(bl['execution_time_ms'])
-            pr_t = float(r['execution_time_ms'])
+            bl_e, pr_e = int(bl['edges_relaxed']), int(r['edges_relaxed'])
+            bl_t, pr_t = float(bl['execution_time_ms']), float(r['execution_time_ms'])
             bl_times.append(bl_t)
             pr_times.append(pr_t)
-            if pr_t > 0:
-                wall_speedups.append(bl_t / pr_t)
+            if pr_e > 0: edge_sp.append(bl_e / pr_e)
+            if pr_t > 0: wall_sp.append(bl_t / pr_t)
+    finite_edge = [x for x in edge_sp if x < 1e15]
+    found = sum(1 for r in tau_rows if r['path_found'] == '1')
+    pct = found / len(tau_rows) * 100
+    print(f"tau={tau_val}: edge_sp={statistics.median(finite_edge):.1f}x  wall_sp={statistics.median(wall_sp):.1f}x  "
+          f"bl_ms={statistics.median(bl_times):.2f}  pr_ms={statistics.median(pr_times):.3f}  found={pct:.1f}%")
 
-    # Filter out inf for median
-    finite_edge = [x for x in edge_speedups if x != float('inf')]
-    print(f"  tau={tau_val}:")
-    if finite_edge:
-        print(f"    edge speedup: median={statistics.median(finite_edge):.1f}x (n={len(finite_edge)} finite, {len(edge_speedups)-len(finite_edge)} inf)")
-    if wall_speedups:
-        print(f"    wall speedup: median={statistics.median(wall_speedups):.1f}x")
-    print(f"    baseline_ms median={statistics.median(bl_times):.2f}")
-    print(f"    pruned_ms  median={statistics.median(pr_times):.4f}")
-
-# 3b. Speedup by tau — PATH-FOUND ONLY
-print("\n=== SPEEDUP BY TAU — PATH-FOUND ONLY (MEDIAN) ===")
-for tau_val in ['0.001', '0.01', '0.05', '0.1', '0.5']:
-    tau_rows = [r for r in pruned if r['tau'] == tau_val and r['path_found'] == '1']
-    edge_speedups = []
-    wall_speedups = []
-    bl_times = []
-    pr_times = []
-    for r in tau_rows:
-        key = (r['graph_type'], r['graph_size'], r['avg_degree'], r['distribution'], r['run'])
-        bl = bl_map.get(key)
-        if bl:
-            bl_e = int(bl['edges_relaxed'])
-            pr_e = int(r['edges_relaxed'])
-            if pr_e > 0:
-                edge_speedups.append(bl_e / pr_e)
-            bl_t = float(bl['execution_time_ms'])
-            pr_t = float(r['execution_time_ms'])
-            bl_times.append(bl_t)
-            pr_times.append(pr_t)
-            if pr_t > 0:
-                wall_speedups.append(bl_t / pr_t)
-
-    print(f"  tau={tau_val} (n={len(tau_rows)}):")
-    if edge_speedups:
-        print(f"    edge speedup: median={statistics.median(edge_speedups):.1f}x")
-    if wall_speedups:
-        print(f"    wall speedup: median={statistics.median(wall_speedups):.1f}x")
-    if bl_times:
-        print(f"    baseline_ms median={statistics.median(bl_times):.2f}")
-    if pr_times:
-        print(f"    pruned_ms  median={statistics.median(pr_times):.4f}")
-
-# 4. Speedup by size at tau=0.01 — ALL rows
-print("\n=== SPEEDUP BY SIZE (tau=0.01, ALL ROWS, MEDIAN) ===")
+print("\n" + "="*70)
+print("TABLE 5.2 / TABLE 4c: SPEEDUP BY SIZE (tau=0.01, all rows)")
+print("="*70)
 for size in ['1000', '5000', '10000']:
     tau_rows = [r for r in pruned if r['tau'] == '0.01' and r['graph_size'] == size]
-    bl_rows_for_size = [r for r in baseline if r['graph_size'] == size]
-    bl_times = [float(r['execution_time_ms']) for r in bl_rows_for_size]
-    bl_mem = [int(r['peak_memory_bytes']) for r in bl_rows_for_size]
+    bl_for = [bl_map[(r['graph_type'], r['graph_size'], r['avg_degree'], r['distribution'], r['run'])] for r in tau_rows]
+    bl_times = [float(b['execution_time_ms']) for b in bl_for]
     pr_times = [float(r['execution_time_ms']) for r in tau_rows]
-    pr_mem = [int(r['peak_memory_bytes']) for r in tau_rows]
-
-    edge_sp = []
-    wall_sp = []
+    bl_mems = [int(b['peak_memory_bytes'])/1024 for b in bl_for]
+    pr_mems = [int(r['peak_memory_bytes'])/1024 for r in tau_rows]
+    edge_sp, wall_sp = [], []
     for r in tau_rows:
         key = (r['graph_type'], r['graph_size'], r['avg_degree'], r['distribution'], r['run'])
-        bl = bl_map.get(key)
-        if bl:
-            bl_e = int(bl['edges_relaxed'])
-            pr_e = int(r['edges_relaxed'])
-            if pr_e > 0:
-                edge_sp.append(bl_e / pr_e)
-            elif bl_e > 0:
-                edge_sp.append(float('inf'))
-            bl_t = float(bl['execution_time_ms'])
-            pr_t = float(r['execution_time_ms'])
-            if pr_t > 0:
-                wall_sp.append(bl_t / pr_t)
+        bl = bl_map[key]
+        bl_e, pr_e = int(bl['edges_relaxed']), int(r['edges_relaxed'])
+        bl_t, pr_t = float(bl['execution_time_ms']), float(r['execution_time_ms'])
+        if pr_e > 0: edge_sp.append(bl_e / pr_e)
+        if pr_t > 0: wall_sp.append(bl_t / pr_t)
+    print(f"|V|={size}: bl_ms={statistics.median(bl_times):.2f}  pr_ms={statistics.median(pr_times):.3f}  "
+          f"edge_sp={statistics.median(edge_sp):.1f}x  wall_sp={statistics.median(wall_sp):.1f}x")
+    print(f"         bl_KB={statistics.median(bl_mems):.1f}  pr_KB={statistics.median(pr_mems):.1f}  "
+          f"reduction={statistics.median(bl_mems)/statistics.median(pr_mems):.1f}x")
 
-    finite_edge = [x for x in edge_sp if x != float('inf')]
-    n_inf = len(edge_sp) - len(finite_edge)
-    print(f"  |V|={size}:")
-    print(f"    baseline_ms median={statistics.median(bl_times):.2f}, pruned_ms median={statistics.median(pr_times):.4f}")
-    print(f"    baseline_mem median={statistics.median(bl_mem)/1024:.1f}KB, pruned_mem median={statistics.median(pr_mem)/1024:.1f}KB")
-    if finite_edge:
-        print(f"    edge_speedup median={statistics.median(finite_edge):.1f}x ({n_inf} inf), wall_speedup median={statistics.median(wall_sp):.1f}x")
-
-# 5. Speedup by graph type at tau=0.01 — ALL rows
-print("\n=== SPEEDUP BY GRAPH TYPE (tau=0.01, ALL ROWS) ===")
+print("\n" + "="*70)
+print("TABLE 5.3: SPEEDUP BY GRAPH TYPE (tau=0.01, all rows)")
+print("="*70)
 for gtype in ['erdos_renyi', 'layered']:
     tau_rows = [r for r in pruned if r['tau'] == '0.01' and r['graph_type'] == gtype]
-    edge_sp = []
-    wall_sp = []
+    edge_sp, wall_sp = [], []
     for r in tau_rows:
         key = (r['graph_type'], r['graph_size'], r['avg_degree'], r['distribution'], r['run'])
-        bl = bl_map.get(key)
-        if bl:
-            bl_e = int(bl['edges_relaxed'])
-            pr_e = int(r['edges_relaxed'])
-            if pr_e > 0:
-                edge_sp.append(bl_e / pr_e)
-            elif bl_e > 0:
-                edge_sp.append(float('inf'))
-            bl_t = float(bl['execution_time_ms'])
-            pr_t = float(r['execution_time_ms'])
-            if pr_t > 0:
-                wall_sp.append(bl_t / pr_t)
-    finite_edge = [x for x in edge_sp if x != float('inf')]
-    n_inf = len(edge_sp) - len(finite_edge)
-    if finite_edge:
-        print(f"  {gtype}: edge={statistics.median(finite_edge):.1f}x ({n_inf} inf), wall={statistics.median(wall_sp):.1f}x")
+        bl = bl_map[key]
+        bl_e, pr_e = int(bl['edges_relaxed']), int(r['edges_relaxed'])
+        bl_t, pr_t = float(bl['execution_time_ms']), float(r['execution_time_ms'])
+        if pr_e > 0: edge_sp.append(bl_e / pr_e)
+        if pr_t > 0: wall_sp.append(bl_t / pr_t)
+    print(f"{gtype}: edge={statistics.median(edge_sp):.1f}x  wall={statistics.median(wall_sp):.1f}x")
 
-# 6. Speedup by distribution at tau=0.01 — ALL rows
-print("\n=== SPEEDUP BY DISTRIBUTION (tau=0.01, ALL ROWS) ===")
+print("\n" + "="*70)
+print("TABLE 5.4: SPEEDUP BY DISTRIBUTION (tau=0.01, all rows)")
+print("="*70)
 for dist in ['uniform', 'power_law']:
     tau_rows = [r for r in pruned if r['tau'] == '0.01' and r['distribution'] == dist]
-    edge_sp = []
-    wall_sp = []
+    edge_sp, wall_sp = [], []
     for r in tau_rows:
         key = (r['graph_type'], r['graph_size'], r['avg_degree'], r['distribution'], r['run'])
-        bl = bl_map.get(key)
-        if bl:
-            bl_e = int(bl['edges_relaxed'])
-            pr_e = int(r['edges_relaxed'])
-            if pr_e > 0:
-                edge_sp.append(bl_e / pr_e)
-            elif bl_e > 0:
-                edge_sp.append(float('inf'))
-            bl_t = float(bl['execution_time_ms'])
-            pr_t = float(r['execution_time_ms'])
-            if pr_t > 0:
-                wall_sp.append(bl_t / pr_t)
-    finite_edge = [x for x in edge_sp if x != float('inf')]
-    n_inf = len(edge_sp) - len(finite_edge)
-    if finite_edge:
-        print(f"  {dist}: edge={statistics.median(finite_edge):.1f}x ({n_inf} inf), wall={statistics.median(wall_sp):.1f}x")
+        bl = bl_map[key]
+        bl_e, pr_e = int(bl['edges_relaxed']), int(r['edges_relaxed'])
+        bl_t, pr_t = float(bl['execution_time_ms']), float(r['execution_time_ms'])
+        if pr_e > 0: edge_sp.append(bl_e / pr_e)
+        if pr_t > 0: wall_sp.append(bl_t / pr_t)
+    print(f"{dist}: edge={statistics.median(edge_sp):.1f}x  wall={statistics.median(wall_sp):.1f}x")
 
-# 7. Raw sample rows to debug
-print("\n=== SAMPLE ROWS (tau=0.5, first 5 pruned) ===")
-sample = [r for r in pruned if r['tau'] == '0.5'][:5]
-for r in sample:
-    key = (r['graph_type'], r['graph_size'], r['avg_degree'], r['distribution'], r['run'])
-    bl = bl_map.get(key)
-    print(f"  {r['graph_type']} n={r['graph_size']} d={r['avg_degree']} {r['distribution']}:")
-    print(f"    bl: edges={bl['edges_relaxed']}, ms={bl['execution_time_ms']}")
-    print(f"    pr: edges={r['edges_relaxed']}, ms={r['execution_time_ms']}, found={r['path_found']}")
-
-# ============ REAL DATA RESULTS ============
-print("\n\n========== REAL DATA RESULTS ==========")
+# Real data
+print("\n" + "="*70)
+print("REAL DATA TABLES")
+print("="*70)
 real_rows = list(csv.DictReader(open('results/real_data_results.csv')))
-print(f"Total real-data rows: {len(real_rows)}")
-
-# Show column names
-print(f"Columns: {list(real_rows[0].keys())}")
-
-# By dataset
 datasets = defaultdict(list)
 for r in real_rows:
     datasets[r['dataset']].append(r)
 
 for ds, ds_rows in datasets.items():
-    found = sum(1 for r in ds_rows if r['path_found'] == '1' or r['path_found'] == 'True')
+    pruned_found = sum(1 for r in ds_rows if r['path_found'] in ('1', 'True'))
+    # Check baseline found
+    baseline_found = sum(1 for r in ds_rows if r['baseline_cost'] != 'inf' and float(r['baseline_cost']) < 1e10)
     speedups = []
+    for r in ds_rows:
+        sp = r.get('speedup', '')
+        if sp and sp not in ('', 'inf', 'nan'):
+            try: speedups.append(float(sp))
+            except: pass
+    max_sp = max(speedups) if speedups else 0
+    med_sp = statistics.median(speedups) if speedups else 0
     gaps = []
     for r in ds_rows:
-        sp = r.get('speedup', '0')
-        if sp and sp != '' and sp != 'inf' and sp != 'nan':
+        g = r.get('optimality_gap_pct', '')
+        if g and g not in ('', 'nan'):
             try:
-                speedups.append(float(sp))
-            except:
-                pass
-        gap = r.get('optimality_gap_pct', '0')
-        if gap and gap != '' and gap != 'nan':
-            try:
-                g = float(gap)
-                if g < 100:
-                    gaps.append(g)
-            except:
-                pass
-
-    n_nodes = set(r['nodes'] for r in ds_rows)
-    n_edges = set(r['edges'] for r in ds_rows)
-    print(f"\n  {ds}:")
-    print(f"    rows={len(ds_rows)}, path_found={found}/{len(ds_rows)}")
-    print(f"    nodes={n_nodes}, edges={n_edges}")
-    if speedups:
-        print(f"    speedup: median={statistics.median(speedups):.1f}x, max={max(speedups):.1f}x")
+                gv = float(g)
+                if gv < 100: gaps.append(gv)
+            except: pass
+    print(f"\n{ds}:")
+    print(f"  rows={len(ds_rows)}, baseline_found={baseline_found}/{len(ds_rows)}, pruned_found={pruned_found}/{len(ds_rows)}")
+    print(f"  speedup: median={med_sp:.1f}x  max={max_sp:.1f}x")
     if gaps:
-        print(f"    gap: max={max(gaps):.4f}%")
+        print(f"  gap: max={max(gaps):.3f}%")
 
-# Show a sample of real-data rows
-print("\n=== SAMPLE REAL DATA ROWS ===")
-for r in real_rows[:3]:
-    print(f"  {r}")
+# Correctness chapter check
+print("\n" + "="*70)
+print("CORRECTNESS CHAPTER VERIFICATION")
+print("="*70)
+total_pruned = len(pruned)
+total_found = sum(1 for r in pruned if r['path_found'] == '1')
+print(f"Total pruned rows: {total_pruned}")
+print(f"Path-found pruned rows: {total_found}")
+print(f"Report says '171 of 180' -- should say '171 of {total_pruned}'")
+
+# Check unique configs
+configs_with_path = set()
+configs_total = set()
+for r in pruned:
+    cfg = (r['graph_type'], r['graph_size'], r['avg_degree'], r['distribution'], r['tau'])
+    configs_total.add(cfg)
+    if r['path_found'] == '1':
+        configs_with_path.add(cfg)
+print(f"Unique (type,size,deg,dist,tau) combos: {len(configs_total)}")
+print(f"Combos with >=1 path found: {len(configs_with_path)}")
+
+# Summary text checks
+print("\n" + "="*70)
+print("PROSE VALUE CHECKS")
+print("="*70)
+# Complexity chapter: "0.64 → 3.60 → 7.25 ms"
+for size in ['1000', '5000', '10000']:
+    bl_rows = [r for r in baseline if r['graph_size'] == size]
+    med = statistics.median([float(r['execution_time_ms']) for r in bl_rows])
+    print(f"Baseline median for V={size}: {med:.2f} ms")
+
+# Memory values
+for size in ['1000', '5000', '10000']:
+    bl_rows = [r for r in baseline if r['graph_size'] == size]
+    med = statistics.median([int(r['peak_memory_bytes'])/1024 for r in bl_rows])
+    print(f"Baseline mem median for V={size}: {med:.1f} KB")
+
+# Pruned memory at tau=0.01
+for size in ['1000', '5000', '10000']:
+    pr_rows = [r for r in pruned if r['tau'] == '0.01' and r['graph_size'] == size]
+    med = statistics.median([int(r['peak_memory_bytes'])/1024 for r in pr_rows])
+    print(f"Pruned mem median for V={size}, tau=0.01: {med:.1f} KB")

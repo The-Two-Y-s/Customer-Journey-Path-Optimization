@@ -82,7 +82,7 @@ In either case, the algorithm never returns a sub-optimal path: the gap $\Delta$
 
 All five correctness properties were verified experimentally.
 
-Across 2,160 synthetic experiment rows and 300 real-data rows, the optimality gap was measured as $\Delta = |C^*_{\text{baseline}} - C^*_{\text{pruned}}| / C^*_{\text{baseline}} \times 100\%$. The result was $\Delta = 0.0000\%$ for every configuration in which both algorithms found a path (171 of 180 synthetic configurations with $\tau > 0$; 79 of 300 real-data rows), confirming Theorem~\ref{thm:all_or_nothing} empirically.
+Across 2,160 synthetic experiment rows and 300 real-data rows, the optimality gap was measured as $\Delta = |C^*_{\text{baseline}} - C^*_{\text{pruned}}| / C^*_{\text{baseline}} \times 100\%$. The result was $\Delta = 0.0000\%$ for every configuration in which both algorithms found a path (171 of 1,800 pruned experiment rows with $\tau > 0$; 79 of 300 real-data rows), confirming Theorem~\ref{thm:all_or_nothing} empirically.
 
 Convergence testing showed that at $\tau = 0.001$ the pruned algorithm found paths in 28.6\% of configurations, decreasing to 5.8\% at $\tau = 0.01$ and 3.9\% at $\tau = 0.5$. In all path-found cases the returned path was identical to the baseline optimal path, confirming monotone convergence to the baseline solution as $\tau \to 0$.
 
