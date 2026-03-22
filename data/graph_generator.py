@@ -121,9 +121,14 @@ def generate_erdos_renyi_graph(
     extra = _ensure_connectivity(adj, source, target, nodes, rng)
     edges.extend(extra)
 
-    # Assign probability weights and build final weighted graph
+    # Assign probability weights and build final weighted graph.
+    # Raw values are drawn from the chosen distribution, then normalised
+    # per source node so that outgoing probabilities sum to 1 — forming a
+    # valid conditional distribution P(v|u).
     graph: Graph = {nd: [] for nd in nodes}
 
+    # Step 1: draw raw (unnormalised) probability values per edge
+    raw: Dict[str, List[Tuple[str, float]]] = {nd: [] for nd in nodes}
     for u, v in edges:
         if distribution == "uniform":
             p = rng.uniform(0.01, 1.0)
@@ -134,8 +139,16 @@ def generate_erdos_renyi_graph(
             p = min(0.01 * (1 - u_sample) ** (-1.0), 1.0)
         else:
             raise ValueError(f"Unknown distribution: {distribution}")
+        raw[u].append((v, p))
 
-        graph[u].append((v, -math.log(p)))
+    # Step 2: normalise so that Σ_v P(v|u) = 1 for every source u
+    for u, neighbours in raw.items():
+        if not neighbours:
+            continue
+        total = sum(p for _, p in neighbours)
+        for v, p in neighbours:
+            prob = p / total
+            graph[u].append((v, -math.log(prob)))
 
     return graph
 
@@ -268,8 +281,12 @@ def generate_layered_graph(
     extra = _ensure_connectivity(adj, source, target, all_nodes, rng)
     edges.extend(extra)
 
-    # Assign probability weights
+    # Assign probability weights.
+    # Raw values are drawn from the chosen distribution, then normalised
+    # per source node so that outgoing probabilities sum to 1.
     graph: Graph = {nd: [] for nd in all_nodes}
+
+    raw: Dict[str, List[Tuple[str, float]]] = {nd: [] for nd in all_nodes}
     for u, v in edges:
         if distribution == "uniform":
             p = rng.uniform(0.01, 1.0)
@@ -279,6 +296,14 @@ def generate_layered_graph(
             p = min(0.01 * (1 - u_sample) ** (-1.0), 1.0)
         else:
             raise ValueError(f"Unknown distribution: {distribution}")
-        graph[u].append((v, -math.log(p)))
+        raw[u].append((v, p))
+
+    for u, neighbours in raw.items():
+        if not neighbours:
+            continue
+        total = sum(p for _, p in neighbours)
+        for v, p in neighbours:
+            prob = p / total
+            graph[u].append((v, -math.log(prob)))
 
     return graph
