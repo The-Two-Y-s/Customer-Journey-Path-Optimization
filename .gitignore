@@ -9,12 +9,7 @@ output.png
 smoke_test.csv
 
 # Large dataset files (too big for GitHub)
-data/real_dataset/retailrocket/*.csv
-data/real_dataset/recsys2015/yoochoose-clicks.dat
-data/real_dataset/recsys2015/yoochoose-buys.dat
-data/real_dataset/recsys2015/yoochoose-test.dat
-data/real_dataset/recsys2015/yoochoose-data/
-data/real_dataset/online_shoppers_intention.csv
+data/real_dataset/
 
 # Large PDFs
 Proposal_report/*.pdf
