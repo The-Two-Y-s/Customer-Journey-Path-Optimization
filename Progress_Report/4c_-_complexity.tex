@@ -42,7 +42,7 @@ In sparse graphs where $|E|=O(|V|)$, this simplifies to $O(|V|\log|V|)$.
 
 Table~\ref{table:time_by_size} shows measured wall-clock times at $\tau=0.01$ across graph sizes.
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}rrrrr@{}}
@@ -62,7 +62,7 @@ The baseline times scale as $0.58 \to 2.69 \to 5.64$ ms for $|V|=1{,}000 \to 5{,
 
 \section{Space Complexity}
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}lll@{}}
@@ -85,7 +85,7 @@ The pruning threshold $\tau$ adds no asymptotic space overhead. In practice, the
 
 \subsection{Empirical Memory Validation}
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}rrrr@{}}
@@ -105,7 +105,7 @@ Baseline peak memory (83.9 KB $\to$ 349.6 KB $\to$ 662.3 KB) scales linearly wit
 
 \section{Summary of Complexity}
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \small

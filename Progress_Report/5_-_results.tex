@@ -8,7 +8,7 @@ This chapter presents the results of the full experimental evaluation and evalua
 
 Table~\ref{table:speedup_tau} summarises median speedups aggregated across all graph types, sizes, degrees, and distributions.
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}rrrrrr@{}}
@@ -28,7 +28,7 @@ $\tau$ & \textbf{Edge Speedup} & \textbf{Wall Speedup} & \textbf{Baseline (ms)} 
 
 Speedups scale monotonically with $\tau$, ranging from $3.6\times$ wall-clock at $\tau=0.001$ to $881\times$ at $\tau=0.5$. Edge speedups consistently exceed wall-clock speedups (e.g., $2{,}124\times$ vs.\ $881\times$ at $\tau=0.5$) because Python per-call overhead becomes a larger fraction of the substantially reduced pruned runtime. Across all 171 path-found rows among the 1,800 pruned synthetic runs ($\tau > 0$), the optimality gap remained exactly $\Delta = 0.0000\%$, confirming the all-or-nothing property (Theorem~\ref{thm:all_or_nothing}, Chapter~\ref{chap:correctness}). Path-found rates decrease with $\tau$, reflecting the reachability--speed trade-off inherent in the pruning approach.
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{plot1_speedup_vs_tau.png}
 \caption[Speedup vs.\ pruning threshold $\tau$]{Wall-clock speedup as a function of $\tau$ for Erd\H{o}s--R\'{e}nyi (left) and layered (right) graphs.}
@@ -41,7 +41,7 @@ Figure~\ref{fig:speedup_vs_tau} plots the wall-clock speedup ratio (baseline tim
 
 Table~\ref{table:speedup_size} shows how speedup scales with graph size at fixed $\tau = 0.01$.
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}rrrrrr@{}}
@@ -59,7 +59,7 @@ $|V|$ & \textbf{Edge Speedup} & \textbf{Wall Speedup} & \textbf{Baseline (ms)} &
 
 Baseline execution time scales linearly with $|V|$ ($0.58 \to 2.69 \to 5.64$~ms for $|V| = 1{,}000 \to 5{,}000 \to 10{,}000$), consistent with the $O(|V|\log|V|)$ theoretical bound for sparse graphs. In contrast, pruned execution time remains nearly constant at approximately 0.05~ms because the threshold eliminates most of the graph regardless of size. Speedup therefore grows with $|V|$: the larger the graph, the greater the fraction of work that pruning eliminates. Peak memory for the pruned algorithm is essentially constant at approximately 4.5~KB, whereas baseline memory grows proportionally to $|V|$.
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{plot5_memory_scaling.png}
 \caption[Peak memory scaling by graph size]{Peak memory (KB) vs.\ graph size $|V|$ at $\tau=0.01$ for baseline and pruned Dijkstra.}
@@ -70,7 +70,7 @@ Figure~\ref{fig:memory_scaling} displays peak memory consumption on log--log axe
 
 \subsection{Speedup by Graph Type}
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}lrr@{}}
@@ -89,7 +89,7 @@ Erd\H{o}s--R\'{e}nyi graphs show higher speedups (41.8$\times$ wall vs.\ 22.5$\t
 
 \subsection{Speedup by Probability Distribution}
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}lrr@{}}
@@ -122,7 +122,7 @@ This confirms Theorem~\ref{thm:all_or_nothing} (All-or-Nothing): whenever the pr
 
 Table~\ref{table:real_data_graphs} summarises the three real-data configurations (two granularities for RetailRocket, one for RecSys~2015).
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}lrrrl@{}}
@@ -140,7 +140,7 @@ RecSys 2015 (YOOCHOOSE)     &     12,935 &     70,442 & 20 & Kaggle~\citep{recsy
 
 \subsection{Real-Data Speedup Results}
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}lrrrr@{}}
@@ -162,7 +162,7 @@ For the \textbf{RetailRocket event-level} configuration, the 3-node funnel graph
 
 The low path-found rates in large real-world graphs highlight an important practical consideration. Table~\ref{table:reachability} summarises reachability across configurations.
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}lrrl@{}}

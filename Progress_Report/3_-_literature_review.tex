@@ -48,8 +48,6 @@ Two public e-commerce clickstream datasets were used for real-world validation i
 
 These datasets replaced the UCI E-Commerce Clickstream dataset originally planned in the proposal, as YOOCHOOSE provides substantially larger scale and more representative e-commerce behaviour patterns for validation purposes.
 
-\vspace{0.5cm}
-
 \noindent The reviewed literature establishes a strong theoretical and methodological foundation for this project. Dijkstra's algorithm~\citep{dijkstra1959} and its complexity analysis~\citep{cormen2009,fredman1987fibonacci} provide the basis for the baseline implementation and complexity comparison. The Markov chain and Viterbi frameworks~\citep{norris1998markov,viterbi1967error,rabiner1989hmm} situate the probabilistic path problem in a well-studied theoretical context. Heuristic search methods~\citep{hart1968astar,pearl1984heuristics} and approximate approaches establish the landscape of alternatives against which the pruning strategy is positioned. Sequential pattern mining techniques~\citep{pei2001prefixspan,han2007sequential} and clickstream modeling~\citep{bucklin2003clickstream,liu2011webmining} validate the representation and motivate pruning as a scalability mechanism. Probabilistic modeling literature~\citep{resnick1997recommender,manning1999nlp} supports the log-probability transformation. Scalable graph systems~\citep{malewicz2010pregel,sahu2017scaling} contextualize the scalability challenges addressed. The Erd\H{o}s--R\'{e}nyi model~\citep{erdosrenyi1960} grounds the synthetic data generation methodology, and real-world benchmarks~\citep{retailrocket2015,recsys2015} validate experimental generalizability.
 
 \section{Graph Cycles in Customer Journey Navigation}
@@ -66,7 +64,6 @@ Two graph generators were implemented. The first, an \textbf{Erd\H{o}s--R\'{e}ny
 
 Both generators use $O(n \cdot d)$ scalable edge sampling, guarantee $s \to t$ connectivity via BFS + bridge edge, normalize outgoing probabilities to sum to~1, and use deterministic seeds via \texttt{hashlib.md5} for cross-platform reproducibility.
 
-\vspace{0.5cm}
 \noindent\textbf{Research Gap.} Despite the extensive literature above, existing studies largely treat shortest-path computation~\citep{dijkstra1959,cormen2009}, probabilistic modeling~\citep{norris1998markov}, and sequential pattern mining~\citep{pei2001prefixspan} as separate problems. Limited work integrates all three within a unified framework tailored to customer conversion path analysis, with explicit treatment of cyclic navigation graphs, principled synthetic data generation~\citep{erdosrenyi1960}, and empirical characterization of the time--optimality trade-off of threshold-based pruning.
 
 The present project addresses this gap by combining probabilistic transition modeling, threshold-controlled pruning, and Dijkstra's algorithm into a cohesive experimental framework. By systematically evaluating performance across diverse synthetic and real-world graph configurations---including cyclic graphs---the study bridges classical graph algorithms, Markov chain theory, and practical navigation graph analysis within a single experimental design.

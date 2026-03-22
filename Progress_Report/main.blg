@@ -5,22 +5,6 @@ Reallocating 'name_of_file' (item size: 1) to 14 items.
 A level-1 auxiliary file: 0_-_cover.aux
 Reallocating 'name_of_file' (item size: 1) to 17 items.
 A level-1 auxiliary file: 1_-_abstract.aux
-Reallocating 'name_of_file' (item size: 1) to 21 items.
-A level-1 auxiliary file: 2_-_introduction.aux
-Reallocating 'name_of_file' (item size: 1) to 26 items.
-A level-1 auxiliary file: 3_-_literature_review.aux
-Reallocating 'name_of_file' (item size: 1) to 20 items.
-A level-1 auxiliary file: 4_-_methodology.aux
-Reallocating 'name_of_file' (item size: 1) to 21 items.
-A level-1 auxiliary file: 4b_-_correctness.aux
-Reallocating 'name_of_file' (item size: 1) to 20 items.
-A level-1 auxiliary file: 4c_-_complexity.aux
-Reallocating 'name_of_file' (item size: 1) to 16 items.
-A level-1 auxiliary file: 5_-_results.aux
-Reallocating 'name_of_file' (item size: 1) to 19 items.
-A level-1 auxiliary file: 6_-_conclusion.aux
-Reallocating 'name_of_file' (item size: 1) to 21 items.
-A level-1 auxiliary file: 7_-_project_plan.aux
 Reallocating 'name_of_file' (item size: 1) to 9 items.
 The style file: plainnat.bst
 Reallocating 'name_of_file' (item size: 1) to 11 items.
@@ -29,7 +13,7 @@ A level-1 auxiliary file: 8_-_appendix.aux
 Database file #1: references.bib
 You've used 21 entries,
             2773 wiz_defined-function locations,
-            743 strings with 8900 characters,
+            735 strings with 8744 characters,
 and the built_in function-call counts, 9926 in all, are:
 = -- 893
 > -- 571

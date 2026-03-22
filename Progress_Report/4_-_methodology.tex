@@ -11,7 +11,7 @@ Two algorithms were implemented and compared throughout this chapter. Algorithm~
 % ----------------------------------------------------------------
 % FIGURE 1: System Workflow
 % ----------------------------------------------------------------
-\begin{figure}[h!]
+\begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[
     node distance=0.6cm and 0.3cm,
@@ -62,7 +62,7 @@ Figure~\ref{fig:journey_graph} illustrates a representative small customer journ
 % ----------------------------------------------------------------
 % FIGURE 2: Example Customer Journey Graph
 % ----------------------------------------------------------------
-\begin{figure}[h!]
+\begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[
     state/.style={circle, draw=black, thick, minimum size=1.15cm,
@@ -195,7 +195,7 @@ def generate_erdos_renyi_graph(n, avg_degree, distribution, seed, ...):
 
 Two real-world clickstream datasets were used for validation (Table~\ref{table:real_datasets}):
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \resizebox{\textwidth}{!}{%
@@ -285,7 +285,7 @@ $\mathit{dist}[s] \leftarrow 0$; insert $(0, s)$ into min-heap $Q$\;
 
 Table~\ref{table:dijkstra_trace} traces Algorithm~1 on the five-node graph (Figure~\ref{fig:journey_graph}).
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{@{}ccccccc@{}}
 \toprule
@@ -343,7 +343,7 @@ $T \leftarrow -\log(\tau)$\tcp*{pruning threshold in log-space}
 
 The \texttt{edges\_relaxed} counter has a precise, intentional definition that differs between the two algorithms:
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}p{3cm}p{5cm}p{5.5cm}@{}}
@@ -399,7 +399,7 @@ Figure~\ref{fig:algo_flowchart} illustrates the decision-flow difference between
 % ----------------------------------------------------------------
 % FIGURE 3: Algorithm Comparison Flowchart
 % ----------------------------------------------------------------
-\begin{figure}[h!]
+\begin{figure}[htbp]
 \centering
 \resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[
@@ -475,7 +475,7 @@ Figure~\ref{fig:algo_flowchart} illustrates the decision-flow difference between
 \label{fig:algo_flowchart}
 \end{figure}
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}p{2.8cm}p{5.5cm}p{5.5cm}@{}}
@@ -525,7 +525,7 @@ Python's \texttt{heapq} module provides $O(\log|V|)$ extract-min and insert. Sin
 
 Table~\ref{table:simenv} summarises the environment used for all experiments.
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}ll@{}}
@@ -556,7 +556,7 @@ Each experiment records execution time (wall-clock milliseconds via \texttt{time
 
 \subsection{Experimental Parameters}
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}llp{7cm}@{}}

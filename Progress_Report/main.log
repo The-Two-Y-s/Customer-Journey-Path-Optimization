@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.3.15)  23 MAR 2026 00:38
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.3.15)  23 MAR 2026 00:44
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1084,10 +1084,7 @@ File: t1ptm.fd 2001/06/04 font definitions for T1/ptm.
 dftex.def
 File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count369
-) (main.aux (0_-_cover.aux) (1_-_abstract.aux) (2_-_introduction.aux)
-(3_-_literature_review.aux) (4_-_methodology.aux) (4b_-_correctness.aux)
-(4c_-_complexity.aux) (5_-_results.aux) (6_-_conclusion.aux)
-(7_-_project_plan.aux) (8_-_appendix.aux))
+) (main.aux (0_-_cover.aux) (1_-_abstract.aux) (8_-_appendix.aux))
 \openout1 = `main.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 169.
@@ -1242,24 +1239,14 @@ AppData/Local/Programs/MiKTeX-v2/fonts/enc/dvips/base/8r.enc}]
 \tf@toc=\write5
 \openout5 = `main.toc'.
 
- [6]
-\openout2 = `2_-_introduction.aux'.
-
- (2_-_introduction.tex
+ [6] (2_-_introduction.tex
 Chapter 1.
 [1
 
 
-
-] [2]) [3]
-\openout2 = `3_-_literature_review.aux'.
-
- (3_-_literature_review.tex
+] [2]) (3_-_literature_review.tex [3]
 Chapter 2.
 [4
-
-
-
 
 ] [5] [6]
 Overfull \hbox (13.53906pt too wide) in paragraph at lines 39--40
@@ -1280,22 +1267,19 @@ Overfull \hbox (19.62288pt too wide) in paragraph at lines 49--50
 and more rep-re-sen-ta-tive e-commerce
  []
 
-[8] [9])
-Overfull \hbox (5.15138pt too wide) in paragraph at lines 72--185
+[8] [9]) (4_-_methodology.tex
+Overfull \hbox (5.15138pt too wide) in paragraph at lines 69--1
 []\T1/ptm/m/n/12 The present project ad-dresses this gap by com-bin-ing prob-a-
 bilis-tic tran-si-tion mod-el-ing, threshold-
  []
 
 
-Overfull \hbox (13.57541pt too wide) in paragraph at lines 72--185
+Overfull \hbox (13.57541pt too wide) in paragraph at lines 69--1
 \T1/ptm/m/n/12 tem-at-i-cally eval-u-at-ing per-for-mance across di-verse syn-t
 hetic and real-world graph configurations---
  []
 
 [10]
-\openout2 = `4_-_methodology.aux'.
-
- (4_-_methodology.tex
 Chapter 3.
 
 Overfull \hbox (4.04727pt too wide) in paragraph at lines 5--6
@@ -1319,9 +1303,6 @@ LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <6> not available
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <5> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 39.
 [11
-
-
-
 
 ]
 Overfull \hbox (10.97127pt too wide) in paragraph at lines 119--120
@@ -1350,15 +1331,7 @@ Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
 nput line 174.
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10.95> not available
 (Font)              Font shape `T1/cmtt/m/n' tried instead on input line 175.
-
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
-[15] [16] [17]
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
-[18] [19]
+ [15] [16] [17] [18] [19]
 LaTeX Font Info:    Font shape `T1/cmtt/bx/it' in size <12> not available
 (Font)              Font shape `T1/cmtt/m/it' tried instead on input line 342.
 
@@ -1367,9 +1340,6 @@ Underfull \hbox (badness 3449) in paragraph at lines 354--355
  []
 
 [20] [21]
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 496.
@@ -1397,10 +1367,7 @@ Overfull \hbox (0.16902pt too wide) in paragraph at lines 551--552
 ec-onds via \T1/cmtt/m/n/12 time.perf_counter()\T1/ptm/m/n/12 ),
  []
 
-[24]) [25]
-\openout2 = `4b_-_correctness.aux'.
-
- (4b_-_correctness.tex
+[24]) (4b_-_correctness.tex [25]
 Chapter 4.
 
 Overfull \hbox (15.66054pt too wide) in paragraph at lines 8--9
@@ -1411,9 +1378,6 @@ m/m/it/12 that min-i-mizes $[][] \OMS/ztmcm/m/n/12 ^^@ []  \OML/ztmcm/m/it/12 p
  []
 
 [26
-
-
-
 
 ]
 
@@ -1474,10 +1438,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 110--110
 []|\T1/ptm/m/n/12 All-or-nothing
  []
 
-) [29]
-\openout2 = `4c_-_complexity.aux'.
-
- (4c_-_complexity.tex
+) (4c_-_complexity.tex [29]
 Chapter 5.
 
 Overfull \hbox (22.02899pt too wide) in paragraph at lines 16--17
@@ -1493,20 +1454,7 @@ L/ztmcm/m/it/12 O\OT1/ztmcm/m/n/12 (\OMS/ztmcm/m/n/12 j\OML/ztmcm/m/it/12 E\OMS
 
 [30
 
-
-
-
-]
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
-[31]) [32] [33]
-\openout2 = `5_-_results.aux'.
-
- (5_-_results.tex
+] [31]) (5_-_results.tex [32] [33]
 Chapter 6.
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
@@ -1526,9 +1474,6 @@ File: plot1_speedup_vs_tau.png Graphic file (type png)
 Package pdftex.def Info: plot1_speedup_vs_tau.png  used on input line 33.
 (pdftex.def)             Requested size: 452.9679pt x 158.44962pt.
 [34
-
-
-
 
 ]
 
@@ -1551,23 +1496,14 @@ Overfull \hbox (39.73715pt too wide) in paragraph at lines 128--137
  []
 
 
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
-
 Overfull \hbox (0.94107pt too wide) in paragraph at lines 146--155
  [][] 
  []
-
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 [37]
 Overfull \hbox (18.86717pt too wide) in paragraph at lines 168--178
  [][] 
  []
-
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 [38]
 Overfull \hbox (0.93913pt too wide) in paragraph at lines 190--191
@@ -1576,17 +1512,14 @@ nk tests (one-sided, al-ter-na-tive: base-line $\OML/ztmcm/m/it/12 >$ \T1/ptm/m
 /n/12 pruned)
  []
 
-[39])
-Overfull \hbox (2.40404pt too wide) in paragraph at lines 194--189
+[39]) (6_-_conclusion.tex
+Overfull \hbox (2.40404pt too wide) in paragraph at lines 194--1
 []\T1/ptm/b/n/12 Practical busi-ness im-pact. \T1/ptm/m/n/12 The $\OT1/ztmcm/m/
 n/12 27[]693\OMS/ztmcm/m/n/12 ^^B$ \T1/ptm/m/n/12 speedup on the Re-tail-Rocket
  item-level graph (44,711
  []
 
 [40]
-\openout2 = `6_-_conclusion.aux'.
-
- (6_-_conclusion.tex
 Chapter 7.
 
 Overfull \hbox (1.90164pt too wide) in paragraph at lines 5--6
@@ -1598,13 +1531,7 @@ n/12 )$\T1/ptm/m/n/12 ) and a probability-
 
 [41
 
-
-
-
-]) [42]
-\openout2 = `7_-_project_plan.aux'.
-
- (7_-_project_plan.tex
+]) (7_-_project_plan.tex [42]
 Chapter 8.
 <timeline.png, id=1014, 813.0375pt x 618.31pt>
 File: timeline.png Graphic file (type png)
@@ -1612,9 +1539,6 @@ File: timeline.png Graphic file (type png)
 Package pdftex.def Info: timeline.png  used on input line 11.
 (pdftex.def)             Requested size: 385.02547pt x 292.804pt.
 ) [43
-
-
-
 
  <./timeline.png>] [44] (main.bbl
 Underfull \hbox (badness 1147) in paragraph at lines 18--24
@@ -1629,8 +1553,6 @@ lenge
  []
 
 [45
-
-
 
 ]) [46]
 \openout2 = `8_-_appendix.aux'.
@@ -1648,10 +1570,7 @@ m/n/12 .
 [47
 
 
-]) [48] (main.aux (0_-_cover.aux) (1_-_abstract.aux) (2_-_introduction.aux)
-(3_-_literature_review.aux) (4_-_methodology.aux) (4b_-_correctness.aux)
-(4c_-_complexity.aux) (5_-_results.aux) (6_-_conclusion.aux)
-(7_-_project_plan.aux) (8_-_appendix.aux))
+]) [48] (main.aux (0_-_cover.aux) (1_-_abstract.aux) (8_-_appendix.aux))
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
@@ -1660,13 +1579,13 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: 4A1ACF255A070F2613BBCA02B14706F6;17204.
  ) 
 Here is how much of TeX's memory you used:
- 39838 strings out of 467871
- 899696 string characters out of 5417417
- 1676400 words of memory out of 5000000
- 67685 multiletter control sequences out of 15000+600000
+ 39702 strings out of 467871
+ 893924 string characters out of 5417417
+ 1671362 words of memory out of 5000000
+ 67581 multiletter control sequences out of 15000+600000
  724075 words of font info for 180 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 84i,20n,116p,1791b,2062s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 84i,20n,116p,1789b,2062s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\ASUS\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecit1
 200.pk> <C:\Users\ASUS\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\
 ecit1095.pk> <C:\Users\ASUS\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dp
@@ -1685,7 +1604,7 @@ tmb8a.pfb><C:/Users/ASUS/AppData/Local/Programs/MiKTeX-v2/fonts/type1/urw/times
 /utmbi8a.pfb><C:/Users/ASUS/AppData/Local/Programs/MiKTeX-v2/fonts/type1/urw/ti
 mes/utmr8a.pfb><C:/Users/ASUS/AppData/Local/Programs/MiKTeX-v2/fonts/type1/urw/
 times/utmri8a.pfb>
-Output written on main.pdf (54 pages, 816342 bytes).
+Output written on main.pdf (54 pages, 816338 bytes).
 PDF statistics:
  1336 PDF objects out of 1440 (max. 8388607)
  304 named destinations out of 1000 (max. 500000)
