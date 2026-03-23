@@ -53,7 +53,7 @@ When $\tau = 0$, Algorithm~2 is identical to Algorithm~1.
 \end{theorem}
 
 \begin{proof}
-When $\tau = 0$, the pruning threshold becomes $T = -\log(0^+) = +\infty$. The pruning condition $\mathit{new\_cost} > T$ is never satisfied since all finite costs are $< +\infty$. Therefore no edge is pruned, and every code path of Algorithm~2 behaves identically to Algorithm~1. Correctness follows directly from Theorem~\ref{thm:baseline_optimal}.
+When $\tau = 0$, the implementation sets $T = \mathtt{math.inf}$ (i.e.\ $T = +\infty$), since $\lim_{\tau\to 0^+}(-\log\tau) = +\infty$. The pruning condition $\mathit{new\_cost} > T$ is never satisfied since all finite costs are $< +\infty$. Therefore no edge is pruned, and every code path of Algorithm~2 behaves identically to Algorithm~1. Correctness follows directly from Theorem~\ref{thm:baseline_optimal}.
 \end{proof}
 
 \subsection{Conditional Optimality for $\tau > 0$}

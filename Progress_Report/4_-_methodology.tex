@@ -151,11 +151,11 @@ view $\to$ transaction (direct) & $p = 0.004$ & $w = -\ln(0.004) = 5.55$ \\
   \item \textbf{Funnel path:} view $\to$ addtocart $\to$ transaction, $\Pi = 0.041 \times 0.226 = 0.0093$ (log-cost $4.69$).
   \item \textbf{Direct skip:} view $\to$ transaction, $\Pi = 0.004$ (log-cost $5.55$).
 \end{itemize}
-Dijkstra selects the \emph{funnel path} because it has lower log-cost ($4.69 < 5.55$), equivalently higher probability ($0.93\% > 0.39\%$). This $2.4\times$ probability advantage quantifies the value of the add-to-cart step: users who add items to their cart are substantially more likely to complete a transaction than those who skip directly.
+Dijkstra selects the \emph{funnel path} because it has lower log-cost ($4.69 < 5.55$), equivalently higher probability ($0.93\% > 0.39\%$). This $2.3\times$ probability advantage quantifies the value of the add-to-cart step: users who add items to their cart are substantially more likely to complete a transaction than those who skip directly.
 
 \subsection{Constraints and Assumptions}
 
-The framework assumes graph sizes up to 50,000 nodes (hardware permitting), with experiments conducted on graphs of up to 10,000 nodes. Graphs are assumed to be sparse ($|E| = O(|V|)$) and stored using an adjacency-list representation requiring $O(|V|+|E|)$ space. All transition probabilities are strictly positive; zero-probability transitions are treated as non-existent edges. The customer journey graph may contain directed cycles; correctness is preserved because $w(u,v) \geq 0$ for all edges. Finally, a first-order \textbf{Markov assumption} is adopted: $P(\text{next} \mid \text{current})$ is independent of earlier states. This assumption is standard in clickstream modeling~\citep{bucklin2003clickstream} and is empirically supported by the observation that transition matrices estimated from session data yield stable, reproducible graph structures across independent subsamples. While higher-order dependencies exist (e.g., users arriving via search may navigate differently from those arriving via advertisement), the first-order model captures the dominant transition structure and keeps the state space tractable at $O(|V|)$ rather than $O(|V|^k)$ for order~$k$.
+The framework assumes graph sizes up to 50,000 nodes (hardware permitting), with experiments conducted on graphs of up to 10,000 nodes. Graphs are assumed to be sparse ($|E| = O(|V|)$) and stored using an adjacency-list representation requiring $O(|V|+|E|)$ space. All transition probabilities are strictly positive; zero-probability transitions are treated as non-existent edges. The customer journey graph may contain directed cycles; correctness is preserved because $w(u,v) \geq 0$ for all edges. Finally, a first-order \textbf{Markov assumption} is adopted: $P(\text{next} \mid \text{current})$ is independent of earlier states. This assumption is standard in clickstream modeling~\citep{bucklin2003clickstream} and is empirically motivated by the observation that transition matrices estimated from session data yield stable, reproducible graph structures across independent subsamples (a necessary condition for the first-order model, though not a formal test of whether higher-order dependencies are absent). While higher-order dependencies exist (e.g., users arriving via search may navigate differently from those arriving via advertisement), the first-order model captures the dominant transition structure and keeps the state space tractable at $O(|V|)$ rather than $O(|V|^k)$ for order~$k$.
 
 \section{Data Generation and Preprocessing}
 
@@ -266,7 +266,8 @@ $\mathit{dist}[s] \leftarrow 0$; insert $(0, s)$ into min-heap $Q$\;
   \If{$u = t$}{\textbf{break}\tcp*{optimal path reached}}
   \If{$d > \mathit{dist}[u]$}{\textbf{continue}\tcp*{stale entry (lazy deletion)}}
   \ForEach{edge $(u, v)$ with weight $w = -\log p(u,v)$}{
-    $\mathit{edges\_relaxed} \leftarrow \mathit{edges\_relaxed} + 1$\;
+    $\mathit{edges\_examined} \leftarrow \mathit{edges\_examined} + 1$\;
+    $\mathit{edges\_relaxed} \leftarrow \mathit{edges\_relaxed} + 1$\tcp*{no pruning, so every examined edge is relaxed}
     $\mathit{new\_dist} \leftarrow \mathit{dist}[u] + w$\;
     \If{$\mathit{new\_dist} < \mathit{dist}[v]$}{
       $\mathit{dist}[v] \leftarrow \mathit{new\_dist}$; $\mathit{parent}[v] \leftarrow u$\;
@@ -323,6 +324,7 @@ $T \leftarrow -\log(\tau)$\tcp*{pruning threshold in log-space}
   \If{$u = t$}{\textbf{break}}
   \If{$d > \mathit{dist}[u]$}{\textbf{continue}\tcp*{stale entry}}
   \ForEach{edge $(u, v)$ with weight $w = -\log p(u,v)$}{
+    $\mathit{edges\_examined} \leftarrow \mathit{edges\_examined} + 1$\;
     $\mathit{new\_dist} \leftarrow \mathit{dist}[u] + w$\;
     \If{$\mathit{new\_dist} > T$}{\textbf{continue}\tcp*{PRUNE: below $\tau$}}
     $\mathit{edges\_relaxed} \leftarrow \mathit{edges\_relaxed} + 1$\;
