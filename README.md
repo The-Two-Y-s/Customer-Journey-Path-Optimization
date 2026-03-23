@@ -380,7 +380,7 @@ Plots are saved to `results/img/`.
 
 ## Results
 
-**Verdict: Hypothesis supported.** Across 1,800 pruned runs (synthetic) and 300 runs (real data), every run that found a path returned the **exact same optimal path** as the baseline (0.00% optimality gap). **The real trade-off is path-found rate, not accuracy:** aggressive τ values yield massive speedups but reduce the chance of finding any path.
+**Verdict: Hypothesis supported.** Across 1,800 pruned runs (synthetic) and 840 runs (real data — 300 fixed-τ + 540 adaptive-τ), every run that found a path returned the **exact same optimal path** as the baseline (0.00% optimality gap across all 706 found paths). **The real trade-off is path-found rate, not accuracy:** aggressive τ values yield massive speedups but reduce the chance of finding any path.
 
 ### Synthetic Data — Speedup by τ
 
@@ -392,26 +392,39 @@ Plots are saved to `results/img/`.
 | 0.1 | 810.5× | 0.7% | 4.4% | 0.00% |
 | 0.5 | 1,986× | 0.1% | 4.2% | 0.00% |
 
-### Real-Data Validation
+### Real-Data Validation — Fixed τ
 
 Three dataset configurations (20 random source-target pairs × 5 τ values = 300 rows). "Best speedup" is the maximum wall-clock speedup across all runs, including runs where the pruned variant terminates quickly because it prunes all paths:
 
 | Dataset | Nodes | Edges | Best Speedup | Path-Found Rate | Max Gap |
 |---------|-------|-------|-------------|-----------------|--------|
 | RetailRocket (event-level funnel) | 3 | 9 | 5× | 78% | 0.00% |
-| RetailRocket (item-level, 50K sessions) | 44,711 | 101,528 | 20,156× | 1% | 0.00% |
-| RecSys 2015 (50K sessions) | 12,935 | 70,442 | 2,623× | 0% | 0.00% |
+| RetailRocket (item-level, 50K sessions) | 44,711 | 101,528 | 18,882× | 1% | 0.00% |
+| RecSys 2015 (50K sessions) | 12,935 | 70,442 | 2,309× | 0% | 0.00% |
 
-> **Note on real-data path-found rates:** Real graphs have very low per-edge probabilities (items visited rarely), so even the smallest tested τ (0.0001) prunes most paths. The massive speedups on large real graphs come primarily from early termination. On the 3-node funnel (where probabilities are higher), pruning preserves most paths and still delivers measurable speedup.
+The near-zero path-found rates on item-level and session-level graphs are a mathematical certainty — baseline path probabilities (~10⁻⁶) fall far below even τ = 0.0001 (cost threshold 9.21).
+
+### Real-Data Validation — Adaptive τ
+
+To address this, an **adaptive-τ regime** sets τ as a fraction (10%–110%) of each pair's baseline path probability, ensuring the threshold is always in the relevant probability range. 20 pairs × 9 fractions = 180 rows per dataset, 540 total:
+
+| Dataset | Paths Found | Path-Found Rate | Max Speedup | Max Gap |
+|---------|-------------|-----------------|-------------|--------|
+| RetailRocket (event-level) | 147 / 180 | 82% | 5.8× | 0.00% |
+| RetailRocket (item-level) | 152 / 180 | 84% | 3.4× | 0.00% |
+| RecSys 2015 | 150 / 180 | 83% | 1.8× | 0.00% |
+
+> **Key insight:** Adaptive τ raises path-found rates from 0–1% to 82–84% while maintaining **exactly 0% optimality gap** across all 449 adaptive found paths. The speedups are modest because the threshold is close to the optimal cost, but the algorithm's correctness guarantee holds perfectly.
 
 ### Key Findings
 
 1. **179/180** synthetic configurations show statistically significant speedup (Wilcoxon signed-rank, p < 0.05)
-2. **100% exact optimality** — every path found by the pruned variant matches the baseline (0.00% gap), on both synthetic and real data (0/178 synthetic, 0/79 real with non-zero gap)
-3. Normalised transition probabilities (`Σ P(v|u) = 1`) make individual edge probabilities small, so pruning is aggressive — speedups up to **20,156×** on real data (wall-clock)
+2. **100% exact optimality** — every path found by the pruned variant matches the baseline (0.00% gap), on both synthetic and real data (0/178 synthetic, 0/528 real with non-zero gap)
+3. Normalised transition probabilities (`Σ P(v|u) = 1`) make individual edge probabilities small, so pruning is aggressive — speedups up to **18,882×** on real data (wall-clock)
 4. The trade-off is **reachability, not accuracy**: at τ = 0.5 only 4.2% of synthetic runs find a path, but those that do are guaranteed optimal
 5. Both uniform and power-law distributions exhibit consistent behaviour
 6. **Real-data validation** on RetailRocket and RecSys 2015 confirms the hypothesis generalises beyond synthetic graphs
+7. **Adaptive τ** calibrated to each pair's baseline path probability resolves near-zero path-found rates on sparse graphs (0% → 83% for RecSys 2015)
 
 ---
 
@@ -461,7 +474,7 @@ python -m pytest tests/ -v
 │   └── test_pipeline.py              # 41 unit tests
 ├── results/
 │   ├── experiment_results.csv        # 2,160-row synthetic experiment output
-│   ├── real_data_results.csv         # 300-row real-data experiment output
+│   ├── real_data_results.csv         # 840-row real-data experiment output (300 fixed + 540 adaptive)
 │   └── img/                          # Saved plots from analysis notebook
 ├── run_experiments.py                # Synthetic experiment matrix runner
 ├── run_real_experiments.py           # Real-data experiment runner

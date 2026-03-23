@@ -27,6 +27,7 @@ from src.dijkstra import dijkstra, dijkstra_pruned, reconstruct_path
 
 
 TAU_VALUES = [0.0001, 0.001, 0.01, 0.1, 0.5]
+ADAPTIVE_FRACTIONS = [0.10, 0.30, 0.50, 0.70, 0.90, 0.95, 0.99, 1.0, 1.10]
 NUM_PAIRS = 20  # source-target pairs per dataset
 
 
@@ -52,6 +53,53 @@ def _pick_pairs(graph, rng, n=NUM_PAIRS):
     return pairs
 
 
+def _adaptive_taus(base_prob: float) -> list[float]:
+    """Generate tau values relative to a pair's baseline path probability."""
+    taus = sorted(set(round(base_prob * f, 12) for f in ADAPTIVE_FRACTIONS))
+    return [t for t in taus if t > 0]
+
+
+def _make_row(name, n_nodes, n_edges, src, tgt, tau, tau_mode,
+              res_base, t_base, base_cost, base_prob,
+              res_pr, t_pr):
+    """Build a single output row dict."""
+    pr_cost = res_pr.dist.get(tgt, float("inf"))
+    pr_prob = math.exp(-pr_cost) if pr_cost < float("inf") else 0.0
+    found = tgt in res_pr.dist
+
+    if found and base_prob > 0:
+        gap = abs(base_prob - pr_prob) / base_prob * 100
+    else:
+        gap = None
+
+    speedup = t_base / t_pr if t_pr > 0 else float("inf")
+
+    return {
+        "dataset": name,
+        "nodes": n_nodes,
+        "edges": n_edges,
+        "source": src,
+        "target": tgt,
+        "tau": tau,
+        "tau_mode": tau_mode,
+        "baseline_cost": round(base_cost, 6),
+        "baseline_prob": f"{base_prob:.10f}",
+        "baseline_nodes_explored": res_base.metrics.nodes_explored,
+        "baseline_edges_examined": res_base.metrics.edges_examined,
+        "baseline_edges_relaxed": res_base.metrics.edges_relaxed,
+        "baseline_ms": round(t_base, 3),
+        "pruned_cost": round(pr_cost, 6) if found else "",
+        "pruned_prob": f"{pr_prob:.10f}" if found else "",
+        "pruned_nodes_explored": res_pr.metrics.nodes_explored,
+        "pruned_edges_examined": res_pr.metrics.edges_examined,
+        "pruned_edges_relaxed": res_pr.metrics.edges_relaxed,
+        "pruned_ms": round(t_pr, 3),
+        "path_found": found,
+        "speedup": round(speedup, 2),
+        "optimality_gap_pct": round(gap, 6) if gap is not None else "",
+    }
+
+
 def run_dataset(name, df, output_rows, rng):
     transitions = extract_transitions(df)
     _, probs = compute_transition_statistics(transitions)
@@ -73,45 +121,24 @@ def run_dataset(name, df, output_rows, rng):
         base_cost = res_base.dist.get(tgt, float("inf"))
         base_prob = math.exp(-base_cost) if base_cost < float("inf") else 0.0
 
+        # --- Fixed-tau sweep (comparability with synthetic experiments) ---
         for tau in TAU_VALUES:
             t0 = time.perf_counter()
             res_pr = dijkstra_pruned(graph, src, tgt, tau=tau)
             t_pr = (time.perf_counter() - t0) * 1000
+            output_rows.append(_make_row(
+                name, n_nodes, n_edges, src, tgt, tau, "fixed",
+                res_base, t_base, base_cost, base_prob, res_pr, t_pr))
 
-            pr_cost = res_pr.dist.get(tgt, float("inf"))
-            pr_prob = math.exp(-pr_cost) if pr_cost < float("inf") else 0.0
-            found = tgt in res_pr.dist
-
-            if found and base_prob > 0:
-                gap = abs(base_prob - pr_prob) / base_prob * 100
-            else:
-                gap = None
-
-            speedup = t_base / t_pr if t_pr > 0 else float("inf")
-
-            output_rows.append({
-                "dataset": name,
-                "nodes": n_nodes,
-                "edges": n_edges,
-                "source": src,
-                "target": tgt,
-                "tau": tau,
-                "baseline_cost": round(base_cost, 6),
-                "baseline_prob": f"{base_prob:.10f}",
-                "baseline_nodes_explored": res_base.metrics.nodes_explored,
-                "baseline_edges_examined": res_base.metrics.edges_examined,
-                "baseline_edges_relaxed": res_base.metrics.edges_relaxed,
-                "baseline_ms": round(t_base, 3),
-                "pruned_cost": round(pr_cost, 6) if found else "",
-                "pruned_prob": f"{pr_prob:.10f}" if found else "",
-                "pruned_nodes_explored": res_pr.metrics.nodes_explored,
-                "pruned_edges_examined": res_pr.metrics.edges_examined,
-                "pruned_edges_relaxed": res_pr.metrics.edges_relaxed,
-                "pruned_ms": round(t_pr, 3),
-                "path_found": found,
-                "speedup": round(speedup, 2),
-                "optimality_gap_pct": round(gap, 6) if gap is not None else "",
-            })
+        # --- Adaptive-tau sweep (τ as fractions of baseline probability) ---
+        if base_prob > 0:
+            for tau in _adaptive_taus(base_prob):
+                t0 = time.perf_counter()
+                res_pr = dijkstra_pruned(graph, src, tgt, tau=tau)
+                t_pr = (time.perf_counter() - t0) * 1000
+                output_rows.append(_make_row(
+                    name, n_nodes, n_edges, src, tgt, tau, "adaptive",
+                    res_base, t_base, base_cost, base_prob, res_pr, t_pr))
 
 
 def main():
@@ -160,9 +187,14 @@ def main():
     print(f"\nWrote {len(rows)} rows to {out}")
 
     # Quick summary
-    found_count = sum(1 for r in rows if r["path_found"])
+    fixed = [r for r in rows if r["tau_mode"] == "fixed"]
+    adaptive = [r for r in rows if r["tau_mode"] == "adaptive"]
+    found_fixed = sum(1 for r in fixed if r["path_found"])
+    found_adaptive = sum(1 for r in adaptive if r["path_found"])
     total = len(rows)
-    print(f"Path-found rate: {found_count}/{total} ({found_count/total*100:.1f}%)")
+    print(f"Fixed-tau rows: {len(fixed)}, paths found: {found_fixed}")
+    print(f"Adaptive-tau rows: {len(adaptive)}, paths found: {found_adaptive}")
+    print(f"Total path-found rate: {found_fixed + found_adaptive}/{total}")
     gaps = [r["optimality_gap_pct"] for r in rows if r["optimality_gap_pct"] != ""]
     if gaps:
         print(f"Max optimality gap: {max(gaps):.6f}%")

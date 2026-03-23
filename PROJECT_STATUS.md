@@ -24,7 +24,7 @@ The full implementation, experimentation, and validation phases of the project a
 - Layered (stage-based) graph generator with 5-stage funnel and backward edges
 - Critical-τ finder with adaptive sweep (110% probe + wall-clock speedup)
 - Synthetic experiment runner (2,160 rows across full parameter matrix)
-- Real-data experiment runner (300 rows across RetailRocket + RecSys 2015)
+- Real-data experiment runner (840 rows across RetailRocket + RecSys 2015: 300 fixed-τ + 540 adaptive-τ)
 - Analysis notebook (5 plots + Wilcoxon signed-rank tests)
 - 41 unit tests passing (pytest), including convergence and edge-case coverage
 - Deterministic seeds via hashlib.md5 for cross-process reproducibility
@@ -57,7 +57,7 @@ The full implementation, experimentation, and validation phases of the project a
 | File | Purpose |
 |------|---------|
 | `run_experiments.py` | Synthetic experiment matrix: 2 graph types × 3 sizes × 3 degrees × 2 distributions × 6 τ × 10 runs = 2,160 rows. Separate timing/memory passes. hashlib.md5 seeds. Cost-based gap. |
-| `run_real_experiments.py` | Real-data experiments: 3 datasets × 20 pairs × 5 τ = 300 rows. |
+| `run_real_experiments.py` | Real-data experiments: 3 datasets × 20 pairs × (5 fixed τ + 9 adaptive fractions) = 840 rows. |
 | `analysis.ipynb` | Results analysis: 5 plots + Wilcoxon statistical tests → `results/img/`. |
 
 ### Tests
@@ -103,17 +103,29 @@ All 41 tests pass (pytest). Coverage includes:
 | 0.5 | 738× | 1,986× | 4.2% | 0.00% |
 
 - **179/180** configurations show statistically significant speedup (Wilcoxon, p < 0.05)
-- **0/257** found paths have non-zero optimality gap (178 synthetic + 79 real)
+- **0/706** found paths have non-zero optimality gap (178 synthetic + 79 fixed-real + 449 adaptive-real)
 
-### Real-Data Validation (300 rows)
+### Real-Data Validation — Fixed τ (300 rows)
 
 | Dataset | Nodes | Edges | Best Speedup | Path-Found Rate | Max Gap |
 |---------|-------|-------|-------------|-----------------|--------|
 | RetailRocket (event-level) | 3 | 9 | 5× | 78% | 0.00% |
-| RetailRocket (item-level) | 44,711 | 101,528 | 20,156× | 1% | 0.00% |
-| RecSys 2015 | 12,935 | 70,442 | 2,623× | 0% | 0.00% |
+| RetailRocket (item-level) | 44,711 | 101,528 | 18,882× | 1% | 0.00% |
+| RecSys 2015 | 12,935 | 70,442 | 2,309× | 0% | 0.00% |
 
-Massive speedups on large real graphs come primarily from early termination (pruning discards everything quickly). Low path-found rates confirm that real transition probabilities are very small.
+### Real-Data Validation — Adaptive τ (540 rows)
+
+τ set as a fraction (10%–110%) of each pair's baseline path probability:
+
+| Dataset | Paths Found | Path-Found Rate | Max Speedup | Max Gap |
+|---------|-------------|-----------------|-------------|--------|
+| RetailRocket (event-level) | 147 / 180 | 82% | 5.8× | 0.00% |
+| RetailRocket (item-level) | 152 / 180 | 84% | 3.4× | 0.00% |
+| RecSys 2015 | 150 / 180 | 83% | 1.8× | 0.00% |
+
+Adaptive τ resolves the near-zero path-found rates: RecSys goes from 0% to 83%, RR item-level from 1% to 84%. Optimality gap remains exactly 0.00% across all 449 adaptive found paths.
+
+Massive speedups on large real graphs come primarily from early termination (pruning discards everything quickly). Low path-found rates under fixed τ confirm that real transition probabilities are very small.
 
 ### Verdict
 
@@ -140,7 +152,7 @@ Massive speedups on large real graphs come primarily from early termination (pru
 | Layered stage-based graph generator | 5 stages, backward edges |
 | Critical-τ finder with adaptive sweep | 110% probe, wall-clock speedup |
 | Parameter matrix (Section 3.8.3) | Full matrix executed (2,160 rows) |
-| Real-data validation | RetailRocket + RecSys 2015 (300 rows) |
+| Real-data validation | RetailRocket + RecSys 2015 (840 rows: 300 fixed + 540 adaptive) |
 | Convergence verification (Section 4.4 item 3) | Tested (costs + edges_relaxed) |
 | Probability consistency (Section 4.4 item 4) | Tested |
 | Edge-case testing (Section 4.4 item 5) | Tested |
@@ -152,7 +164,7 @@ Massive speedups on large real graphs come primarily from early termination (pru
 Based on the report's project timeline (Chapter 8, Figure 8.1):
 
 - **Weeks 1-4 (Implementation): COMPLETE.**
-- **Weeks 4-7 (Testing and Experimentation): COMPLETE.** Full synthetic (2,160 rows) and real-data (300 rows) experiments executed and analysed.
+- **Weeks 4-7 (Testing and Experimentation): COMPLETE.** Full synthetic (2,160 rows) and real-data (840 rows: 300 fixed + 540 adaptive) experiments executed and analysed.
 - **Weeks 7-10 (Analysis, Writing, Presentation): IN PROGRESS.** Analysis notebook populated. Results written up. Final report and presentation remaining.
 
 ---
