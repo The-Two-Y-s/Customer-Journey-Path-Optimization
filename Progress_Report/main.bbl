@@ -1,4 +1,4 @@
-\begin{thebibliography}{21}
+\begin{thebibliography}{23}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -53,6 +53,15 @@ Michael~L. Fredman and Robert~E. Tarjan.
 \newblock \emph{Journal of the {ACM}}, 34\penalty0 (3):\penalty0 596--615,
   1987.
 \newblock \doi{10.1145/28869.28874}.
+
+\bibitem[Geisberger et~al.(2008)Geisberger, Sanders, Schultes, and
+  Delling]{geisberger2008contraction}
+Robert Geisberger, Peter Sanders, Dominik Schultes, and Daniel Delling.
+\newblock Contraction hierarchies: Faster and simpler hierarchical routing in
+  road networks.
+\newblock In \emph{Proceedings of the 7th International Workshop on
+  Experimental Algorithms (WEA)}, pages 319--333, 2008.
+\newblock \doi{10.1007/978-3-540-68552-4_24}.
 
 \bibitem[Han et~al.(2007)Han, Cheng, Xin, and Yan]{han2007sequential}
 Jiawei Han, Hong Cheng, Dong Xin, and Xifeng Yan.
@@ -153,5 +162,11 @@ Andrew~J. Viterbi.
 \newblock \emph{IEEE Transactions on Information Theory}, 13\penalty0
   (2):\penalty0 260--269, 1967.
 \newblock \doi{10.1109/TIT.1967.1054010}.
+
+\bibitem[Yen(1971)]{yen1971ksp}
+Jin~Y. Yen.
+\newblock Finding the $k$ shortest loopless paths in a network.
+\newblock \emph{Management Science}, 17\penalty0 (11):\penalty0 712--716, 1971.
+\newblock \doi{10.1287/mnsc.17.11.712}.
 
 \end{thebibliography}

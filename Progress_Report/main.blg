@@ -11,44 +11,44 @@ Reallocating 'name_of_file' (item size: 1) to 11 items.
 Reallocating 'name_of_file' (item size: 1) to 17 items.
 A level-1 auxiliary file: 8_-_appendix.aux
 Database file #1: references.bib
-You've used 21 entries,
+You've used 23 entries,
             2773 wiz_defined-function locations,
-            735 strings with 8744 characters,
-and the built_in function-call counts, 9926 in all, are:
-= -- 893
-> -- 571
-< -- 15
-+ -- 195
-- -- 174
-* -- 804
-:= -- 1543
-add.period$ -- 78
-call.type$ -- 21
-change.case$ -- 117
-chr.to.int$ -- 21
-cite$ -- 42
-duplicate$ -- 442
-empty$ -- 805
-format.name$ -- 207
-if$ -- 2070
+            749 strings with 9170 characters,
+and the built_in function-call counts, 11017 in all, are:
+= -- 998
+> -- 620
+< -- 17
++ -- 212
+- -- 189
+* -- 889
+:= -- 1700
+add.period$ -- 86
+call.type$ -- 23
+change.case$ -- 128
+chr.to.int$ -- 23
+cite$ -- 46
+duplicate$ -- 495
+empty$ -- 899
+format.name$ -- 224
+if$ -- 2308
 int.to.chr$ -- 1
 int.to.str$ -- 1
-missing$ -- 25
-newline$ -- 127
-num.names$ -- 84
-pop$ -- 239
+missing$ -- 27
+newline$ -- 139
+num.names$ -- 92
+pop$ -- 261
 preamble$ -- 1
-purify$ -- 100
+purify$ -- 109
 quote$ -- 0
-skip$ -- 343
+skip$ -- 385
 stack$ -- 0
-substring$ -- 369
-swap$ -- 41
-text.length$ -- 2
+substring$ -- 430
+swap$ -- 53
+text.length$ -- 3
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 201
+type$ -- 223
 warning$ -- 0
-while$ -- 91
+while$ -- 102
 width$ -- 0
-write$ -- 303
+write$ -- 333
