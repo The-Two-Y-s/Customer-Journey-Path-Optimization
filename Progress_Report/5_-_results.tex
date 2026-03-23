@@ -6,7 +6,7 @@ This chapter presents the results of the full experimental evaluation and evalua
 
 \subsection{Speedup vs.\ Pruning Threshold $\tau$}
 
-Table~\ref{table:speedup_tau} summarises median speedups aggregated across all graph types, sizes, degrees, and distributions.
+Table~\ref{table:speedup_tau} summarizes median speedups aggregated across all graph types, sizes, degrees, and distributions.
 
 \begin{table}[htbp]
 \centering
@@ -23,16 +23,16 @@ $\tau$ & Edge Spd & Exam.\ Spd & Wall Spd & Base (ms) & Pruned (ms) & Found (\%)
 0.5   & 1,986$\times$ & 711.1$\times$ & 738.2$\times$ & 4.98 & 0.006 & 4.2  \\
 \bottomrule
 \end{tabular}
-\caption[Speedup by pruning threshold $\tau$]{Median speedups by $\tau$ across all synthetic configurations. ``Edge Speedup'' = baseline \texttt{edges\_relaxed} / pruned \texttt{edges\_relaxed} (measures pruning aggressiveness). ``Exam.\ Speedup'' = baseline \texttt{edges\_examined} / pruned \texttt{edges\_examined} (fair like-for-like comparison; see Table~\ref{table:edges_relaxed}). ``Wall Speedup'' = baseline ms / pruned ms. Optimality gap $\Delta = 0.0000\%$ for all path-found rows.}
+\caption[Speedup by pruning threshold $\tau$]{Median speedups by pruning threshold $\tau$.}
 \label{table:speedup_tau}
 \end{table}
 
-Speedups scale monotonically with $\tau$, ranging from $3.3\times$ wall-clock at $\tau=0.001$ to $738\times$ at $\tau=0.5$. The ``Edge Speedup'' column---based on \texttt{edges\_relaxed}---consistently exceeds both other measures because its pruned denominator excludes threshold-pruned edges; it quantifies pruning aggressiveness, not raw work reduction. The ``Exam.\ Speedup'' column provides the fair apples-to-apples comparison using \texttt{edges\_examined}, which counts every outgoing edge the algorithm inspects regardless of whether it survives the threshold (see Table~\ref{table:edges_relaxed} for counter semantics). At $\tau=0.5$, the examination speedup ($711\times$) closely tracks wall-clock speedup ($738\times$), confirming that the wall-clock gains are genuine and not inflated by counter semantics. At lower $\tau$ values (e.g.\ $\tau=0.001$, exam.\ speedup $1.9\times$, wall-clock $3.3\times$), the pruned algorithm still examines most edges but skips many relaxation operations, and Python per-call overhead becomes a larger fraction of the reduced runtime. Across all 178 path-found rows among the 1,800 pruned synthetic runs ($\tau > 0$), the optimality gap remained exactly $\Delta = 0.0000\%$, confirming the all-or-nothing property (Theorem~\ref{thm:all_or_nothing}, Chapter~\ref{chap:correctness}). Path-found rates decrease with $\tau$, reflecting the reachability--speed trade-off inherent in the pruning approach.
+Speedups scale monotonically with $\tau$, ranging from $3.3\times$ wall-clock at $\tau=0.001$ to $738\times$ at $\tau=0.5$. The ``Edge Speedup'' column---based on \texttt{edges\_relaxed}---consistently exceeds both other measures because its pruned denominator excludes threshold-pruned edges; it quantifies pruning aggressiveness, not raw work reduction. The ``Exam.\ Speedup'' column provides the fair like-for-like comparison using \texttt{edges\_examined}, which counts every outgoing edge the algorithm inspects regardless of whether it survives the threshold (see Table~\ref{table:edges_relaxed} for counter semantics). At $\tau=0.5$, the examination speedup ($711\times$) closely tracks wall-clock speedup ($738\times$), confirming that the wall-clock gains are genuine and not inflated by counter semantics. At lower $\tau$ values (e.g.\ $\tau=0.001$, exam.\ speedup $1.9\times$, wall-clock $3.3\times$), the pruned algorithm still examines most edges but skips many relaxation operations, and Python per-call overhead becomes a larger fraction of the reduced runtime. Across all 178 path-found rows among the 1,800 pruned synthetic runs ($\tau > 0$), the optimality gap remained exactly $\Delta = 0.0000\%$, confirming the all-or-nothing property (Theorem~\ref{thm:all_or_nothing}, Chapter~\ref{chap:correctness}). Path-found rates decrease with $\tau$, reflecting the reachability--speed trade-off inherent in the pruning approach.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{plot1_speedup_vs_tau.png}
-\caption[Speedup vs.\ pruning threshold $\tau$]{Wall-clock speedup as a function of $\tau$ for Erd\H{o}s--R\'{e}nyi (left) and layered (right) graphs.}
+\caption[Speedup vs.\ pruning threshold $\tau$]{Wall-clock speedup vs.\ $\tau$ for ER (left) and layered (right) graphs.}
 \label{fig:speedup_vs_tau}
 \end{figure}
 
@@ -55,7 +55,7 @@ $|V|$ & Edge Spd & Exam.\ Spd & Wall Spd & Base (ms) & Pruned (ms) & Peak Mem (K
 10,000 & 180.4$\times$ & 41.3$\times$ & 77.0$\times$ & 15.83 & 0.222 & 655.0 $\to$ 4.5 \\
 \bottomrule
 \end{tabular}
-\caption[Speedup scaling by graph size]{Median speedups at $\tau = 0.01$ by graph size. Columns defined as in Table~\ref{table:speedup_tau}. Baseline time grows linearly with $|V|$; pruned time remains nearly constant. Memory columns show baseline $\to$ pruned peak consumption.}
+\caption[Speedup scaling by graph size]{Median speedups at $\tau=0.01$ by graph size.}
 \label{table:speedup_size}
 \end{table}
 
@@ -64,11 +64,11 @@ Baseline execution time scales linearly with $|V|$ ($1.67 \to 7.12 \to 15.83$~ms
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{plot5_memory_scaling.png}
-\caption[Peak memory scaling by graph size]{Peak memory (KB) vs.\ graph size $|V|$ at $\tau=0.01$ for baseline and pruned Dijkstra.}
+\caption[Peak memory scaling]{Peak memory (KB) vs.\ $|V|$ at $\tau=0.01$ for baseline and pruned Dijkstra.}
 \label{fig:memory_scaling}
 \end{figure}
 
-Figure~\ref{fig:memory_scaling} displays peak memory consumption on log--log axes for Erd\H{o}s--R\'{e}nyi (left) and layered (right) graphs at $\tau=0.01$. Solid lines with circle markers represent baseline Dijkstra; dashed lines with triangle markers represent the pruned variant. Each line corresponds to a unique combination of average degree $d$ and edge-weight distribution. Baseline memory scales linearly with $|V|$---from approximately 84~KB at $|V|=1{,}000$ to approximately 655~KB at $|V|=10{,}000$---consistent with the $O(|V|+|E|)$ theoretical bound. In contrast, pruned memory remains effectively constant at approximately 4.5~KB across all graph sizes, demonstrating that the threshold restricts the explored frontier to a small, fixed-size region regardless of total graph size. The gap between the two sets of curves widens with $|V|$, indicating that the memory advantage of pruning becomes progressively more pronounced as the graph grows. This constant-memory behaviour makes the pruned algorithm particularly attractive for deployment on memory-constrained systems.
+Figure~\ref{fig:memory_scaling} displays peak memory consumption on log--log axes for Erd\H{o}s--R\'{e}nyi (left) and layered (right) graphs at $\tau=0.01$. Solid lines with circle markers represent baseline Dijkstra; dashed lines with triangle markers represent the pruned variant. Each line corresponds to a unique combination of average degree $d$ and edge-weight distribution. Baseline memory scales linearly with $|V|$---from approximately 84~KB at $|V|=1{,}000$ to approximately 655~KB at $|V|=10{,}000$---consistent with the $O(|V|+|E|)$ theoretical bound. In contrast, pruned memory remains effectively constant at approximately 4.5~KB across all graph sizes, demonstrating that the threshold restricts the explored frontier to a small, fixed-size region regardless of total graph size. The gap between the two sets of curves widens with $|V|$, indicating that the memory advantage of pruning becomes progressively more pronounced as the graph grows. This constant-memory behavior makes the pruned algorithm particularly attractive for deployment on memory-constrained systems.
 
 \subsection{Speedup by Graph Type}
 
@@ -83,7 +83,7 @@ Erd\H{o}s--R\'{e}nyi & 111.6$\times$ & 24.5$\times$ & 40.1$\times$ \\
 Layered              &  49.3$\times$ &  9.0$\times$ & 16.6$\times$ \\
 \bottomrule
 \end{tabular}
-\caption[Speedup by graph type]{Median speedups at $\tau = 0.01$ by graph type. Columns defined as in Table~\ref{table:speedup_tau}. ER graphs benefit more from pruning than layered graphs.}
+\caption[Speedup by graph type]{Median speedups at $\tau = 0.01$ by graph type.}
 \label{table:speedup_graph_type}
 \end{table}
 
@@ -102,7 +102,7 @@ Power-law ($\alpha=2$) & 73.0$\times$ & 13.9$\times$ & 25.1$\times$ \\
 Uniform                & 83.8$\times$ & 14.1$\times$ & 22.4$\times$ \\
 \bottomrule
 \end{tabular}
-\caption[Speedup by probability distribution]{Median speedups at $\tau = 0.01$ by distribution. Columns defined as in Table~\ref{table:speedup_tau}. Both distributions achieve similar wall-clock speedups.}
+\caption[Speedup by probability distribution]{Median speedups at $\tau = 0.01$ by probability distribution.}
 \label{table:speedup_dist}
 \end{table}
 
@@ -122,7 +122,7 @@ This confirms Theorem~\ref{thm:all_or_nothing} (All-or-Nothing): whenever the pr
 
 \subsection{Datasets and Graph Statistics}
 
-Table~\ref{table:real_data_graphs} summarises the three real-data configurations (two granularities for RetailRocket, one for RecSys~2015).
+Table~\ref{table:real_data_graphs} summarizes the three real-data configurations (two granularities for RetailRocket, one for RecSys~2015).
 
 \begin{table}[htbp]
 \centering
@@ -137,7 +137,7 @@ RetailRocket (item-level)   &     44,711 &    101,528 & 20 & Kaggle~\citep{retai
 RecSys 2015 (YOOCHOOSE)     &     12,935 &     70,442 & 20 & Kaggle~\citep{recsys2015}       \\
 \bottomrule
 \end{tabular}
-\caption[Real-data graph configurations]{Graph sizes for the three real-data configurations. 20 random source--target pairs were tested per dataset (balancing statistical representativeness against computational cost). Each pair was evaluated with both a \emph{fixed} $\tau$ grid ($\tau \in \{0.0001, 0.001, 0.01, 0.1, 0.5\}$, 300 rows) and an \emph{adaptive} $\tau$ sweep where $\tau$ is set as a fraction of the pair's baseline path probability (540 rows; see Section~\ref{sec:adaptive_tau}). Total: 840 rows.}
+\caption[Real-data graph configurations]{Real-data graph configurations.}
 \label{table:real_data_graphs}
 \end{table}
 
@@ -155,7 +155,7 @@ RetailRocket (item-level)   &   508$\times$ &  18,882$\times$ &  1 / 100 & 0.000
 RecSys 2015 (YOOCHOOSE)     &   197$\times$ &   2,309$\times$ &  0 / 100 & --- \\
 \bottomrule
 \end{tabular}
-\caption[Fixed-$\tau$ real-data speedup results]{Speedup results using the fixed $\tau$ grid. Wall-clock speedup = baseline time / pruned time. $\Delta$ is the optimality gap (0.000\% for all found paths). The high speedups on item-level graphs are driven by early termination but produce very low path-found rates.}
+\caption[Fixed-$\tau$ real-data speedup]{Fixed-$\tau$ speedup on real-world datasets.}
 \label{table:real_data_speedup}
 \end{table}
 
@@ -165,11 +165,16 @@ The near-zero path-found rates on the large graphs are \emph{not} surprising onc
 
 \subsection{Adaptive-$\tau$ Experiment}\label{sec:adaptive_tau}
 
-The fixed $\tau$ grid was designed for the synthetic experiments (where edge probabilities are higher) and is poorly calibrated for real-world item-level graphs whose cumulative path probabilities are orders of magnitude smaller. To address this, we added a per-pair \emph{adaptive} $\tau$ sweep: for each source--target pair, $\tau$ is set to a fraction $f \in \{0.10, 0.30, 0.50, 0.70, 0.90, 0.95, 0.99, 1.00, 1.10\}$ of that pair's baseline path probability. This mirrors the adaptive sweep strategy used internally by the \texttt{critical\_tau} module (Chapter~\ref{chap:methodology}, Section~\ref{sec:critical_tau}) and ensures that the tested thresholds are always in the relevant probability regime.
+The fixed $\tau$ grid was designed for the synthetic experiments (where edge probabilities are higher) and is poorly calibrated for real-world item-level graphs whose cumulative path probabilities are orders of magnitude smaller. To address this, a per-pair \emph{adaptive} $\tau$ sweep was introduced: for each source--target pair, $\tau$ is set to a fraction~$f$ of that pair's baseline path probability, where
+\[
+  f \in \{0.10,\; 0.30,\; 0.50,\; 0.70,\; 0.90,\; 0.95,\; 0.99,\; 1.00,\; 1.10\}.
+\]
+This mirrors the adaptive sweep strategy used internally by the \texttt{critical\_tau} module (Chapter~\ref{chap:methodology}, Section~\ref{sec:critical_tau}) and ensures that the tested thresholds are always in the relevant probability regime.
 
 \begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 \textbf{Dataset} & \textbf{Median Speedup} & \textbf{Max Speedup} & \textbf{Paths Found} & $\Delta$ \\
@@ -178,23 +183,25 @@ RetailRocket (event-level)  &     1.3$\times$ &   5.8$\times$ & 147 / 180 & 0.00
 RetailRocket (item-level)   &     1.2$\times$ &   3.4$\times$ & 152 / 180 & 0.000\% \\
 RecSys 2015 (YOOCHOOSE)     &     1.1$\times$ &   1.8$\times$ & 150 / 180 & 0.000\% \\
 \bottomrule
-\end{tabular}
-\caption[Adaptive-$\tau$ real-data speedup results]{Speedup results with adaptive $\tau$ (set as a fraction of each pair's baseline path probability). Path-found rates increase dramatically compared to Table~\ref{table:real_data_speedup}: from 0/100 to 150/180 for RecSys~2015. The optimality gap remains exactly 0.000\% for all 449 found paths.}
+\end{tabular}%
+}
+\caption[Adaptive-$\tau$ real-data speedup]{Adaptive-$\tau$ speedup results.}
 \label{table:real_data_adaptive}
 \end{table}
 
-The contrast with the fixed-$\tau$ results is striking. RecSys~2015 moves from 0/100 found paths (fixed) to \textbf{150/180} found paths (adaptive); RetailRocket item-level similarly improves from 1/100 to \textbf{152/180}. The speedups under adaptive $\tau$ are modest (1.1--5.8$\times$) because the threshold is now close to the optimal path probability, so only a small margin of the search space is pruned. This is the expected behaviour of the reachability--speed trade-off: in the adaptive regime the algorithm preserves the optimal path at the cost of reduced pruning, whereas the fixed-$\tau$ regime achieves massive speedups only when the threshold is far above the optimal path probability (and therefore prunes everything).
+The contrast with the fixed-$\tau$ results is striking. RecSys~2015 moves from 0/100 found paths (fixed) to \textbf{150/180} found paths (adaptive); RetailRocket item-level similarly improves from 1/100 to \textbf{152/180}. The speedups under adaptive $\tau$ are modest (1.1--5.8$\times$) because the threshold is now close to the optimal path probability, so only a small margin of the search space is pruned. This is the expected behavior of the reachability--speed trade-off: in the adaptive regime the algorithm preserves the optimal path at the cost of reduced pruning, whereas the fixed-$\tau$ regime achieves massive speedups only when the threshold is far above the optimal path probability (and therefore prunes everything).
 
 Crucially, the optimality gap remains \textbf{exactly $0.0000\%$} across all 449 adaptive found paths, extending the zero-gap guarantee to a total of 528 real-data found paths (79 fixed + 449 adaptive) and reinforcing the all-or-nothing property on real-world graphs.
 
 \subsection{Reachability Analysis}
 
-Table~\ref{table:reachability} summarises path-found rates across all experiment configurations, contrasting the fixed and adaptive $\tau$ regimes.
+Table~\ref{table:reachability} summarizes path-found rates across all experiment configurations, contrasting the fixed and adaptive $\tau$ regimes.
 
 \begin{table}[htbp]
 \centering
 \small
 \renewcommand{\arraystretch}{1.3}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}llrrl@{}}
 \toprule
 Configuration & $\tau$ Mode & Baseline Found & Pruned Found & Interpretation \\
@@ -208,8 +215,9 @@ RR event-level        & adaptive & 180 / 180 & 147 / 180   & 82\% found with cal
 RR item-level         & adaptive & 180 / 180 & 152 / 180   & 84\% found; dramatic improvement from 1\% \\
 RecSys 2015           & adaptive & 180 / 180 & 150 / 180   & 83\% found; dramatic improvement from 0\% \\
 \bottomrule
-\end{tabular}
-\caption[Reachability summary]{Path-found rates across synthetic and real-data experiments under fixed and adaptive $\tau$ regimes. The adaptive regime sets $\tau$ as a fraction of the baseline path probability, ensuring thresholds are calibrated to each pair's probability regime.}
+\end{tabular}%
+}
+\caption[Reachability summary]{Path-found rates under fixed and adaptive $\tau$ regimes.}
 \label{table:reachability}
 \end{table}
 
@@ -223,7 +231,7 @@ In synthetic graphs, the BFS connectivity guarantee ensures the baseline always 
 
 The experimental evaluation yields several principal findings. Wall-clock speedups range from $3.3\times$ at $\tau=0.001$ to $738\times$ at $\tau=0.5$ on synthetic data, and reach up to $18{,}882\times$ on real-world item-level graphs under fixed $\tau$. The optimality gap remained at exactly $\Delta = 0.0000\%$ across all 706 experiment rows in which both algorithms found a path---178 of 1,800 pruned synthetic rows, 79 of 300 fixed-$\tau$ real-data rows, and 449 of 540 adaptive-$\tau$ real-data rows---confirming the all-or-nothing property established in Theorem~\ref{thm:all_or_nothing}.
 
-\textbf{Statistical significance.} Wilcoxon signed-rank tests (one-sided, alternative: baseline $>$ pruned) were applied to all 180 unique synthetic configurations (each with 10 paired runs). Of these, 179 tests rejected the null hypothesis at $\alpha = 0.05$, with $p$-values ranging from $9.77 \times 10^{-4}$ (the minimum attainable for $n=10$ paired observations) to $0.032$. The median $p$-value was $9.77 \times 10^{-4}$. One configuration (layered, $|V|=1{,}000$, $d=5$, uniform, $\tau=0.001$) yielded $p=0.116$, failing the significance threshold; this is the mildest pruning level on a small, forward-biased graph where baseline and pruned running times are very close. Excluding this single outlier, all remaining configurations confirm that the speedup is not an artefact of measurement noise.
+\textbf{Statistical significance.} Wilcoxon signed-rank tests (one-sided, alternative: baseline $>$ pruned) were applied to all 180 unique synthetic configurations (each with 10 paired runs). Of these, 179 tests rejected the null hypothesis at $\alpha = 0.05$, with $p$-values ranging from $9.77 \times 10^{-4}$ (the minimum attainable for $n=10$ paired observations) to $0.032$. The median $p$-value was $9.77 \times 10^{-4}$. One configuration (layered, $|V|=1{,}000$, $d=5$, uniform, $\tau=0.001$) yielded $p=0.116$, failing the significance threshold; this is the mildest pruning level on a small, forward-biased graph where baseline and pruned running times are very close. Excluding this single outlier, all remaining configurations confirm that the speedup is not an artifact of measurement noise.
 
 Speedup grows with graph size---from $9.4\times$ at $|V|=1{,}000$ to $77\times$ at $|V|=10{,}000$ at fixed $\tau=0.01$---because larger graphs contain more pruneable edges. The fair \texttt{edges\_examined}-based examination speedup confirms these gains are genuine (e.g.\ $5.7\times$ to $41.3\times$ over the same size range), while the higher \texttt{edges\_relaxed}-based ratios quantify pruning aggressiveness. At the same time, higher $\tau$ values reduce path-found rates from 30.6\% at $\tau=0.001$ to 4.2\% at $\tau=0.5$ on synthetic data, demonstrating the inherent reachability--speed trade-off. Under fixed $\tau$, real-world item-level and session-level graphs showed near-zero pruned-found rates because baseline path probabilities ($10^{-6}$--$10^{-9}$) fall far below even $\tau=0.0001$. Introducing an adaptive-$\tau$ regime---where the threshold is set as a fraction of each pair's baseline path probability---raised path-found rates to 82--84\% while maintaining zero optimality gap, validating the algorithm's correctness on real-world graphs.
 

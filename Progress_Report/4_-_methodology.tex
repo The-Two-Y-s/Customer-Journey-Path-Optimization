@@ -1,10 +1,10 @@
-\chapter{ALGORITHM DESIGN, DATA STRUCTURES, AND IMPLEMENTATION}
+\chapter{ALGORITHM DESIGN, DATA STRUCTURES, AND IMPLEMENTATION}\label{chap:methodology}
 
 \section{System Overview}
 
 The \textit{Customer Journey Path Optimization} system models user interactions as a directed weighted graph $G = (V, E)$, where each node $v \in V$ represents a discrete interaction state (e.g., \textit{Landing Page}, \textit{Search}, \textit{Product Page}, \textit{Cart}, \textit{Checkout}), and each directed edge $(u,v) \in E$ represents a user transition between states annotated with a transition probability $p(u,v) \in (0,1]$. The primary goal is to identify the most probable path from a designated source node $s$ to a target conversion node $t$.
 
-Figure~\ref{fig:system_workflow} presents the end-to-end workflow. It is organised into five sequential components: (1) data generation and preprocessing, (2) graph construction, (3) baseline path optimization using Dijkstra's algorithm, (4) optimized path search using probability-pruned Dijkstra, and (5) experimental evaluation and comparative analysis.
+Figure~\ref{fig:system_workflow} presents the end-to-end workflow. It is organized into five sequential components: (1) data generation and preprocessing, (2) graph construction, (3) baseline path optimization using Dijkstra's algorithm, (4) optimized path search using probability-pruned Dijkstra, and (5) experimental evaluation and comparative analysis.
 
 Two algorithms were implemented and compared throughout this chapter. Algorithm~1 (Baseline Dijkstra on Log-Weights) applies standard Dijkstra's algorithm to the log-probability-transformed graph, guaranteeing globally optimal paths in $O(|E|\log|V|)$ time. Algorithm~2 (Probability-Pruned Dijkstra) extends Algorithm~1 with a pruning threshold $\tau$ that discards partial paths whose cumulative probability falls below $\tau$, reducing expected runtime to $O(|E'|\log|V|)$, $|E'| \leq |E|$, with convergence to Algorithm~1 as $\tau \to 0$.
 
@@ -47,7 +47,7 @@ Two algorithms were implemented and compared throughout this chapter. Algorithm~
     node[midway, below=8pt, font=\small\bfseries, color=nodeblue]
     {Customer Journey Path Optimization Workflow Process};
 \end{tikzpicture}
-\caption[System workflow overview]{Five-stage workflow process: data generation, graph construction, baseline Dijkstra, pruned Dijkstra, and experimental evaluation.}
+\caption[System workflow overview]{End-to-end system workflow.}
 \label{fig:system_workflow}
 \end{figure}
 
@@ -57,7 +57,7 @@ Two algorithms were implemented and compared throughout this chapter. Algorithm~
 
 Customer interactions are modeled as a directed graph $G = (V, E)$, where $V$ is the set of interaction states (nodes), $E \subseteq V \times V$ is the set of directed transitions (edges), and each edge $(u,v) \in E$ carries a transition probability $p(u,v) \in (0,1]$. A designated source node $s \in V$ (e.g., Landing Page) and target node $t \in V$ (e.g., Checkout) define the query endpoints. In the optimized algorithm, a pruning threshold $\tau \in (0,1]$ is used to discard low-probability partial paths.
 
-Figure~\ref{fig:journey_graph} illustrates a representative small customer journey graph to clarify the graph model.
+Figure~\ref{fig:journey_graph} illustrates a representative five-node customer journey graph. Node abbreviations: LP\,=\,Landing Page (source~$s$), SR\,=\,Search Results, PP\,=\,Product Page, CT\,=\,Cart, CK\,=\,Checkout (target~$t$). The solid blue path LP\,$\to$\,SR\,$\to$\,PP\,$\to$\,CK is optimal ($\Pi^*=0.336$, log-cost $\approx 1.091$).
 
 % ----------------------------------------------------------------
 % FIGURE 2: Example Customer Journey Graph
@@ -104,7 +104,7 @@ Figure~\ref{fig:journey_graph} illustrates a representative small customer journ
   \end{tabular}
 };
 \end{tikzpicture}
-\caption[Example customer journey graph]{Representative customer journey graph. LP = source $s$, CK = target $t$. Solid blue path LP$\to$SR$\to$PP$\to$CK is optimal ($\Pi^*=0.336$, log-cost$\approx1.091$).}
+\caption[Example customer journey graph]{Five-node customer journey graph ($s=\text{LP}$, $t=\text{CK}$).}
 \label{fig:journey_graph}
 \end{figure}
 
@@ -163,15 +163,15 @@ The framework assumes graph sizes up to 50,000 nodes (hardware permitting), with
 
 Two graph generators were implemented in \texttt{data/graph\_generator.py}.
 
-The first is an \textbf{Erd\H{o}s--R\'{e}nyi sparse random generator}~\citep{erdosrenyi1960}, which creates $|V|$ nodes and samples directed edges with expected total $\bar{d} \cdot |V|$; transition probabilities are drawn from either a uniform $\mathcal{U}(0.01, 1.0)$ or a power-law ($\alpha=2$) distribution. This generator produces graphs with uniformly random structure, serving as a controlled baseline for evaluating algorithmic behaviour without structural bias.
+The first is an \textbf{Erd\H{o}s--R\'{e}nyi sparse random generator}~\citep{erdosrenyi1960}, which creates $|V|$ nodes and samples directed edges with expected total $\bar{d} \cdot |V|$; transition probabilities are drawn from either a uniform $\mathcal{U}(0.01, 1.0)$ or a power-law ($\alpha=2$) distribution. This generator produces graphs with uniformly random structure, serving as a controlled baseline for evaluating algorithmic behavior without structural bias.
 
-The second is a \textbf{layered (stage-based) generator}, which models the funnel-shaped structure typical of real customer journeys. Nodes are distributed across five ordered stages---Awareness, Interest, Consideration, Intent, and Conversion---reflecting the standard e-commerce conversion funnel. Edges are sampled primarily in the forward direction (up to $+2$ stages ahead), ensuring that the dominant flow proceeds from awareness toward conversion. A configurable \texttt{backward\_prob} parameter (default~$0.15$) controls the fraction of backward links, modelling the common user behaviour of revisiting earlier stages (e.g., returning from a product page to browse). Transition probabilities for forward edges use raw weights drawn from $\mathcal{U}(0.3, 0.8)$, while backward edges receive lower raw weights from $\mathcal{U}(0.05, 0.3)$, reflecting the empirical observation that forward progression is more likely than backtracking. These raw weights are then normalised per source node (so that $\sum_v p(u,v) = 1$); consequently, the final transition probabilities no longer follow the original uniform distributions but preserve their relative ordering. This layered design is the more application-relevant of the two generators, as it approximates the stage-wise structure observed in real clickstream data (Section~\ref{sec:real_results}).
+The second is a \textbf{layered (stage-based) generator}, which models the funnel-shaped structure typical of real customer journeys. Nodes are distributed across five ordered stages---Awareness, Interest, Consideration, Intent, and Conversion---reflecting the standard e-commerce conversion funnel. Edges are sampled primarily in the forward direction (up to $+2$ stages ahead), ensuring that the dominant flow proceeds from awareness toward conversion. A configurable \texttt{backward\_prob} parameter (default~$0.15$) controls the fraction of backward links, modeling the common user behavior of revisiting earlier stages (e.g., returning from a product page to browse). Transition probabilities for forward edges use raw weights drawn from $\mathcal{U}(0.3, 0.8)$, while backward edges receive lower raw weights from $\mathcal{U}(0.05, 0.3)$, reflecting the empirical observation that forward progression is more likely than backtracking. These raw weights are then normalized per source node (so that $\sum_v p(u,v) = 1$); consequently, the final transition probabilities no longer follow the original uniform distributions but preserve their relative ordering. This layered design is the more application-relevant of the two generators, as it approximates the stage-wise structure observed in real clickstream data (Section~\ref{sec:real_results}).
 
-Both generators employ $O(n \cdot d)$ scalable edge sampling rather than $O(n^2)$ adjacency-matrix construction. A BFS-based connectivity guarantee ensures that if no $s \to t$ path exists after random sampling, bridge edges are added; these bridge edges are treated as forward edges and therefore receive raw weights from $\mathcal{U}(0.3, 0.8)$. Outgoing probabilities are normalised per node ($\sum_v p(u,v) = 1$), and deterministic seeding via \texttt{hashlib.md5} ensures cross-platform reproducibility.
+Both generators employ $O(n \cdot d)$ scalable edge sampling rather than $O(n^2)$ adjacency-matrix construction. A BFS-based connectivity guarantee ensures that if no $s \to t$ path exists after random sampling, bridge edges are added; these bridge edges are treated as forward edges and therefore receive raw weights from $\mathcal{U}(0.3, 0.8)$. Outgoing probabilities are normalized per node ($\sum_v p(u,v) = 1$), and deterministic seeding via \texttt{hashlib.md5} ensures cross-platform reproducibility.
 
 The following code snippet shows key aspects of the Erd\H{o}s--R\'{e}nyi generator:
 
-\begin{lstlisting}[language=Python, caption={Core edge sampling from the ER generator (\texttt{data/graph\_generator.py})}, label=lst:er_gen]
+\begin{lstlisting}[language=Python, caption={ER graph generator (\texttt{data/graph\_generator.py})}, label=lst:er_gen]
 def generate_erdos_renyi_graph(n, avg_degree, distribution, seed, ...):
     rng = random.Random(seed)
     graph = {f"node_{i}": {} for i in range(n)}
@@ -209,7 +209,7 @@ RecSys 2015 (YOOCHOOSE) & 33M & 50K & 12,935 nodes, 70,442 edges & Kaggle~\citep
 \bottomrule
 \end{tabular}%
 }
-\caption[Real-world dataset summary]{Real-world clickstream datasets used for validation. RetailRocket supports two granularities: event-type (3-node funnel) and item-level (large graph). RecSys 2015 uses item-to-item click transitions.}
+\caption[Real-world dataset summary]{Real-world clickstream datasets used for validation.}
 \label{table:real_datasets}
 \end{table}
 
@@ -299,9 +299,11 @@ Init   & ---          & $0$    & $\infty$ & $\infty$ & $\infty$ & $\infty$ \\
 4      & \textbf{CK}\checkmark & $0$ & $0.36$ & $0.87$ & $1.20$ & \textbf{1.09} \\
 \bottomrule
 \end{tabular}
-\caption[Dijkstra dist trace]{Dijkstra \texttt{dist[]} trace on the five-node graph, $s = \text{LP}$, $t = \text{CK}$. At step~4, CK is finalised with optimal log-cost $1.09$, probability $\exp(-1.09) = 0.336$.}
+\caption[Dijkstra dist trace]{Dijkstra \texttt{dist[]} trace ($s=\text{LP}$, $t=\text{CK}$).}
 \label{table:dijkstra_trace}
 \end{table}
+
+The column headers are node abbreviations: LP\,=\,Landing Page (source~$s$), SR\,=\,Search Results, PP\,=\,Product Page, CT\,=\,Cart, and CK\,=\,Checkout (target~$t$). Each row shows the \texttt{dist[]} array after extracting the minimum-cost node listed in the \textbf{Extract} column. Values are log-costs $w=-\log\,p$; $\infty$ denotes an unreached node. At Step~1, extracting LP relaxes its neighbours SR ($-\log0.7\approx0.36$) and CT ($-\log0.3\approx1.20$). At Step~2, SR is extracted and reaches PP ($0.36+{-\log0.6}\approx0.87$). Step~3 extracts PP and discovers CK ($0.87+{-\log0.8}\approx1.09$). At Step~4, CK is extracted with cost $\mathbf{1.09}$; the \checkmark{} annotation marks the \emph{target-reached} early exit. The bold value $\mathbf{1.09}$ is the final optimal log-cost, corresponding to path probability $\Pi^*=\exp(-1.09)\approx0.336$.
 
 \subsection{Optimized Algorithm: Probability-Pruned Dijkstra}
 
@@ -348,17 +350,19 @@ The \texttt{edges\_relaxed} counter has a precise, intentional definition that d
 \begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
-\begin{tabular}{@{}p{3cm}p{3cm}p{4cm}p{4cm}@{}}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}llp{5.5cm}p{4.5cm}@{}}
 \toprule
-\textbf{Algorithm} & \textbf{Counter} & \textbf{Counts} & \textbf{Placement in Code} \\
+\textbf{Algorithm} & \textbf{Metric} & \textbf{Definition} & \textbf{Code Placement} \\
 \midrule
 Baseline & \texttt{edges\_examined} & Every outgoing edge from a settled node & Before the improvement check \\
-Baseline & \texttt{edges\_relaxed} & (Same as \texttt{edges\_examined}) & (No pruning step) \\
-Pruned & \texttt{edges\_examined} & Every outgoing edge from a settled node & Before the \texttt{if new\_cost > T} check \\
-Pruned & \texttt{edges\_relaxed} & Only edges that \textbf{survived} $\tau$ & After the \texttt{if new\_cost > T: continue} check \\
+Baseline & \texttt{edges\_relaxed} & Same as \texttt{edges\_examined} & No pruning step \\
+Pruned & \texttt{edges\_examined} & Every outgoing edge from a settled node & Before \texttt{if new\_cost > T} \\
+Pruned & \texttt{edges\_relaxed} & Only edges that \textbf{survived} $\tau$ & After \texttt{if new\_cost > T: continue} \\
 \bottomrule
-\end{tabular}
-\caption[Edge-counting semantics]{Edge-counting semantics. \texttt{edges\_examined} provides an apples-to-apples comparison between baseline and pruned, since both algorithms increment it at the same point for every outgoing edge. \texttt{edges\_relaxed} in the pruned algorithm counts only threshold-surviving edges; the difference \texttt{edges\_examined $-$ edges\_relaxed} isolates the pruning overhead.}
+\end{tabular}%
+}
+\caption[Edge-counting semantics]{Edge-counting semantics for baseline and pruned Dijkstra.}
 \label{table:edges_relaxed}
 \end{table}
 
@@ -399,7 +403,7 @@ def dijkstra_pruned(graph, source, target, tau):
 
 \subsection{Algorithm Comparison}
 
-Figure~\ref{fig:algo_flowchart} illustrates the decision-flow difference between both algorithms. Table~\ref{table:algo_compare} summarises the trade-offs.
+Figure~\ref{fig:algo_flowchart} illustrates the decision-flow difference between both algorithms. The pruned variant (right column) adds a \emph{More edges?} inner-loop decision and a threshold gate $d_{\text{new}}>T$ (red box); edges exceeding $T=-\log(\tau)$ are skipped without relaxation, looping back to the next edge, and when all edges from $u$ are processed control returns to Extract-Min. Table~\ref{table:algo_compare} summarizes the trade-offs.
 
 % ----------------------------------------------------------------
 % FIGURE 3: Algorithm Comparison Flowchart
@@ -417,6 +421,8 @@ Figure~\ref{fig:algo_flowchart} illustrates the decision-flow difference between
                      draw=black, thick, font=\scriptsize\bfseries, text centered},
     prune/.style={rectangle, minimum width=2.5cm, minimum height=0.7cm,
                   draw=red!70!black, thick, fill=boxred, font=\small, text centered},
+    terminal/.style={rectangle, rounded corners=8pt, minimum width=2.2cm, minimum height=0.6cm,
+                     draw=nodegreen!80!black, thick, fill=boxgreen, font=\small\bfseries, text centered},
     arr/.style={-{Stealth[length=4pt]}, thick},
     lbl/.style={font=\scriptsize, fill=white, inner sep=1pt}
 ]
@@ -427,62 +433,73 @@ Figure~\ref{fig:algo_flowchart} illustrates the decision-flow difference between
 \node[decision, below=0.7cm of b_tgt]    (b_stale)  {Stale?};
 \node[process,  below=0.7cm of b_stale, fill=boxblue] (b_relax) {Relax neighbours};
 \node[process,  below=0.5cm of b_relax, fill=boxblue] (b_push)  {Push to $Q$ if better};
+\node[terminal, right=1.0cm of b_tgt]    (b_done)   {Return path};
 
 \draw[arr] (b_start) -- (b_tgt);
-\draw[arr] (b_tgt)   -- node[lbl,right]{No}  (b_stale);
-\draw[arr] (b_stale) -- node[lbl,right]{No}  (b_relax);
-\draw[arr] (b_relax) --                      (b_push);
+\draw[arr] (b_tgt)   -- node[lbl,left]{No}  (b_stale);
+\draw[arr] (b_stale) -- node[lbl,right]{No} (b_relax);
+\draw[arr] (b_relax) --                     (b_push);
 
-\draw[arr] (b_tgt.east)
-    -- ++(1.1,0)
-    |- node[lbl, pos=0.25, right]{Yes $\Rightarrow$ \textbf{Stop}}
-    (b_push.east);
+% u=t? Yes → Return path (terminal exit)
+\draw[arr] (b_tgt)   -- node[lbl,above]{Yes} (b_done);
 
-\draw[arr] (b_stale.east)
-    -- ++(0.8,0)
-    |- node[lbl, pos=0.25, right]{Yes $\Rightarrow$ Skip}
-    (b_relax.east);
+% Stale? Yes → loop back to Extract-Min
+\draw[arr] (b_stale.west) -- ++(-0.7,0)
+    node[lbl, left]{Yes}
+    |- (b_start.west);
+
+% Push → loop back to Extract-Min
+\draw[arr] (b_push.west) -- ++(-1.2,0) |- (b_start.west);
 
 \node[font=\small\bfseries, above=0.25cm of b_start, color=nodeorange] {Baseline Dijkstra};
 
 %--- RIGHT COLUMN: Pruned Dijkstra ---
-\node[startstop, fill=boxorange, right=3.8cm of b_start] (p_start) {Extract-Min$(Q)$};
+\node[startstop, fill=boxorange, right=6.5cm of b_start] (p_start) {Extract-Min$(Q)$};
 \node[decision,  below=0.5cm of p_start]  (p_tgt)   {$u = t$?};
 \node[decision,  below=0.7cm of p_tgt]    (p_stale)  {Stale?};
-\node[decision,  below=0.7cm of p_stale]  (p_prune)  {$d_{\text{new}} > T$?};
-\node[prune,     below=0.5cm of p_prune]  (p_skip)   {\textbf{PRUNE} (skip)};
-\node[process,   right=1.3cm of p_prune, fill=boxblue] (p_relax)  {Relax edge};
-\node[process,   below=0.5cm of p_skip,  fill=boxblue] (p_push)   {Push to $Q$ if better};
+\node[decision,  below=0.7cm of p_stale]  (p_foreach) {More edges?};
+\node[decision,  below=0.7cm of p_foreach] (p_prune)  {$d_{\text{new}} > T$?};
+\node[prune,     right=1.5cm of p_prune]  (p_skip)   {\textbf{PRUNE} (skip)};
+\node[process,   below=0.7cm of p_prune, fill=boxblue] (p_relax)  {Relax \& Push if better};
+\node[terminal,  right=1.0cm of p_tgt]    (p_done)   {Return path};
 
 \draw[arr] (p_start) -- (p_tgt);
-\draw[arr] (p_tgt)   -- node[lbl,right]{No}  (p_stale);
-\draw[arr] (p_stale) -- node[lbl,right]{No}  (p_prune);
-\draw[arr] (p_prune) -- node[lbl,left] {Yes} (p_skip);
-\draw[arr] (p_skip)  --                      (p_push);
+\draw[arr] (p_tgt)   -- node[lbl,left]{No}  (p_stale);
+\draw[arr] (p_stale) -- node[lbl,right]{No} (p_foreach);
+\draw[arr] (p_foreach) -- node[lbl,right]{Yes} (p_prune);
+\draw[arr] (p_prune) -- node[lbl,right]{No} (p_relax);
 
-\draw[arr] (p_prune.east) -- node[lbl,above]{No} (p_relax);
-\draw[arr] (p_relax.south) |- (p_push.east);
+% u=t? Yes → Return path (terminal exit)
+\draw[arr] (p_tgt)   -- node[lbl,above]{Yes} (p_done);
 
-\draw[arr] (p_tgt.east)
-    -- ++(1.4,0)
-    |- node[lbl, pos=0.25, right]{Yes $\Rightarrow$ \textbf{Stop}}
-    (p_push.east);
+% Stale? Yes → loop back to Extract-Min
+\draw[arr] (p_stale.west) -- ++(-0.7,0)
+    node[lbl, left]{Yes}
+    |- (p_start.west);
 
-\draw[arr] (p_stale.east)
-    -- ++(1.1,0)
-    |- node[lbl, pos=0.25, right]{Yes $\Rightarrow$ Skip}
-    (p_prune.east);
+% More edges? No → all edges processed, back to Extract-Min
+\draw[arr] (p_foreach.west) -- ++(-1.2,0)
+    node[lbl, left]{No}
+    |- (p_start.west);
+
+% PRUNE: Yes → skip edge, back to More edges?
+\draw[arr] (p_prune) -- node[lbl,above]{Yes} (p_skip);
+\draw[arr] (p_skip.north) |- (p_foreach.east);
+
+% Relax → loop back to More edges? (next edge in inner loop)
+\draw[arr] (p_relax.east) -- (p_relax.east -| p_skip.east) -- ++(0.5,0) |- (p_foreach.east);
 
 \node[font=\small\bfseries, above=0.25cm of p_start, color=nodegreen] {Pruned Dijkstra};
 \end{tikzpicture}%
 }% end resizebox
-\caption[Algorithm decision-flow comparison]{Decision-flow comparison. The pruned variant adds a threshold check $d_{\text{new}}>T$ (red box); edges exceeding $T=-\log(\tau)$ are discarded without relaxation.}
+\caption[Algorithm decision-flow comparison]{Decision-flow comparison of baseline and pruned Dijkstra.}
 \label{fig:algo_flowchart}
 \end{figure}
 
 \begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}p{2.8cm}p{5.5cm}p{5.5cm}@{}}
 \toprule
 \textbf{Criterion} & \textbf{Baseline Dijkstra} & \textbf{Probability-Pruned Dijkstra} \\
@@ -493,8 +510,9 @@ Figure~\ref{fig:algo_flowchart} illustrates the decision-flow difference between
 \textbf{Trade-off} & None & Reachability vs.\ speed \\[4pt]
 \textbf{Convergence} & Always optimal & Identical to baseline as $\tau \to 0$ \\
 \bottomrule
-\end{tabular}
-\caption[Algorithm comparison]{Comparison of Baseline and Pruned Dijkstra. Experimental results (Chapter~\ref{chap:results}) confirm 0\% optimality gap on all found paths.}
+\end{tabular}%
+}
+\caption[Algorithm comparison]{Comparison of baseline and pruned Dijkstra.}
 \label{table:algo_compare}
 \end{table}
 
@@ -507,9 +525,9 @@ Given the baseline optimal probability $\Pi^*$, fixed $\tau$ values would miss t
 
 \subsection{$k$-Shortest Simple Paths}
 
-In addition to single-path queries, the CLI (\texttt{main.py}) provides a $k$-shortest simple paths mode activated by the \texttt{--k} flag. This uses a best-first search with visited-set tracking to enumerate the top-$k$ distinct simple paths from $s$ to $t$ in non-decreasing cost order. When $k=1$, the result is identical to Dijkstra's shortest path. This feature is validated by five dedicated unit tests covering $k=1$ equivalence, ascending cost ordering, simple-path guarantee, $k=0$ boundary, and disconnected-graph behaviour.
+In addition to single-path queries, the CLI (\texttt{main.py}) provides a $k$-shortest simple paths mode activated by the \texttt{--k} flag. This uses a best-first search with visited-set tracking to enumerate the top-$k$ distinct simple paths from $s$ to $t$ in non-decreasing cost order. When $k=1$, the result is identical to Dijkstra's shortest path. This feature is validated by five dedicated unit tests covering $k=1$ equivalence, ascending cost ordering, simple-path guarantee, $k=0$ boundary, and disconnected-graph behavior.
 
-\textbf{Complexity note.} Enumerating $k$ simple paths via best-first search has worst-case exponential complexity $O(k \cdot |V|!)$, since the number of simple paths in a dense graph can be factorial in $|V|$. In practice the search terminates early once $k$ paths are found, and the \texttt{max\_path\_len} parameter bounds the depth of exploration. This utility is provided for interactive analysis of small queries and is not part of the theoretically analysed pruning framework.
+\textbf{Complexity note.} Enumerating $k$ simple paths via best-first search has worst-case exponential complexity $O(k \cdot |V|!)$, since the number of simple paths in a dense graph can be factorial in $|V|$. In practice, the search terminates early once $k$ paths are found, and the \texttt{max\_path\_len} parameter bounds the depth of exploration. This utility is provided for interactive analysis of small queries and is not part of the theoretically analyzed pruning framework.
 
 \section{Data Structures}
 
@@ -530,11 +548,12 @@ Python's \texttt{heapq} module provides $O(\log|V|)$ extract-min and insert. Sin
 
 \subsection{Simulation Environment}
 
-Table~\ref{table:simenv} summarises the environment used for all experiments.
+Table~\ref{table:simenv} summarizes the environment used for all experiments.
 
 \begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}ll@{}}
 \toprule
 \textbf{Component} & \textbf{Specification} \\
@@ -548,8 +567,9 @@ Random Seeds & Deterministic \texttt{hashlib.md5} per configuration \\
 Repetitions & 10 runs per configuration \\
 Graph Generators & Erd\H{o}s--R\'{e}nyi + Layered (in-house, \texttt{data/graph\_generator.py}) \\
 \bottomrule
-\end{tabular}
-\caption[Simulation environment]{Simulation environment. Timing and memory are measured in separate passes so \texttt{tracemalloc} overhead does not corrupt the stopwatch.}
+\end{tabular}%
+}
+\caption[Simulation environment]{Simulation environment.}
 \label{table:simenv}
 \end{table}
 
@@ -578,7 +598,7 @@ $\tau$ & 0, 0.001, 0.01, 0.05, 0.1, 0.5 & Conservative to aggressive pruning \\
 Runs & 10 per config & Statistical reliability \\
 \bottomrule
 \end{tabular}
-\caption[Experimental parameter matrix]{Full parameter matrix: $2 \times 3 \times 3 \times 2 \times 6 \times 10 = 2{,}160$ total rows.}
+\caption[Experimental parameter matrix]{Experimental parameter matrix ($2{,}160$ total rows).}
 \label{table:param_matrix}
 \end{table}
 

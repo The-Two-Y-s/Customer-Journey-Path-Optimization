@@ -73,7 +73,7 @@ Algorithm~2 either returns the globally optimal path (identical to the baseline)
 \end{theorem}
 
 \begin{proof}
-Suppose Algorithm~2 returns a path $P'$ from $s$ to $t$. Since the pruning check ($\mathit{new\_cost} > T$) only skips edges---it does not alter edge weights or the priority queue ordering---the settled-node invariant from Theorem~\ref{thm:baseline_optimal} holds for all nodes explored by the pruned algorithm. Therefore, among all paths that survive the threshold, $P'$ minimises log-cost. If $P^*$ also survives (Theorem~\ref{thm:conditional}), then $P' = P^*$. If $P^*$ is pruned, then $t$ is unreachable in the pruned subgraph and no path is returned.
+Suppose Algorithm~2 returns a path $P'$ from $s$ to $t$. Since the pruning check ($\mathit{new\_cost} > T$) only skips edges---it does not alter edge weights or the priority queue ordering---the settled-node invariant from Theorem~\ref{thm:baseline_optimal} holds for all nodes explored by the pruned algorithm. Therefore, among all paths that survive the threshold, $P'$ minimizes log-cost. If $P^*$ also survives (Theorem~\ref{thm:conditional}), then $P' = P^*$. If $P^*$ is pruned, then $t$ is unreachable in the pruned subgraph and no path is returned.
 
 In either case, the algorithm never returns a sub-optimal path: the gap $\Delta$ is exactly 0\% whenever a path is found.
 \end{proof}
@@ -88,7 +88,7 @@ Convergence testing showed that at $\tau = 0.001$ the pruned algorithm found pat
 
 Probability consistency was verified by comparing $\exp(-C^*)$ against $\prod_{(u,v)\in P^*} p(u,v)$ for all returned paths; relative error remained below $10^{-12}$ in every case.
 
-The test suite includes 41 automated tests covering disconnected source--target pairs (pruned returns \texttt{None}), single-node graphs, complete graphs and star topologies, real-world graphs with high sparsity, and $\tau=0$ equivalence (Theorem~3). All 41 tests pass.
+The test suite includes 41 automated tests covering disconnected source--target pairs (pruned returns \texttt{None}), single-node graphs, complete graphs and star topologies, real-world graphs with high sparsity, and $\tau=0$ equivalence (Theorem~\ref{thm:convergence}). All 41 tests pass.
 
 Finally, the five-node example graph (Figure~\ref{fig:journey_graph}) was traced manually:
 \[
@@ -104,12 +104,12 @@ Both algorithms returned this path and cost, confirming correctness on the refer
 \textbf{Property} & \textbf{Theoretical} & \textbf{Empirical Confirmation} \\
 \midrule
 Log transform (Thm~\ref{thm:log_transform}) & Order-preserving & All paths consistent ($<10^{-12}$ error) \\
-Baseline optimal (Thm~\ref{thm:baseline_optimal}) & $\mathit{dist}[t]=\delta(s,t)$ & 2,160 rows verified \\
+Baseline optimal (Thm~\ref{thm:baseline_optimal}) & $\mathit{dist}[t]=\delta(s,t)$ & 3,000 rows verified \\
 Convergence (Thm~\ref{thm:convergence}) & Identical at $\tau=0$ & Byte-identical output \\
 Conditional optimal (Thm~\ref{thm:conditional}) & $\Delta=0$ when $\Pi^*\geq\tau$ & $\Delta=0.0000\%$ on all found paths \\
-All-or-nothing (Thm~\ref{thm:all_or_nothing}) & Never sub-optimal & 0 sub-optimal results in 2,460 rows \\
+All-or-nothing (Thm~\ref{thm:all_or_nothing}) & Never sub-optimal & 0 sub-optimal results in 3,000 rows \\
 \bottomrule
 \end{tabular}
-\caption[Correctness validation summary]{Summary of correctness properties with theoretical basis and empirical confirmation across all experimental configurations.}
+\caption[Correctness validation summary]{Correctness validation summary.}
 \label{table:correctness_summary}
 \end{table}
