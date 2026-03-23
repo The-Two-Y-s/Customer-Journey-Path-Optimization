@@ -16,3 +16,6 @@ Proposal_report/
 
 # Project report artifact
 CustomerJourney_Report_FINAL.pdf
+
+# One-off audit / diagnostic scripts
+audit*.py

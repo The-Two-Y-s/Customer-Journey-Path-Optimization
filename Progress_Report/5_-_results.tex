@@ -15,18 +15,18 @@ Table~\ref{table:speedup_tau} summarises median speedups aggregated across all g
 \toprule
 $\tau$ & \textbf{Edge Speedup} & \textbf{Wall Speedup} & \textbf{Baseline (ms)} & \textbf{Pruned (ms)} & \textbf{Path Found (\%)} \\
 \midrule
-0.001 &   8.8$\times$ &   3.6$\times$ & 1.67 & 0.496 & 28.6 \\
-0.01  &  82.1$\times$ &  30.4$\times$ & 1.67 & 0.055 & 5.8  \\
-0.05  & 374.4$\times$ & 146.8$\times$ & 1.67 & 0.011 & 4.7  \\
-0.1   & 790.8$\times$ & 280.9$\times$ & 1.67 & 0.006 & 4.4  \\
-0.5   & 2,124$\times$ & 881.3$\times$ & 1.67 & 0.002 & 3.9  \\
+0.001 &   8.7$\times$ &   3.3$\times$ & 4.98 & 1.561 & 30.6 \\
+0.01  &  79.2$\times$ &  24.7$\times$ & 4.98 & 0.206 & 5.6  \\
+0.05  & 368.4$\times$ & 123.6$\times$ & 4.98 & 0.040 & 4.7  \\
+0.1   & 810.5$\times$ & 242.6$\times$ & 4.98 & 0.020 & 4.4  \\
+0.5   & 1,986$\times$ & 738.2$\times$ & 4.98 & 0.006 & 4.2  \\
 \bottomrule
 \end{tabular}
 \caption[Speedup by pruning threshold $\tau$]{Median speedups by $\tau$ across all synthetic configurations. ``Edge Speedup'' = baseline edges relaxed / pruned edges relaxed. ``Wall Speedup'' = baseline ms / pruned ms. Note: edge speedup uses \texttt{edges\_relaxed}, where the pruned counter excludes threshold-pruned edges; it measures pruning aggressiveness rather than a strict like-for-like work comparison (see Table~\ref{table:edges_relaxed}). Optimality gap $\Delta = 0.0000\%$ for all path-found rows.}
 \label{table:speedup_tau}
 \end{table}
 
-Speedups scale monotonically with $\tau$, ranging from $3.6\times$ wall-clock at $\tau=0.001$ to $881\times$ at $\tau=0.5$. Edge speedups consistently exceed wall-clock speedups (e.g., $2{,}124\times$ vs.\ $881\times$ at $\tau=0.5$). Part of this discrepancy is definitional: the edge speedup uses \texttt{edges\_relaxed}, where the pruned algorithm counts only threshold-surviving edges, not the total edges examined (see Table~\ref{table:edges_relaxed}). Additionally, Python per-call overhead becomes a larger fraction of the substantially reduced pruned runtime. The wall-clock speedup is therefore the more conservative and practically meaningful measure. Across all 171 path-found rows among the 1,800 pruned synthetic runs ($\tau > 0$), the optimality gap remained exactly $\Delta = 0.0000\%$, confirming the all-or-nothing property (Theorem~\ref{thm:all_or_nothing}, Chapter~\ref{chap:correctness}). Path-found rates decrease with $\tau$, reflecting the reachability--speed trade-off inherent in the pruning approach.
+Speedups scale monotonically with $\tau$, ranging from $3.3\times$ wall-clock at $\tau=0.001$ to $738\times$ at $\tau=0.5$. Edge speedups consistently exceed wall-clock speedups (e.g., $1{,}986\times$ vs.\ $738\times$ at $\tau=0.5$). Part of this discrepancy is definitional: the edge speedup uses \texttt{edges\_relaxed}, where the pruned algorithm counts only threshold-surviving edges, not the total edges examined (see Table~\ref{table:edges_relaxed}). Additionally, Python per-call overhead becomes a larger fraction of the substantially reduced pruned runtime. The wall-clock speedup is therefore the more conservative and practically meaningful measure. Across all 178 path-found rows among the 1,800 pruned synthetic runs ($\tau > 0$), the optimality gap remained exactly $\Delta = 0.0000\%$, confirming the all-or-nothing property (Theorem~\ref{thm:all_or_nothing}, Chapter~\ref{chap:correctness}). Path-found rates decrease with $\tau$, reflecting the reachability--speed trade-off inherent in the pruning approach.
 
 \begin{figure}[htbp]
 \centering
@@ -48,16 +48,16 @@ Table~\ref{table:speedup_size} shows how speedup scales with graph size at fixed
 \toprule
 $|V|$ & \textbf{Edge Speedup} & \textbf{Wall Speedup} & \textbf{Baseline (ms)} & \textbf{Pruned (ms)} & \textbf{Peak Mem (KB)} \\
 \midrule
-1,000  &  30.6$\times$ & 11.0$\times$ & 0.58 & 0.050 & 83.9 $\to$ 4.4 \\
-5,000  & 104.9$\times$ & 55.8$\times$ & 2.69 & 0.056 & 349.6 $\to$ 4.6 \\
-10,000 & 173.9$\times$ & 89.1$\times$ & 5.64 & 0.057 & 662.3 $\to$ 4.5 \\
+1,000  &  31.5$\times$ &  9.4$\times$ & 1.67 & 0.189 & 83.8 $\to$ 4.4 \\
+5,000  & 104.0$\times$ & 43.1$\times$ & 7.12 & 0.215 & 342.9 $\to$ 4.5 \\
+10,000 & 180.4$\times$ & 77.0$\times$ & 15.83 & 0.222 & 655.0 $\to$ 4.5 \\
 \bottomrule
 \end{tabular}
 \caption[Speedup scaling by graph size]{Median speedups at $\tau = 0.01$ by graph size. Baseline time grows linearly with $|V|$; pruned time remains nearly constant. Memory columns show baseline $\to$ pruned peak consumption.}
 \label{table:speedup_size}
 \end{table}
 
-Baseline execution time scales linearly with $|V|$ ($0.58 \to 2.69 \to 5.64$~ms for $|V| = 1{,}000 \to 5{,}000 \to 10{,}000$), consistent with the $O(|V|\log|V|)$ theoretical bound for sparse graphs. In contrast, pruned execution time remains nearly constant at approximately 0.05~ms because the threshold eliminates most of the graph regardless of size. Speedup therefore grows with $|V|$: the larger the graph, the greater the fraction of work that pruning eliminates. Peak memory for the pruned algorithm is essentially constant at approximately 4.5~KB, whereas baseline memory grows proportionally to $|V|$.
+Baseline execution time scales linearly with $|V|$ ($1.67 \to 7.12 \to 15.83$~ms for $|V| = 1{,}000 \to 5{,}000 \to 10{,}000$), consistent with the $O(|V|\log|V|)$ theoretical bound for sparse graphs. In contrast, pruned execution time remains nearly constant at approximately 0.2~ms because the threshold eliminates most of the graph regardless of size. Speedup therefore grows with $|V|$: the larger the graph, the greater the fraction of work that pruning eliminates. Peak memory for the pruned algorithm is essentially constant at approximately 4.5~KB, whereas baseline memory grows proportionally to $|V|$.
 
 \begin{figure}[htbp]
 \centering
@@ -66,7 +66,7 @@ Baseline execution time scales linearly with $|V|$ ($0.58 \to 2.69 \to 5.64$~ms 
 \label{fig:memory_scaling}
 \end{figure}
 
-Figure~\ref{fig:memory_scaling} displays peak memory consumption on log--log axes for Erd\H{o}s--R\'{e}nyi (left) and layered (right) graphs at $\tau=0.01$. Solid lines with circle markers represent baseline Dijkstra; dashed lines with triangle markers represent the pruned variant. Each line corresponds to a unique combination of average degree $d$ and edge-weight distribution. Baseline memory scales linearly with $|V|$---from approximately 84~KB at $|V|=1{,}000$ to approximately 662~KB at $|V|=10{,}000$---consistent with the $O(|V|+|E|)$ theoretical bound. In contrast, pruned memory remains effectively constant at approximately 4.5~KB across all graph sizes, demonstrating that the threshold restricts the explored frontier to a small, fixed-size region regardless of total graph size. The gap between the two sets of curves widens with $|V|$, indicating that the memory advantage of pruning becomes progressively more pronounced as the graph grows. This constant-memory behaviour makes the pruned algorithm particularly attractive for deployment on memory-constrained systems.
+Figure~\ref{fig:memory_scaling} displays peak memory consumption on log--log axes for Erd\H{o}s--R\'{e}nyi (left) and layered (right) graphs at $\tau=0.01$. Solid lines with circle markers represent baseline Dijkstra; dashed lines with triangle markers represent the pruned variant. Each line corresponds to a unique combination of average degree $d$ and edge-weight distribution. Baseline memory scales linearly with $|V|$---from approximately 84~KB at $|V|=1{,}000$ to approximately 655~KB at $|V|=10{,}000$---consistent with the $O(|V|+|E|)$ theoretical bound. In contrast, pruned memory remains effectively constant at approximately 4.5~KB across all graph sizes, demonstrating that the threshold restricts the explored frontier to a small, fixed-size region regardless of total graph size. The gap between the two sets of curves widens with $|V|$, indicating that the memory advantage of pruning becomes progressively more pronounced as the graph grows. This constant-memory behaviour makes the pruned algorithm particularly attractive for deployment on memory-constrained systems.
 
 \subsection{Speedup by Graph Type}
 
@@ -77,15 +77,15 @@ Figure~\ref{fig:memory_scaling} displays peak memory consumption on log--log axe
 \toprule
 \textbf{Graph Type} & \textbf{Edge Speedup} & \textbf{Wall Speedup} \\
 \midrule
-Erd\H{o}s--R\'{e}nyi & 108.2$\times$ & 41.8$\times$ \\
-Layered              &  57.1$\times$ & 22.5$\times$ \\
+Erd\H{o}s--R\'{e}nyi & 111.6$\times$ & 40.1$\times$ \\
+Layered              &  49.3$\times$ & 16.6$\times$ \\
 \bottomrule
 \end{tabular}
 \caption[Speedup by graph type]{Median speedups at $\tau = 0.01$ by graph type. ER graphs benefit more from pruning than layered graphs.}
 \label{table:speedup_graph_type}
 \end{table}
 
-Erd\H{o}s--R\'{e}nyi graphs show higher speedups (41.8$\times$ wall vs.\ 22.5$\times$ for layered). This is expected: ER graphs have uniformly random structure, so more edges lead to distant (low-probability) regions that the threshold can eliminate. Layered graphs have a built-in forward bias toward the target, so a larger fraction of edges remain relevant.
+Erd\H{o}s--R\'{e}nyi graphs show higher speedups (40.1$\times$ wall vs.\ 16.6$\times$ for layered). This is expected: ER graphs have uniformly random structure, so more edges lead to distant (low-probability) regions that the threshold can eliminate. Layered graphs have a built-in forward bias toward the target, so a larger fraction of edges remain relevant.
 
 \subsection{Speedup by Probability Distribution}
 
@@ -96,15 +96,15 @@ Erd\H{o}s--R\'{e}nyi graphs show higher speedups (41.8$\times$ wall vs.\ 22.5$\t
 \toprule
 \textbf{Distribution} & \textbf{Edge Speedup} & \textbf{Wall Speedup} \\
 \midrule
-Power-law ($\alpha=2$) & 69.7$\times$ & 31.4$\times$ \\
-Uniform                & 84.3$\times$ & 29.2$\times$ \\
+Power-law ($\alpha=2$) & 73.0$\times$ & 25.1$\times$ \\
+Uniform                & 83.8$\times$ & 22.4$\times$ \\
 \bottomrule
 \end{tabular}
 \caption[Speedup by probability distribution]{Median speedups at $\tau = 0.01$ by distribution. Both distributions achieve similar wall-clock speedups.}
 \label{table:speedup_dist}
 \end{table}
 
-Both distributions achieve comparable wall-clock speedups ($\sim$30$\times$). Power-law distributions have a few high-probability edges and many low-probability ones; uniform distributions spread probability more evenly. The pruning mechanism is effective in both cases.
+Both distributions achieve comparable wall-clock speedups ($\sim$23$\times$). Power-law distributions have a few high-probability edges and many low-probability ones; uniform distributions spread probability more evenly. The pruning mechanism is effective in both cases.
 
 \subsection{Optimality Gap Analysis}
 
@@ -147,16 +147,16 @@ RecSys 2015 (YOOCHOOSE)     &     12,935 &     70,442 & 20 & Kaggle~\citep{recsy
 \toprule
 \textbf{Dataset} & \textbf{Median Speedup} & \textbf{Max Speedup} & \textbf{Paths Found} & $\Delta$ \\
 \midrule
-RetailRocket (event-level)  &     1.1$\times$ &     4.9$\times$ & 78 / 100 & 0.000\% \\
-RetailRocket (item-level)   &   906.2$\times$ &  27,693$\times$ &  1 / 100 & 0.000\% \\
-RecSys 2015 (YOOCHOOSE)     &   407.6$\times$ &   4,191$\times$ &  0 / 100 & --- \\
+RetailRocket (event-level)  &     1.1$\times$ &     5$\times$ & 78 / 100 & 0.000\% \\
+RetailRocket (item-level)   &   552.9$\times$ &  20,156$\times$ &  1 / 100 & 0.000\% \\
+RecSys 2015 (YOOCHOOSE)     &   194.7$\times$ &   2,623$\times$ &  0 / 100 & --- \\
 \bottomrule
 \end{tabular}
 \caption[Real-data speedup results]{Speedup results on real-world datasets. Wall-clock speedup = baseline time / pruned time. $\Delta$ is the optimality gap (0.000\% for all found paths).}
 \label{table:real_data_speedup}
 \end{table}
 
-For the \textbf{RetailRocket event-level} configuration, the 3-node funnel graph (view $\to$ addtocart $\to$ transaction) is sufficiently small that both algorithms complete in microseconds; 78 of 100 configurations found paths and speedup is minimal ($\leq 5\times$) because there is almost nothing to prune. The \textbf{RetailRocket item-level} graph (44,711 nodes) yields substantial speedups up to $27{,}693\times$, although only 1 of 100 pruned configurations found a path because item-level transitions are extremely sparse and most source--target pairs become unreachable once low-probability edges are pruned. For \textbf{RecSys~2015 (YOOCHOOSE)}, the 12,935-node graph achieves a median speedup of $407.6\times$ and a maximum of $4{,}191\times$; the baseline found paths for all 100 configurations, but pruning was too aggressive at every tested $\tau$ value to preserve any complete $s\to t$ path. This reflects the sparse session structure of the YOOCHOOSE clickstream data.
+For the \textbf{RetailRocket event-level} configuration, the 3-node funnel graph (view $\to$ addtocart $\to$ transaction) is sufficiently small that both algorithms complete in microseconds; 78 of 100 configurations found paths and speedup is minimal ($\leq 5\times$) because there is almost nothing to prune. The \textbf{RetailRocket item-level} graph (44,711 nodes) yields substantial speedups up to $20{,}156\times$, although only 1 of 100 pruned configurations found a path because item-level transitions are extremely sparse and most source--target pairs become unreachable once low-probability edges are pruned. For \textbf{RecSys~2015 (YOOCHOOSE)}, the 12,935-node graph achieves a median speedup of $194.7\times$ and a maximum of $2{,}623\times$; the baseline found paths for all 100 configurations, but pruning was too aggressive at every tested $\tau$ value to preserve any complete $s\to t$ path. This reflects the sparse session structure of the YOOCHOOSE clickstream data.
 
 \subsection{Reachability Analysis}
 
@@ -169,7 +169,7 @@ The low path-found rates in large real-world graphs highlight an important pract
 \toprule
 \textbf{Configuration} & \textbf{Baseline Found} & \textbf{Pruned Found} & \textbf{Interpretation} \\
 \midrule
-Synthetic (all $\tau$)       & 360 / 360 & 171 / 1,800 & Dense synthetic graphs highly connected \\
+Synthetic (all $\tau$)       & 360 / 360 & 178 / 1,800 & Dense synthetic graphs highly connected \\
 RR event-level              & 100 / 100 &  78 / 100   & 3-node funnel is fully connected \\
 RR item-level               & 100 / 100 &   1 / 100   & Baseline reachable; pruning too aggressive \\
 RecSys 2015                  & 100 / 100 &   0 / 100   & Baseline reachable; all pruned paths lost \\
@@ -185,12 +185,12 @@ In synthetic graphs, the BFS connectivity guarantee ensures the baseline always 
 
 \section{Summary of Findings}
 
-The experimental evaluation yields several principal findings. Wall-clock speedups range from $3.6\times$ at $\tau=0.001$ to $881\times$ at $\tau=0.5$ on synthetic data, and reach up to $27{,}693\times$ on real-world item-level graphs. The optimality gap remained at exactly $\Delta = 0.0000\%$ across all 250 experiment rows in which both algorithms found a path (171 of 1,800 pruned synthetic rows; 79 of 300 real-data rows), confirming the all-or-nothing property established in Theorem~\ref{thm:all_or_nothing}.
+The experimental evaluation yields several principal findings. Wall-clock speedups range from $3.3\times$ at $\tau=0.001$ to $738\times$ at $\tau=0.5$ on synthetic data, and reach up to $20{,}156\times$ on real-world item-level graphs. The optimality gap remained at exactly $\Delta = 0.0000\%$ across all 257 experiment rows in which both algorithms found a path (178 of 1,800 pruned synthetic rows; 79 of 300 real-data rows), confirming the all-or-nothing property established in Theorem~\ref{thm:all_or_nothing}.
 
-\textbf{Statistical significance.} Wilcoxon signed-rank tests (one-sided, alternative: baseline $>$ pruned) were applied to all 180 unique synthetic configurations (each with 10 paired runs). All 180 tests rejected the null hypothesis at $\alpha = 0.05$, with $p$-values ranging from $9.77 \times 10^{-4}$ (the minimum attainable for $n=10$ paired observations) to $0.032$. The median $p$-value was $9.77 \times 10^{-4}$. No configuration failed the significance test, confirming that the speedup is not an artefact of measurement noise.
+\textbf{Statistical significance.} Wilcoxon signed-rank tests (one-sided, alternative: baseline $>$ pruned) were applied to all 180 unique synthetic configurations (each with 10 paired runs). Of these, 179 tests rejected the null hypothesis at $\alpha = 0.05$, with $p$-values ranging from $9.77 \times 10^{-4}$ (the minimum attainable for $n=10$ paired observations) to $0.032$. The median $p$-value was $9.77 \times 10^{-4}$. One configuration (layered, $|V|=1{,}000$, $d=5$, uniform, $\tau=0.001$) yielded $p=0.116$, failing the significance threshold; this is the mildest pruning level on a small, forward-biased graph where baseline and pruned running times are very close. Excluding this single outlier, all remaining configurations confirm that the speedup is not an artefact of measurement noise.
 
-Speedup grows with graph size---from $11\times$ at $|V|=1{,}000$ to $89\times$ at $|V|=10{,}000$ at fixed $\tau=0.01$---because larger graphs contain more pruneable edges. At the same time, higher $\tau$ values reduce path-found rates from 28.6\% at $\tau=0.001$ to 3.9\% at $\tau=0.5$ on synthetic data, demonstrating the inherent reachability--speed trade-off. Real-world graphs showed further reduced pruned-found rates due to aggressive thresholding on sparse session-based structures, yet the algorithm maintained zero optimality gap on all found paths and achieved substantial speedups on large graphs.
+Speedup grows with graph size---from $9.4\times$ at $|V|=1{,}000$ to $77\times$ at $|V|=10{,}000$ at fixed $\tau=0.01$---because larger graphs contain more pruneable edges. At the same time, higher $\tau$ values reduce path-found rates from 30.6\% at $\tau=0.001$ to 4.2\% at $\tau=0.5$ on synthetic data, demonstrating the inherent reachability--speed trade-off. Real-world graphs showed further reduced pruned-found rates due to aggressive thresholding on sparse session-based structures, yet the algorithm maintained zero optimality gap on all found paths and achieved substantial speedups on large graphs.
 
-\textbf{Practical business impact.} The $27{,}693\times$ speedup on the RetailRocket item-level graph (44,711 items) translates baseline query times of ${\sim}72$\,ms to $0.003$\,ms under pruning. For a team running daily journey analysis across all items, this reduction shifts path computation from a batch process into a real-time query, enabling interactive exploration of conversion funnels and on-the-fly evaluation of UI changes without waiting for overnight batch jobs.
+\textbf{Practical business impact.} The peak $20{,}156\times$ speedup on the RetailRocket item-level graph (44,711 items) reduced a single query from ${\sim}163$\,ms to $0.008$\,ms under pruning. For a team running daily journey analysis across all items, this reduction shifts path computation from a batch process into a real-time query, enabling interactive exploration of conversion funnels and on-the-fly evaluation of UI changes without waiting for overnight batch jobs.
 
 \textbf{Critical-$\tau$ analysis.} A detailed critical-$\tau$ analysis, including per-configuration $\tau^*$ heatmaps and practical threshold recommendations, will be presented in the final report following additional experimentation across the full parameter matrix.

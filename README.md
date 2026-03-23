@@ -386,11 +386,11 @@ Plots are saved to `results/img/`.
 
 | τ | Median Speedup | Edges Examined (% of baseline) | Path-Found Rate | Gap (when found) |
 |---|---------------|----------------|-----------------|------------------|
-| 0.001 | 8.8× | 11.4% | 28.6% | 0.00% |
-| 0.01 | 82.1× | 1.2% | 5.8% | 0.00% |
-| 0.05 | 374.4× | 0.3% | 4.7% | 0.00% |
-| 0.1 | 790.8× | 0.1% | 4.4% | 0.00% |
-| 0.5 | 2,124× | ~0% | 3.9% | 0.00% |
+| 0.001 | 8.7× | 53.3% | 30.6% | 0.00% |
+| 0.01 | 79.2× | 7.1% | 5.6% | 0.00% |
+| 0.05 | 368.4× | 1.4% | 4.7% | 0.00% |
+| 0.1 | 810.5× | 0.7% | 4.4% | 0.00% |
+| 0.5 | 1,986× | 0.1% | 4.2% | 0.00% |
 
 ### Real-Data Validation
 
@@ -398,18 +398,18 @@ Three dataset configurations (20 random source-target pairs × 5 τ values = 300
 
 | Dataset | Nodes | Edges | Best Speedup | Path-Found Rate | Max Gap |
 |---------|-------|-------|-------------|-----------------|--------|
-| RetailRocket (event-level funnel) | 3 | 9 | 4.9× | 78% | 0.00% |
-| RetailRocket (item-level, 50K sessions) | 44,711 | 101,528 | 27,693× | 1% | 0.00% |
-| RecSys 2015 (50K sessions) | 12,935 | 70,442 | 4,191× | 0% | 0.00% |
+| RetailRocket (event-level funnel) | 3 | 9 | 5× | 78% | 0.00% |
+| RetailRocket (item-level, 50K sessions) | 44,711 | 101,528 | 20,156× | 1% | 0.00% |
+| RecSys 2015 (50K sessions) | 12,935 | 70,442 | 2,623× | 0% | 0.00% |
 
 > **Note on real-data path-found rates:** Real graphs have very low per-edge probabilities (items visited rarely), so even the smallest tested τ (0.0001) prunes most paths. The massive speedups on large real graphs come primarily from early termination. On the 3-node funnel (where probabilities are higher), pruning preserves most paths and still delivers measurable speedup.
 
 ### Key Findings
 
-1. **180/180** synthetic configurations show statistically significant speedup (Wilcoxon signed-rank, p < 0.05)
-2. **100% exact optimality** — every path found by the pruned variant matches the baseline (0.00% gap), on both synthetic and real data (0/171 synthetic, 0/79 real with non-zero gap)
-3. Normalised transition probabilities (`Σ P(v|u) = 1`) make individual edge probabilities small, so pruning is aggressive — speedups up to **27,693×** on real data (wall-clock)
-4. The trade-off is **reachability, not accuracy**: at τ = 0.5 only 3.9% of synthetic runs find a path, but those that do are guaranteed optimal
+1. **179/180** synthetic configurations show statistically significant speedup (Wilcoxon signed-rank, p < 0.05)
+2. **100% exact optimality** — every path found by the pruned variant matches the baseline (0.00% gap), on both synthetic and real data (0/178 synthetic, 0/79 real with non-zero gap)
+3. Normalised transition probabilities (`Σ P(v|u) = 1`) make individual edge probabilities small, so pruning is aggressive — speedups up to **20,156×** on real data (wall-clock)
+4. The trade-off is **reachability, not accuracy**: at τ = 0.5 only 4.2% of synthetic runs find a path, but those that do are guaranteed optimal
 5. Both uniform and power-law distributions exhibit consistent behaviour
 6. **Real-data validation** on RetailRocket and RecSys 2015 confirms the hypothesis generalises beyond synthetic graphs
 
@@ -417,7 +417,7 @@ Three dataset configurations (20 random source-target pairs × 5 τ values = 300
 
 ## Testing
 
-41 unit tests across 11 test classes:
+41 unit tests across 12 test classes:
 
 ```bash
 python -m pytest tests/ -v
@@ -435,6 +435,7 @@ python -m pytest tests/ -v
 | `TestProbabilityNormalization` | Outgoing probs sum to 1 (both generators × both distributions) |
 | `TestKShortestSimplePaths` | k=1 matches Dijkstra, ascending cost, simple paths, disconnected |
 | `TestRealDataLoaders` | RetailRocket + RecSys 2015 loading, Dijkstra on real graphs |
+| `TestRealDataPipeline` | End-to-end test on synthetic journey dataset |
 | `TestCriticalTau` | Critical-τ on ER/Layered graphs, unreachable target |
 
 ---

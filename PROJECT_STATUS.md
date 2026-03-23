@@ -64,7 +64,7 @@ The full implementation, experimentation, and validation phases of the project a
 
 | File | Purpose |
 |------|---------|
-| `tests/test_pipeline.py` | 41 unit tests across 11 test classes covering preprocessing, graph building, both Dijkstra variants, convergence (including edges_relaxed and τ=0 equivalence), probability consistency, edge cases, both generators, probability normalisation, k-shortest paths, real-data loaders, and critical-τ finder. |
+| `tests/test_pipeline.py` | 41 unit tests across 12 test classes covering preprocessing, graph building, both Dijkstra variants, convergence (including edges_relaxed and τ=0 equivalence), probability consistency, edge cases, both generators, probability normalisation, k-shortest paths, real-data loaders, real-data pipeline, and critical-τ finder. |
 
 ---
 
@@ -94,24 +94,24 @@ All 41 tests pass (pytest). Coverage includes:
 
 ### Synthetic Data (2,160 rows)
 
-| τ | Median Speedup | Edges Examined (% of baseline) | Path-Found Rate | Gap (when found) |
-|---|---------------|----------------|-----------------|------------------|
-| 0.001 | 8.8× | 11.4% | 28.6% | 0.00% |
-| 0.01 | 82.1× | 1.2% | 5.8% | 0.00% |
-| 0.05 | 374.4× | 0.3% | 4.7% | 0.00% |
-| 0.1 | 790.8× | 0.1% | 4.4% | 0.00% |
-| 0.5 | 2,124× | ~0% | 3.9% | 0.00% |
+| τ | Wall Speedup | Edge Speedup | Path-Found Rate | Gap (when found) |
+|---|-------------|-------------|-----------------|------------------|
+| 0.001 | 3.3× | 8.7× | 30.6% | 0.00% |
+| 0.01 | 24.7× | 79.2× | 5.6% | 0.00% |
+| 0.05 | 123.6× | 368.4× | 4.7% | 0.00% |
+| 0.1 | 242.6× | 810.5× | 4.4% | 0.00% |
+| 0.5 | 738× | 1,986× | 4.2% | 0.00% |
 
-- **180/180** configurations show statistically significant speedup (Wilcoxon, p < 0.05)
-- **0/171** found paths have non-zero optimality gap
+- **179/180** configurations show statistically significant speedup (Wilcoxon, p < 0.05)
+- **0/257** found paths have non-zero optimality gap (178 synthetic + 79 real)
 
 ### Real-Data Validation (300 rows)
 
 | Dataset | Nodes | Edges | Best Speedup | Path-Found Rate | Max Gap |
 |---------|-------|-------|-------------|-----------------|--------|
-| RetailRocket (event-level) | 3 | 9 | 4.9× | 78% | 0.00% |
-| RetailRocket (item-level) | 44,711 | 101,528 | 27,693× | 1% | 0.00% |
-| RecSys 2015 | 12,935 | 70,442 | 4,191× | 0% | 0.00% |
+| RetailRocket (event-level) | 3 | 9 | 5× | 78% | 0.00% |
+| RetailRocket (item-level) | 44,711 | 101,528 | 20,156× | 1% | 0.00% |
+| RecSys 2015 | 12,935 | 70,442 | 2,623× | 0% | 0.00% |
 
 Massive speedups on large real graphs come primarily from early termination (pruning discards everything quickly). Low path-found rates confirm that real transition probabilities are very small.
 
