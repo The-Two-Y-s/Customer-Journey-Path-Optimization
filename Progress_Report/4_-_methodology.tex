@@ -346,19 +346,21 @@ The \texttt{edges\_relaxed} counter has a precise, intentional definition that d
 \begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
-\begin{tabular}{@{}p{3cm}p{5cm}p{5.5cm}@{}}
+\begin{tabular}{@{}p{3cm}p{3cm}p{4cm}p{4cm}@{}}
 \toprule
-\textbf{Algorithm} & \textbf{Counts} & \textbf{Placement in Code} \\
+\textbf{Algorithm} & \textbf{Counter} & \textbf{Counts} & \textbf{Placement in Code} \\
 \midrule
-Baseline & Every outgoing edge examined from a settled node & After computing \texttt{new\_cost}, before the improvement check \\
-Pruned & Every edge that \textbf{survived} the $\tau$ threshold & After the \texttt{if new\_cost > T: continue} check \\
+Baseline & \texttt{edges\_examined} & Every outgoing edge from a settled node & Before the improvement check \\
+Baseline & \texttt{edges\_relaxed} & (Same as \texttt{edges\_examined}) & (No pruning step) \\
+Pruned & \texttt{edges\_examined} & Every outgoing edge from a settled node & Before the \texttt{if new\_cost > T} check \\
+Pruned & \texttt{edges\_relaxed} & Only edges that \textbf{survived} $\tau$ & After the \texttt{if new\_cost > T: continue} check \\
 \bottomrule
 \end{tabular}
-\caption[edges\_relaxed semantics]{The \texttt{edges\_relaxed} metric definition. Because the counter is placed at different points in the two algorithms, the baseline count includes all edge examinations whereas the pruned count includes only edges that survived the threshold check. This is an intentional design choice: the ratio $\text{baseline}/\text{pruned}$ directly quantifies the computational work eliminated by pruning, though readers should note that the two counts are not strictly comparable in absolute terms.}
+\caption[Edge-counting semantics]{Edge-counting semantics. \texttt{edges\_examined} provides an apples-to-apples comparison between baseline and pruned, since both algorithms increment it at the same point for every outgoing edge. \texttt{edges\_relaxed} in the pruned algorithm counts only threshold-surviving edges; the difference \texttt{edges\_examined $-$ edges\_relaxed} isolates the pruning overhead.}
 \label{table:edges_relaxed}
 \end{table}
 
-This design cleanly isolates the pruning effect from stale-entry skips, making the speedup ratio directly attributable to the $\tau$ mechanism.
+The ratio $\texttt{baseline\_edges\_examined}/\texttt{pruned\_edges\_examined}$ gives a fair like-for-like \emph{examination speedup}, while $\texttt{baseline\_edges\_relaxed}/\texttt{pruned\_edges\_relaxed}$ quantifies the work eliminated by the threshold---a useful measure of pruning aggressiveness but not a direct efficiency comparison, since the denominators count different populations.
 
 \subsubsection{Actual Python Implementation}
 
@@ -382,6 +384,7 @@ def dijkstra_pruned(graph, source, target, tau):
         metrics.max_pq_size = max(metrics.max_pq_size, len(pq)+1)
         for v, w in graph.get(u, []):
             new_cost = d + w
+            metrics.edges_examined += 1
             if new_cost > T:
                 continue  # PRUNE
             metrics.edges_relaxed += 1
@@ -548,7 +551,7 @@ Graph Generators & Erd\H{o}s--R\'{e}nyi + Layered (in-house, \texttt{data/graph\
 
 \subsection{Evaluation Metrics}
 
-Each experiment records execution time (wall-clock milliseconds via \texttt{time.perf\_counter()}), peak memory (bytes via \texttt{tracemalloc.get\_traced\_memory()}), nodes explored (vertices extracted from the priority queue), edges relaxed (edge operations; see Table~\ref{table:edges_relaxed}), maximum priority queue size, and path probability $\Pi^* = \exp(-C^*)$. The optimality gap is defined as:
+Each experiment records execution time (wall-clock milliseconds via \texttt{time.perf\_counter()}), peak memory (bytes via \texttt{tracemalloc.get\_traced\_memory()}), nodes explored (vertices extracted from the priority queue), edges examined (total outgoing edges visited from settled nodes), edges relaxed (edge operations that survived the $\tau$ threshold; see Table~\ref{table:edges_relaxed}), maximum priority queue size, and path probability $\Pi^* = \exp(-C^*)$. The optimality gap is defined as:
     \[
     \Delta = \frac{|C^*_{\text{baseline}} - C^*_{\text{pruned}}|}{C^*_{\text{baseline}}} \times 100\%
     \]

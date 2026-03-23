@@ -22,11 +22,11 @@ $\tau$ & \textbf{Edge Speedup} & \textbf{Wall Speedup} & \textbf{Baseline (ms)} 
 0.5   & 2,124$\times$ & 881.3$\times$ & 1.67 & 0.002 & 3.9  \\
 \bottomrule
 \end{tabular}
-\caption[Speedup by pruning threshold $\tau$]{Median speedups by $\tau$ across all synthetic configurations. ``Edge Speedup'' = baseline edges relaxed / pruned edges relaxed. ``Wall Speedup'' = baseline ms / pruned ms. Optimality gap $\Delta = 0.0000\%$ for all path-found rows.}
+\caption[Speedup by pruning threshold $\tau$]{Median speedups by $\tau$ across all synthetic configurations. ``Edge Speedup'' = baseline edges relaxed / pruned edges relaxed. ``Wall Speedup'' = baseline ms / pruned ms. Note: edge speedup uses \texttt{edges\_relaxed}, where the pruned counter excludes threshold-pruned edges; it measures pruning aggressiveness rather than a strict like-for-like work comparison (see Table~\ref{table:edges_relaxed}). Optimality gap $\Delta = 0.0000\%$ for all path-found rows.}
 \label{table:speedup_tau}
 \end{table}
 
-Speedups scale monotonically with $\tau$, ranging from $3.6\times$ wall-clock at $\tau=0.001$ to $881\times$ at $\tau=0.5$. Edge speedups consistently exceed wall-clock speedups (e.g., $2{,}124\times$ vs.\ $881\times$ at $\tau=0.5$) because Python per-call overhead becomes a larger fraction of the substantially reduced pruned runtime. Across all 171 path-found rows among the 1,800 pruned synthetic runs ($\tau > 0$), the optimality gap remained exactly $\Delta = 0.0000\%$, confirming the all-or-nothing property (Theorem~\ref{thm:all_or_nothing}, Chapter~\ref{chap:correctness}). Path-found rates decrease with $\tau$, reflecting the reachability--speed trade-off inherent in the pruning approach.
+Speedups scale monotonically with $\tau$, ranging from $3.6\times$ wall-clock at $\tau=0.001$ to $881\times$ at $\tau=0.5$. Edge speedups consistently exceed wall-clock speedups (e.g., $2{,}124\times$ vs.\ $881\times$ at $\tau=0.5$). Part of this discrepancy is definitional: the edge speedup uses \texttt{edges\_relaxed}, where the pruned algorithm counts only threshold-surviving edges, not the total edges examined (see Table~\ref{table:edges_relaxed}). Additionally, Python per-call overhead becomes a larger fraction of the substantially reduced pruned runtime. The wall-clock speedup is therefore the more conservative and practically meaningful measure. Across all 171 path-found rows among the 1,800 pruned synthetic runs ($\tau > 0$), the optimality gap remained exactly $\Delta = 0.0000\%$, confirming the all-or-nothing property (Theorem~\ref{thm:all_or_nothing}, Chapter~\ref{chap:correctness}). Path-found rates decrease with $\tau$, reflecting the reachability--speed trade-off inherent in the pruning approach.
 
 \begin{figure}[htbp]
 \centering

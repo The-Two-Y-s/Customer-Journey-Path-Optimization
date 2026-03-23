@@ -532,6 +532,10 @@ class TestCriticalTau(unittest.TestCase):
             res_prune.metrics.nodes_explored,
         )
         self.assertEqual(
+            res_base.metrics.edges_examined,
+            res_prune.metrics.edges_examined,
+        )
+        self.assertEqual(
             res_base.metrics.edges_relaxed,
             res_prune.metrics.edges_relaxed,
         )

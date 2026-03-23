@@ -10,6 +10,7 @@ class DijkstraMetrics:
     """Execution metrics collected during a Dijkstra run."""
     nodes_explored: int = 0
     edges_relaxed: int = 0
+    edges_examined: int = 0
     max_pq_size: int = 0
 
 
@@ -44,6 +45,7 @@ def dijkstra(graph, start, goal):
 
         for neighbor, weight in graph.get(node, []):
             new_cost = cost + weight
+            metrics.edges_examined += 1
             metrics.edges_relaxed += 1
 
             if neighbor not in dist or new_cost < dist[neighbor]:
@@ -86,6 +88,7 @@ def dijkstra_pruned(graph, start, goal, tau=0.01):
 
         for neighbor, weight in graph.get(node, []):
             new_cost = cost + weight
+            metrics.edges_examined += 1
 
             # PRUNE: cumulative log-cost exceeds threshold
             if new_cost > T:

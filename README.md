@@ -183,16 +183,18 @@ The threshold `T = -log(τ)` acts as a uniform upper bound on path cost. This pr
 
 > **Why no suboptimal paths?** Dijkstra settles nodes in non-decreasing cost order. Any node settled with cost ≤ T receives its true shortest-path distance, because all cheaper alternatives were already explored. The pruned algorithm either finds the optimal path intact or misses the target entirely — it can never return a worse path.
 
-### Metric: `edges_relaxed`
+### Metric: `edges_relaxed` and `edges_examined`
 
-The `edges_relaxed` counter has a precise, intentional definition that differs between the two algorithms:
+Two edge counters provide complementary views of algorithmic work:
 
-| Algorithm | Counts | Placement in code |
-|-----------|--------|-------------------|
-| **Baseline** | Every outgoing edge examined from a settled node | After computing `new_cost`, before the improvement check |
-| **Pruned** | Every edge that **survived** the τ threshold | After the `if new_cost > T: continue` check |
+| Algorithm | `edges_examined` | `edges_relaxed` |
+|-----------|-----------------|-----------------|
+| **Baseline** | Every outgoing edge from a settled node | Same as `edges_examined` (no pruning) |
+| **Pruned** | Every outgoing edge from a settled node (before threshold check) | Only edges that **survived** the τ threshold |
 
-The difference `baseline_edges_relaxed − pruned_edges_relaxed` is exactly the work saved by pruning. This cleanly isolates the pruning effect from stale-entry skips, making the speedup ratio directly attributable to the τ mechanism.
+- The ratio `baseline_edges_examined / pruned_edges_examined` is an **apples-to-apples** comparison of total edge work.
+- The ratio `baseline_edges_relaxed / pruned_edges_relaxed` measures **pruning aggressiveness** — how much work the threshold eliminates — but is not a strict like-for-like comparison since the pruned counter excludes threshold-rejected edges.
+- The difference `pruned_edges_examined − pruned_edges_relaxed` isolates the **pruning overhead** (edges checked then discarded).
 
 ---
 

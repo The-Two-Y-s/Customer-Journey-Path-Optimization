@@ -5,8 +5,10 @@ Usage:
 
 Outputs results/real_data_results.csv  with columns:
     dataset, nodes, edges, source, target, tau,
-    baseline_cost, baseline_prob, baseline_nodes_explored, baseline_edges_relaxed, baseline_ms,
-    pruned_cost, pruned_prob, pruned_nodes_explored, pruned_edges_relaxed, pruned_ms,
+    baseline_cost, baseline_prob, baseline_nodes_explored,
+    baseline_edges_examined, baseline_edges_relaxed, baseline_ms,
+    pruned_cost, pruned_prob, pruned_nodes_explored,
+    pruned_edges_examined, pruned_edges_relaxed, pruned_ms,
     path_found, speedup, optimality_gap_pct
 """
 from __future__ import annotations
@@ -97,11 +99,13 @@ def run_dataset(name, df, output_rows, rng):
                 "baseline_cost": round(base_cost, 6),
                 "baseline_prob": f"{base_prob:.10f}",
                 "baseline_nodes_explored": res_base.metrics.nodes_explored,
+                "baseline_edges_examined": res_base.metrics.edges_examined,
                 "baseline_edges_relaxed": res_base.metrics.edges_relaxed,
                 "baseline_ms": round(t_base, 3),
                 "pruned_cost": round(pr_cost, 6) if found else "",
                 "pruned_prob": f"{pr_prob:.10f}" if found else "",
                 "pruned_nodes_explored": res_pr.metrics.nodes_explored,
+                "pruned_edges_examined": res_pr.metrics.edges_examined,
                 "pruned_edges_relaxed": res_pr.metrics.edges_relaxed,
                 "pruned_ms": round(t_pr, 3),
                 "path_found": found,

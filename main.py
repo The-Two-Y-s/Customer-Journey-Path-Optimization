@@ -105,6 +105,7 @@ def print_result(result: DijkstraResult, source: str, target: str, label: str = 
     m = result.metrics
     print(f"\nMetrics:")
     print(f"  Nodes explored:    {m.nodes_explored}")
+    print(f"  Edges examined:    {m.edges_examined}")
     print(f"  Edges relaxed:     {m.edges_relaxed}")
     print(f"  Max PQ size:       {m.max_pq_size}")
 
