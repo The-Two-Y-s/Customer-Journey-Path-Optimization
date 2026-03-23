@@ -24,7 +24,7 @@
     - [Baseline Dijkstra](#baseline-dijkstra)
     - [Probability-Pruned Dijkstra](#probability-pruned-dijkstra)
     - [Pruning Correctness](#pruning-correctness)
-    - [Metric: `edges_relaxed`](#metric-edges_relaxed)
+    - [Metric: `edges_relaxed` and `edges_examined`](#metric-edges_relaxed-and-edges_examined)
   - [Pipeline](#pipeline)
   - [Data](#data)
     - [Input Formats](#input-formats)
@@ -116,6 +116,7 @@ Path Probability:       0.053949
 Metrics:
   Nodes explored:    5
   Edges examined:    12
+  Edges relaxed:     12
   Max PQ size:       4
   Execution time:    0.123 ms
   Peak memory:       1.23 KB
@@ -132,6 +133,7 @@ Path Probability:       0.053949
 Metrics:
   Nodes explored:    3
   Edges examined:    8
+  Edges relaxed:     6
   Max PQ size:       3
   Execution time:    0.098 ms
   Peak memory:       0.98 KB
@@ -331,7 +333,7 @@ python run_experiments.py --graph-types erdos_renyi \
     --sizes 1000 5000 --degrees 2 5 --runs 3
 ```
 
-Output CSV columns: `graph_type`, `graph_size`, `avg_degree`, `distribution`, `tau`, `run`, `seed`, `algorithm`, `execution_time_ms`, `peak_memory_bytes`, `nodes_explored`, `edges_relaxed`, `max_pq_size`, `path_cost`, `path_probability`, `path_length`, `path_found`, `optimality_gap_pct`.
+Output CSV columns: `graph_type`, `graph_size`, `avg_degree`, `distribution`, `tau`, `run`, `seed`, `algorithm`, `execution_time_ms`, `peak_memory_bytes`, `nodes_explored`, `edges_examined`, `edges_relaxed`, `max_pq_size`, `path_cost`, `path_probability`, `path_length`, `path_found`, `optimality_gap_pct`.
 
 </details>
 
@@ -425,7 +427,7 @@ python -m pytest tests/ -v
 |-----------|----------|
 | `TestPreprocessing` | Transition extraction (both CSV formats), MLE probability computation |
 | `TestGraphAndDijkstra` | Graph building, baseline & pruned Dijkstra, missing-sink handling |
-| `TestConvergence` | Pruned → baseline as τ → 0 (costs and `edges_relaxed`) |
+| `TestConvergence` | Pruned → baseline as τ → 0 (costs, `edges_examined`, and `edges_relaxed`) |
 | `TestProbabilityConsistency` | exp(−C\*) = Π edge probs along path |
 | `TestEdgeCases` | Disconnected graph, single node, probability-1 edges |
 | `TestGraphGenerator` | ER size, connectivity, power-law support |
