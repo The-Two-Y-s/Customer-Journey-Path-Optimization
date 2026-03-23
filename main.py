@@ -158,6 +158,8 @@ def main() -> None:
 
     if args.source not in graph:
         raise ValueError(f"Source node '{args.source}' not found in graph")
+    if args.target not in graph:
+        raise ValueError(f"Target node '{args.target}' not found in graph")
 
     if args.k <= 1:
         # --- Baseline Dijkstra ---

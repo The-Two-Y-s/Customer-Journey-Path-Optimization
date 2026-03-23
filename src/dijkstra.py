@@ -46,6 +46,8 @@ def dijkstra(graph, start, goal):
         for neighbor, weight in graph.get(node, []):
             new_cost = cost + weight
             metrics.edges_examined += 1
+            # In baseline, every examined edge is relaxed (no pruning),
+            # so edges_relaxed == edges_examined by design.
             metrics.edges_relaxed += 1
 
             if neighbor not in dist or new_cost < dist[neighbor]:

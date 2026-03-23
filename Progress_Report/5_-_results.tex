@@ -53,7 +53,7 @@ $|V|$ & \textbf{Edge Speedup} & \textbf{Wall Speedup} & \textbf{Baseline (ms)} &
 10,000 & 180.4$\times$ & 77.0$\times$ & 15.83 & 0.222 & 655.0 $\to$ 4.5 \\
 \bottomrule
 \end{tabular}
-\caption[Speedup scaling by graph size]{Median speedups at $\tau = 0.01$ by graph size. Baseline time grows linearly with $|V|$; pruned time remains nearly constant. Memory columns show baseline $\to$ pruned peak consumption.}
+\caption[Speedup scaling by graph size]{Median speedups at $\tau = 0.01$ by graph size. ``Edge Speedup'' = baseline \texttt{edges\_relaxed} / pruned \texttt{edges\_relaxed} (see Table~\ref{table:speedup_tau} note). Baseline time grows linearly with $|V|$; pruned time remains nearly constant. Memory columns show baseline $\to$ pruned peak consumption.}
 \label{table:speedup_size}
 \end{table}
 
@@ -81,7 +81,7 @@ Erd\H{o}s--R\'{e}nyi & 111.6$\times$ & 40.1$\times$ \\
 Layered              &  49.3$\times$ & 16.6$\times$ \\
 \bottomrule
 \end{tabular}
-\caption[Speedup by graph type]{Median speedups at $\tau = 0.01$ by graph type. ER graphs benefit more from pruning than layered graphs.}
+\caption[Speedup by graph type]{Median speedups at $\tau = 0.01$ by graph type. Edge and wall speedups defined as in Table~\ref{table:speedup_tau}. ER graphs benefit more from pruning than layered graphs.}
 \label{table:speedup_graph_type}
 \end{table}
 
@@ -100,7 +100,7 @@ Power-law ($\alpha=2$) & 73.0$\times$ & 25.1$\times$ \\
 Uniform                & 83.8$\times$ & 22.4$\times$ \\
 \bottomrule
 \end{tabular}
-\caption[Speedup by probability distribution]{Median speedups at $\tau = 0.01$ by distribution. Both distributions achieve similar wall-clock speedups.}
+\caption[Speedup by probability distribution]{Median speedups at $\tau = 0.01$ by distribution. Edge and wall speedups defined as in Table~\ref{table:speedup_tau}. Both distributions achieve similar wall-clock speedups.}
 \label{table:speedup_dist}
 \end{table}
 
@@ -134,7 +134,7 @@ RetailRocket (item-level)   &     44,711 &    101,528 & 20 & Kaggle~\citep{retai
 RecSys 2015 (YOOCHOOSE)     &     12,935 &     70,442 & 20 & Kaggle~\citep{recsys2015}       \\
 \bottomrule
 \end{tabular}
-\caption[Real-data graph configurations]{Graph sizes for the three real-data configurations. 20 random source--target pairs were tested per dataset. Each pair was evaluated with both a \emph{fixed} $\tau$ grid ($\tau \in \{0.0001, 0.001, 0.01, 0.1, 0.5\}$, 300 rows) and an \emph{adaptive} $\tau$ sweep where $\tau$ is set as a fraction of the pair's baseline path probability (540 rows; see Section~\ref{sec:adaptive_tau}). Total: 840 rows.}
+\caption[Real-data graph configurations]{Graph sizes for the three real-data configurations. 20 random source--target pairs were tested per dataset (balancing statistical representativeness against computational cost). Each pair was evaluated with both a \emph{fixed} $\tau$ grid ($\tau \in \{0.0001, 0.001, 0.01, 0.1, 0.5\}$, 300 rows) and an \emph{adaptive} $\tau$ sweep where $\tau$ is set as a fraction of the pair's baseline path probability (540 rows; see Section~\ref{sec:adaptive_tau}). Total: 840 rows.}
 \label{table:real_data_graphs}
 \end{table}
 

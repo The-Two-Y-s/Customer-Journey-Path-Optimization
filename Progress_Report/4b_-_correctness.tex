@@ -84,7 +84,7 @@ All five correctness properties were verified experimentally.
 
 Across 2,160 synthetic experiment rows and 840 real-data rows (300 fixed-$\tau$ + 540 adaptive-$\tau$), the optimality gap was measured as $\Delta = |C^*_{\text{baseline}} - C^*_{\text{pruned}}| / C^*_{\text{baseline}} \times 100\%$. The result was $\Delta = 0.0000\%$ for every configuration in which both algorithms found a path (178 of 1,800 pruned experiment rows with $\tau > 0$; 528 of 840 real-data rows), confirming Theorem~\ref{thm:all_or_nothing} empirically.
 
-Convergence testing showed that at $\tau = 0.001$ the pruned algorithm found paths in 28.6\% of configurations, decreasing to 5.8\% at $\tau = 0.01$ and 3.9\% at $\tau = 0.5$. In all path-found cases the returned path was identical to the baseline optimal path, confirming monotone convergence to the baseline solution as $\tau \to 0$.
+Convergence testing showed that at $\tau = 0.001$ the pruned algorithm found paths in 30.6\% of configurations, decreasing to 5.6\% at $\tau = 0.01$ and 4.2\% at $\tau = 0.5$. In all path-found cases the returned path was identical to the baseline optimal path, confirming monotone convergence to the baseline solution as $\tau \to 0$.
 
 Probability consistency was verified by comparing $\exp(-C^*)$ against $\prod_{(u,v)\in P^*} p(u,v)$ for all returned paths; relative error remained below $10^{-12}$ in every case.
 
