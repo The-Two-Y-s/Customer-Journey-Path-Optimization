@@ -269,7 +269,7 @@ graph = generate_layered_graph(
 )
 ```
 
-Nodes are distributed evenly across stages. Edges go primarily forward (up to +2 stages); `backward_prob` controls backward links modelling user loops.
+Nodes are distributed evenly across stages. Edges go primarily forward (up to +2 stages); `backward_prob` controls backward links modelling user loops. Under the `"uniform"` distribution, forward edges draw transition probabilities from U(0.3, 0.8) while backward edges draw from U(0.05, 0.3), reflecting that forward progression is more likely than backtracking.
 
 </details>
 

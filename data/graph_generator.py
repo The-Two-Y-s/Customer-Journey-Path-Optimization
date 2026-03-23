@@ -185,8 +185,9 @@ def generate_layered_graph(
     avg_degree : float
         Expected out-degree per vertex.
     distribution : str
-        ``"uniform"`` for U(0.01, 1) edge probabilities,
-        ``"power_law"`` for power-law distributed probabilities.
+        ``"uniform"`` — forward edges use U(0.3, 0.8), backward edges
+        use U(0.05, 0.3).  ``"power_law"`` — power-law distributed
+        probabilities (alpha=2) regardless of direction.
     source, target : str
         Labels for the designated source / target nodes.
     seed : int
@@ -238,7 +239,7 @@ def generate_layered_graph(
 
     # --- Edge generation (rejection sampling for scalability) ---
     adj: Dict[str, List[str]] = {nd: [] for nd in all_nodes}
-    edges: list[tuple[str, str]] = []
+    edges: list[tuple[str, str, bool]] = []  # (u, v, is_backward)
 
     for u in all_nodes:
         u_stage = node_to_stage[u]
@@ -257,7 +258,8 @@ def generate_layered_graph(
         while len(chosen) < out_deg and attempts < max_attempts:
             attempts += 1
 
-            if rng.random() < backward_prob and u_stage > 0:
+            is_backward = rng.random() < backward_prob and u_stage > 0
+            if is_backward:
                 prev_stage = rng.randint(0, u_stage - 1)
                 pool = stage_nodes[prev_stage]
             else:
@@ -276,21 +278,22 @@ def generate_layered_graph(
             if v != u and v not in chosen:
                 chosen.add(v)
                 adj[u].append(v)
-                edges.append((u, v))
+                edges.append((u, v, is_backward))
 
-    # Guarantee s-t connectivity
-    extra = _ensure_connectivity(adj, source, target, all_nodes, rng)
-    edges.extend(extra)
+    # Guarantee s-t connectivity (bridge edges are forward)
+    extra_pairs = _ensure_connectivity(adj, source, target, all_nodes, rng)
+    edges.extend((u, v, False) for u, v in extra_pairs)
 
     # Assign probability weights.
-    # Raw values are drawn from the chosen distribution, then normalised
-    # per source node so that outgoing probabilities sum to 1.
+    # Forward edges draw from U(0.3, 0.8), backward edges from U(0.05, 0.3),
+    # reflecting that forward progression is more likely than backtracking.
+    # Values are then normalised per source node so outgoing probs sum to 1.
     graph: Graph = {nd: [] for nd in all_nodes}
 
     raw: Dict[str, List[Tuple[str, float]]] = {nd: [] for nd in all_nodes}
-    for u, v in edges:
+    for u, v, is_bwd in edges:
         if distribution == "uniform":
-            p = rng.uniform(0.01, 1.0)
+            p = rng.uniform(0.05, 0.3) if is_bwd else rng.uniform(0.3, 0.8)
         elif distribution == "power_law":
             # Inverse-CDF power-law with exponent alpha=2, x_min=0.01
             rand_val = rng.random()
