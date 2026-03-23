@@ -37,7 +37,8 @@
     - [Analysis Notebook](#analysis-notebook)
   - [Results](#results)
     - [Synthetic Data — Speedup by τ](#synthetic-data--speedup-by-τ)
-    - [Real-Data Validation](#real-data-validation)
+    - [Real-Data Validation — Fixed τ](#real-data-validation--fixed-τ)
+    - [Real-Data Validation — Adaptive τ](#real-data-validation--adaptive-τ)
     - [Key Findings](#key-findings)
   - [Testing](#testing)
   - [Project Structure](#project-structure)
@@ -273,7 +274,7 @@ graph = generate_layered_graph(
 )
 ```
 
-Nodes are distributed evenly across stages. Edges go primarily forward (up to +2 stages); `backward_prob` controls backward links modelling user loops. Under the `"uniform"` distribution, forward edges draw transition probabilities from U(0.3, 0.8) while backward edges draw from U(0.05, 0.3), reflecting that forward progression is more likely than backtracking.
+Nodes are distributed evenly across stages. Edges go primarily forward (up to +2 stages); `backward_prob` controls backward links modelling user loops. Under the `"uniform"` distribution, forward edges draw raw weights from U(0.3, 0.8) while backward edges draw from U(0.05, 0.3); these raw weights are then normalised per source node so that outgoing probabilities sum to 1. Forward progression is therefore more likely than backtracking.
 
 </details>
 
@@ -323,7 +324,7 @@ Runs both algorithms across the full parameter matrix:
 - **τ:** 0, 0.001, 0.01, 0.05, 0.1, 0.5
 - **Runs:** 10 per configuration (deterministic `hashlib.md5` seeds)
 
-Timing and memory are measured in **separate passes** so tracemalloc overhead does not corrupt the stopwatch. Default matrix produces **2,160 rows** → `results/experiment_results.csv`.
+Timing and memory are measured in **separate passes** so tracemalloc overhead does not corrupt the stopwatch. Default matrix produces **2,160 rows** → `results/experiment_results.csv`. The `results/` directory is created automatically on first run.
 
 <details>
 <summary>Customisation</summary>
@@ -343,7 +344,7 @@ Output CSV columns: `graph_type`, `graph_size`, `avg_degree`, `distribution`, `t
 python run_real_experiments.py
 ```
 
-Tests three dataset configurations (RetailRocket event-level, RetailRocket item-level, RecSys 2015) with 20 random reachable source-target pairs each across 5 τ values → **300 rows** → `results/real_data_results.csv`.
+Tests three dataset configurations (RetailRocket event-level, RetailRocket item-level, RecSys 2015) with 20 random reachable source-target pairs each across 5 τ values → **300 rows** → `results/real_data_results.csv`. The `results/` directory is created automatically on first run.
 
 ```bash
 python run_real_experiments.py --recsys-sessions 50000 --pairs 20 --seed 42
@@ -380,6 +381,8 @@ Plots are saved to `results/img/`.
 
 ## Results
 
+> **Simulation environment:** Python 3.12.3, Windows 11, AMD Ryzen 7 5800H, 16 GB RAM. Speedup numbers are environment-sensitive; see the [progress report](Progress_Report/) for the full simulation environment table.
+
 **Verdict: Hypothesis supported.** Across 1,800 pruned runs (synthetic) and 840 runs (real data — 300 fixed-τ + 540 adaptive-τ), every run that found a path returned the **exact same optimal path** as the baseline (0.00% optimality gap across all 706 found paths). **The real trade-off is path-found rate, not accuracy:** aggressive τ values yield massive speedups but reduce the chance of finding any path.
 
 ### Synthetic Data — Speedup by τ
@@ -398,7 +401,7 @@ Three dataset configurations (20 random source-target pairs × 5 τ values = 300
 
 | Dataset | Nodes | Edges | Best Speedup | Path-Found Rate | Max Gap |
 |---------|-------|-------|-------------|-----------------|--------|
-| RetailRocket (event-level funnel) | 3 | 9 | 5× | 78% | 0.00% |
+| RetailRocket (event-level funnel) | 3 | 9 | 6× | 78% | 0.00% |
 | RetailRocket (item-level, 50K sessions) | 44,711 | 101,528 | 18,882× | 1% | 0.00% |
 | RecSys 2015 (50K sessions) | 12,935 | 70,442 | 2,309× | 0% | 0.00% |
 
@@ -430,11 +433,13 @@ To address this, an **adaptive-τ regime** sets τ as a fraction (10%–110%) of
 
 ## Testing
 
-41 unit tests across 12 test classes:
+44 unit tests across 13 test classes:
 
 ```bash
 python -m pytest tests/ -v
 ```
+
+> **Note on skipped tests:** Seven tests in `TestRealDataLoaders` are skipped when the real-world datasets (RetailRocket, RecSys 2015) are not present in `data/real_dataset/`. These are data-availability guards, not suppressed failures. Download the datasets to run them.
 
 | Test class | Coverage |
 |-----------|----------|
@@ -450,6 +455,7 @@ python -m pytest tests/ -v
 | `TestRealDataLoaders` | RetailRocket + RecSys 2015 loading, Dijkstra on real graphs |
 | `TestRealDataPipeline` | End-to-end test on synthetic journey dataset |
 | `TestCriticalTau` | Critical-τ on ER/Layered graphs, unreachable target |
+| `TestScaleAndProperty` | 2,000- and 5,000-node correctness, randomised zero-gap property across 20 graphs |
 
 ---
 

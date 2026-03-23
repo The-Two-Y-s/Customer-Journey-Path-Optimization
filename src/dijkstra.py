@@ -22,7 +22,10 @@ class DijkstraResult:
     metrics: DijkstraMetrics = field(default_factory=DijkstraMetrics)
 
 
-def dijkstra(graph, start, goal):
+Graph = dict[str, list[tuple[str, float]]]
+
+
+def dijkstra(graph: Graph, start: str, goal: str) -> DijkstraResult:
     """Baseline Dijkstra (Algorithm 1) with stale-entry skip and metrics."""
     pq = [(0, start)]
     dist = {start: 0}
@@ -60,7 +63,7 @@ def dijkstra(graph, start, goal):
     return DijkstraResult(dist=dist, parent=parent, metrics=metrics)
 
 
-def dijkstra_pruned(graph, start, goal, tau=0.01):
+def dijkstra_pruned(graph: Graph, start: str, goal: str, tau: float = 0.01) -> DijkstraResult:
     """Probability-Pruned Dijkstra (Algorithm 2).
 
     Prunes partial paths whose cumulative probability falls below tau.
@@ -108,7 +111,7 @@ def dijkstra_pruned(graph, start, goal, tau=0.01):
     return DijkstraResult(dist=dist, parent=parent, metrics=metrics)
 
 
-def reconstruct_path(parent, start, goal):
+def reconstruct_path(parent: dict[str, str], start: str, goal: str) -> list[str]:
     """Backtrack through the parent map to recover the s-to-t path."""
     if start == goal:
         return [start]
@@ -116,11 +119,13 @@ def reconstruct_path(parent, start, goal):
         return []
 
     path = [goal]
+    visited: set[str] = {goal}
     cur = goal
     while cur != start:
         cur = parent[cur]
-        path.append(cur)
-        if len(path) > len(parent) + 1:
+        if cur in visited:
             raise RuntimeError("Cycle detected in parent map during path reconstruction")
+        visited.add(cur)
+        path.append(cur)
     path.reverse()
     return path

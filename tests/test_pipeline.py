@@ -541,5 +541,45 @@ class TestCriticalTau(unittest.TestCase):
         )
 
 
+class TestScaleAndProperty(unittest.TestCase):
+    """Larger-scale tests and randomised property-based validation."""
+
+    def test_correctness_at_2000_nodes_er(self):
+        """Pruned Dijkstra returns exact optimal on a 2,000-node ER graph."""
+        graph = generate_erdos_renyi_graph(n=2000, avg_degree=5, seed=77)
+        base = dijkstra(graph, "s", "t")
+        if "t" not in base.dist:
+            self.skipTest("No s-t path in this graph")
+        pruned = dijkstra_pruned(graph, "s", "t", tau=1e-6)
+        if "t" in pruned.dist:
+            self.assertAlmostEqual(base.dist["t"], pruned.dist["t"], places=12)
+
+    def test_correctness_at_5000_nodes_layered(self):
+        """Pruned Dijkstra returns exact optimal on a 5,000-node layered graph."""
+        graph = generate_layered_graph(n=5000, avg_degree=5, seed=88)
+        base = dijkstra(graph, "s", "t")
+        self.assertIn("t", base.dist, "Layered graph must have s-t path")
+        pruned = dijkstra_pruned(graph, "s", "t", tau=1e-6)
+        if "t" in pruned.dist:
+            self.assertAlmostEqual(base.dist["t"], pruned.dist["t"], places=12)
+
+    def test_random_graph_property_gap_always_zero(self):
+        """Property: across 20 random graphs, gap is always 0 when path found."""
+        import random as _rng
+        seeds = _rng.Random(42).sample(range(10000), 20)
+        for seed in seeds:
+            graph = generate_erdos_renyi_graph(n=500, avg_degree=4, seed=seed)
+            base = dijkstra(graph, "s", "t")
+            if "t" not in base.dist:
+                continue
+            for tau in [1e-6, 1e-4, 1e-2]:
+                pruned = dijkstra_pruned(graph, "s", "t", tau=tau)
+                if "t" in pruned.dist:
+                    self.assertAlmostEqual(
+                        base.dist["t"], pruned.dist["t"], places=12,
+                        msg=f"Non-zero gap at seed={seed}, tau={tau}",
+                    )
+
+
 if __name__ == "__main__":
     unittest.main()

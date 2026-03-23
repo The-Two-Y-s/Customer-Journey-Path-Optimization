@@ -88,7 +88,10 @@ def find_critical_tau(
     """
     taus_input = taus  # save the user's explicit list (or None)
 
-    # Run baseline with wall-clock timing
+    # Run baseline with wall-clock timing.
+    # NOTE: single-shot timing — noisier than the main experiment runner
+    # which averages over 10 repetitions.  The speedup_wallclock values in
+    # TauProfile should be treated as rough estimates on small graphs.
     t0 = time.perf_counter()
     result_base = dijkstra(graph, source, target)
     base_time = time.perf_counter() - t0

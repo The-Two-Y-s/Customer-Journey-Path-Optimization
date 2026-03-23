@@ -18,6 +18,7 @@ import csv
 import math
 import random
 import time
+from collections import deque
 from pathlib import Path
 
 from data.real_data_loader import load_retailrocket, load_recsys2015, dataset_summary
@@ -28,7 +29,22 @@ from src.dijkstra import dijkstra, dijkstra_pruned, reconstruct_path
 
 TAU_VALUES = [0.0001, 0.001, 0.01, 0.1, 0.5]
 ADAPTIVE_FRACTIONS = [0.10, 0.30, 0.50, 0.70, 0.90, 0.95, 0.99, 1.0, 1.10]
-NUM_PAIRS = 20  # source-target pairs per dataset
+NUM_PAIRS = 20  # default source-target pairs per dataset
+
+
+def _bfs_reachable(graph: dict, source: str, target: str) -> bool:
+    """Check reachability via BFS (much cheaper than full Dijkstra)."""
+    visited: set[str] = {source}
+    queue = deque([source])
+    while queue:
+        node = queue.popleft()
+        for neighbour, _weight in graph.get(node, []):
+            if neighbour == target:
+                return True
+            if neighbour not in visited:
+                visited.add(neighbour)
+                queue.append(neighbour)
+    return False
 
 
 def _pick_pairs(graph, rng, n=NUM_PAIRS):
@@ -45,9 +61,8 @@ def _pick_pairs(graph, rng, n=NUM_PAIRS):
         if src == tgt:
             attempts += 1
             continue
-        # Quick reachability check
-        res = dijkstra(graph, src, tgt)
-        if tgt in res.dist:
+        # Quick reachability check via BFS (cheaper than full Dijkstra)
+        if _bfs_reachable(graph, src, tgt):
             pairs.append((src, tgt))
         attempts += 1
     return pairs
@@ -100,7 +115,7 @@ def _make_row(name, n_nodes, n_edges, src, tgt, tau, tau_mode,
     }
 
 
-def run_dataset(name, df, output_rows, rng):
+def run_dataset(name, df, output_rows, rng, n_pairs=NUM_PAIRS):
     transitions = extract_transitions(df)
     _, probs = compute_transition_statistics(transitions)
     graph = build_weighted_graph(probs)
@@ -109,7 +124,7 @@ def run_dataset(name, df, output_rows, rng):
     n_edges = sum(len(v) for v in graph.values())
     print(f"  {name}: {n_nodes:,} nodes, {n_edges:,} edges")
 
-    pairs = _pick_pairs(graph, rng, n=NUM_PAIRS)
+    pairs = _pick_pairs(graph, rng, n=n_pairs)
     print(f"  Found {len(pairs)} reachable pairs")
 
     for src, tgt in pairs:
@@ -152,9 +167,7 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
-    global NUM_PAIRS
-    NUM_PAIRS = args.pairs
-
+    n_pairs = args.pairs
     rng = random.Random(args.seed)
     rows = []
 
@@ -162,18 +175,18 @@ def main():
     print("Loading RetailRocket (event-level)...")
     df_rr = load_retailrocket(granularity="event",
                               max_sessions=args.retailrocket_sessions)
-    run_dataset("RetailRocket-event", df_rr, rows, rng)
+    run_dataset("RetailRocket-event", df_rr, rows, rng, n_pairs=n_pairs)
 
     # ----- RetailRocket (item-level — large graph) -----
     print("Loading RetailRocket (item-level, 50K sessions)...")
     df_rr_item = load_retailrocket(granularity="item", max_sessions=50000)
-    run_dataset("RetailRocket-item", df_rr_item, rows, rng)
+    run_dataset("RetailRocket-item", df_rr_item, rows, rng, n_pairs=n_pairs)
 
     # ----- RecSys 2015 (item-level) -----
     print("Loading RecSys 2015 (%s sessions)..." %
           (f"{args.recsys_sessions:,}" if args.recsys_sessions else "all"))
     df_rc = load_recsys2015(max_sessions=args.recsys_sessions)
-    run_dataset("RecSys2015", df_rc, rows, rng)
+    run_dataset("RecSys2015", df_rc, rows, rng, n_pairs=n_pairs)
 
     # ----- Write CSV -----
     out = Path("results/real_data_results.csv")
