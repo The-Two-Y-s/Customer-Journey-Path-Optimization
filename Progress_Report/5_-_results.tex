@@ -18,18 +18,18 @@ Table~\ref{table:speedup_tau} summarizes median speedups aggregated across all g
 \toprule
 $\tau$ & Edge Spd & Exam.\ Spd & Wall Spd & Base (ms) & Pruned (ms) & Found (\%) \\
 \midrule
-0.001 &   8.7$\times$ &   1.9$\times$ &   3.3$\times$ & 4.98 & 1.561 & 30.6 \\
-0.01  &  79.2$\times$ &  14.0$\times$ &  24.7$\times$ & 4.98 & 0.206 & 5.6  \\
-0.05  & 368.4$\times$ &  70.4$\times$ & 123.6$\times$ & 4.98 & 0.040 & 4.7  \\
-0.1   & 810.5$\times$ & 136.9$\times$ & 242.6$\times$ & 4.98 & 0.020 & 4.4  \\
-0.5   & 1,986$\times$ & 711.1$\times$ & 738.2$\times$ & 4.98 & 0.006 & 4.2  \\
+0.001 &  6.9$\times$ &   1.7$\times$ &   3.4$\times$ & 3.75 & 1.075 & 31.4 \\
+0.01  &  58.4$\times$ &  14.2$\times$ &  24.5$\times$ & 3.75 & 0.151 & 5.6  \\
+0.05  & 284.1$\times$ &  68.2$\times$ & 110.7$\times$ & 3.75 & 0.033 & 4.7  \\
+0.1   & 526.6$\times$ & 127.4$\times$ & 226.1$\times$ & 3.75 & 0.016 & 4.4  \\
+0.5   & 1,788.6$\times$ & 589.3$\times$ & 735.2$\times$ & 3.75 & 0.005 & 3.9  \\
 \bottomrule
 \end{tabular}
 \caption[Speedup by pruning threshold $\tau$]{Median speedups by pruning threshold $\tau$.}
 \label{table:speedup_tau}
 \end{table}
 
-Speedups scale monotonically with $\tau$, ranging from $3.3\times$ wall-clock at $\tau=0.001$ to $738\times$ at $\tau=0.5$. The ``Edge Speedup'' column---based on \texttt{edges\_relaxed}---consistently exceeds both other measures because its pruned denominator excludes threshold-pruned edges; it quantifies pruning aggressiveness, not raw work reduction. The ``Exam.\ Speedup'' column provides the fair like-for-like comparison using \texttt{edges\_examined}, which counts every outgoing edge the algorithm inspects regardless of whether it survives the threshold (see Table~\ref{table:edges_relaxed} for counter semantics). At $\tau=0.5$, the examination speedup ($711\times$) closely tracks wall-clock speedup ($738\times$), confirming that the wall-clock gains are genuine and not inflated by counter semantics. At lower $\tau$ values (e.g.\ $\tau=0.001$, exam.\ speedup $1.9\times$, wall-clock $3.3\times$), the pruned algorithm still examines most edges but skips many relaxation operations, and Python per-call overhead becomes a larger fraction of the reduced runtime. Across all 178 path-found rows among the 1,800 pruned synthetic runs ($\tau > 0$), the optimality gap remained exactly $\Delta = 0.0000\%$, confirming the all-or-nothing property (Theorem~\ref{thm:all_or_nothing}, Chapter~\ref{chap:correctness}). Path-found rates decrease with $\tau$, reflecting the reachability--speed trade-off inherent in the pruning approach.
+Speedups scale monotonically with $\tau$, ranging from $3.4\times$ wall-clock at $\tau=0.001$ to $735.2\times$ at $\tau=0.5$. The ``Edge Speedup'' column---based on \texttt{edges\_relaxed}---consistently exceeds both other measures because its pruned denominator excludes threshold-pruned edges; it quantifies pruning aggressiveness, not raw work reduction. The ``Exam.\ Speedup'' column provides the fair like-for-like comparison using \texttt{edges\_examined}, which counts every outgoing edge the algorithm inspects regardless of whether it survives the threshold (see Table~\ref{table:edges_relaxed} for counter semantics). At $\tau=0.5$, the examination speedup ($589.3\times$) closely tracks wall-clock speedup ($735.2\times$), confirming that the wall-clock gains are genuine and not inflated by counter semantics. At lower $\tau$ values (e.g.\ $\tau=0.001$, exam.\ speedup $1.7\times$, wall-clock $3.4\times$), the pruned algorithm still examines most edges but skips many relaxation operations, and Python per-call overhead becomes a larger fraction of the reduced runtime. Across all 169 path-found rows among the 1,800 pruned synthetic runs ($\tau > 0$), the optimality gap remained exactly $\Delta = 0.0000\%$, confirming the all-or-nothing property (Theorem~\ref{thm:all_or_nothing}, Chapter~\ref{chap:correctness}). Path-found rates decrease with $\tau$, reflecting the reachability--speed trade-off inherent in the pruning approach.
 
 \begin{figure}[htbp]
 \centering
