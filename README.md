@@ -383,17 +383,17 @@ Plots are saved to `results/img/`.
 
 > **Simulation environment:** Python 3.12.3, Windows 11, AMD Ryzen 7 5800H, 16 GB RAM. Speedup numbers are environment-sensitive; see the [progress report](Progress_Report/) for the full simulation environment table.
 
-**Verdict: Hypothesis supported.** Across 1,800 pruned runs (synthetic) and 840 runs (real data — 300 fixed-τ + 540 adaptive-τ), every run that found a path returned the **exact same optimal path** as the baseline (0.00% optimality gap across all 706 found paths). **The real trade-off is path-found rate, not accuracy:** aggressive τ values yield massive speedups but reduce the chance of finding any path.
+**Verdict: Hypothesis supported.** Across 1,800 pruned runs (synthetic) and 840 runs (real data — 300 fixed-τ + 540 adaptive-τ), every run that found a path returned the **exact same optimal path** as the baseline (0.00% optimality gap across all 708 found paths). **The real trade-off is path-found rate, not accuracy:** aggressive τ values yield massive speedups but reduce the chance of finding any path.
 
 ### Synthetic Data — Speedup by τ
 
-| τ | Median Speedup | Edges Examined (% of baseline) | Path-Found Rate | Gap (when found) |
+| τ | Wall-Clock Speedup | Edges Examined (% of baseline) | Path-Found Rate | Gap (when found) |
 |---|---------------|----------------|-----------------|------------------|
-| 0.001 | 8.7× | 53.3% | 30.6% | 0.00% |
-| 0.01 | 79.2× | 7.1% | 5.6% | 0.00% |
-| 0.05 | 368.4× | 1.4% | 4.7% | 0.00% |
-| 0.1 | 810.5× | 0.7% | 4.4% | 0.00% |
-| 0.5 | 1,986× | 0.1% | 4.2% | 0.00% |
+| 0.001 | 3.4× | 53.4% | 31.4% | 0.00% |
+| 0.01 | 24.5× | 7.3% | 5.6% | 0.00% |
+| 0.05 | 110.7× | 1.4% | 4.7% | 0.00% |
+| 0.1 | 226.1× | 0.7% | 4.4% | 0.00% |
+| 0.5 | 735.2× | 0.1% | 3.9% | 0.00% |
 
 ### Real-Data Validation — Fixed τ
 
@@ -422,9 +422,9 @@ To address this, an **adaptive-τ regime** sets τ as a fraction (10%–110%) of
 ### Key Findings
 
 1. **179/180** synthetic configurations show statistically significant speedup (Wilcoxon signed-rank, p < 0.05)
-2. **100% exact optimality** — every path found by the pruned variant matches the baseline (0.00% gap), on both synthetic and real data (0/178 synthetic, 0/528 real with non-zero gap)
+2. **100% exact optimality** — every path found by the pruned variant matches the baseline (0.00% gap), on both synthetic and real data (0/180 synthetic, 0/528 real with non-zero gap)
 3. Normalised transition probabilities (`Σ P(v|u) = 1`) make individual edge probabilities small, so pruning is aggressive — speedups up to **18,882×** on real data (wall-clock)
-4. The trade-off is **reachability, not accuracy**: at τ = 0.5 only 4.2% of synthetic runs find a path, but those that do are guaranteed optimal
+4. The trade-off is **reachability, not accuracy**: at τ = 0.5 only 3.9% of synthetic runs find a path, but those that do are guaranteed optimal
 5. Both uniform and power-law distributions exhibit consistent behaviour
 6. **Real-data validation** on RetailRocket and RecSys 2015 confirms the hypothesis generalises beyond synthetic graphs
 7. **Adaptive τ** calibrated to each pair's baseline path probability resolves near-zero path-found rates on sparse graphs (0% → 83% for RecSys 2015)

@@ -36,7 +36,7 @@ Probability-Pruned Dijkstra provides meaningful speedup over baseline Dijkstra w
 
 \noindent\textbf{Experimental Verdict: Hypothesis Supported.}
 
-Pruning reduces the number of edges examined, yielding wall-clock speedups from $3.3\times$ at $\tau=0.001$ to $738\times$ at $\tau=0.5$ (edge-relaxation speedups of $8.7\times$ to $1{,}986\times$; fair edge-examination speedups of $1.9\times$ to $711\times$). Whenever the pruned algorithm finds a path, it returns the exact same optimal path as the baseline, with an optimality gap of $0.0000\%$ across all 178 path-found rows (of 1,800 pruned). The only cost is reduced reachability: at aggressive $\tau$ values the optimal path may be pruned entirely, causing the algorithm to report no path.
+Pruning reduces the number of edges examined, yielding wall-clock speedups from $3.4\times$ at $\tau=0.001$ to $735.2\times$ at $\tau=0.5$ (edge-relaxation speedups of $8.6\times$ to $1{,}928\times$; fair edge-examination speedups of $1.9\times$ to $710\times$). Whenever the pruned algorithm finds a path, it returns the exact same optimal path as the baseline, with an optimality gap of $0.0000\%$ across all 180 path-found rows (of 1,800 pruned). The only cost is reduced reachability: at aggressive $\tau$ values the optimal path may be pruned entirely, causing the algorithm to report no path.
 
 \section{Target Users}
 
