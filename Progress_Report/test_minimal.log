@@ -1,0 +1,680 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.3.27)  27 MAR 2026 21:18
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**./test_minimal.tex
+(test_minimal.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-01-19>
+(C:\Program Files\MiKTeX\tex/latex/base\report.cls
+Document Class: report 2025/01/22 v1.4n Standard LaTeX document class
+(C:\Program Files\MiKTeX\tex/latex/base\size12.clo
+File: size12.clo 2025/01/22 v1.4n Standard LaTeX file (size option)
+)
+\c@part=\count275
+\c@chapter=\count276
+\c@section=\count277
+\c@subsection=\count278
+\c@subsubsection=\count279
+\c@paragraph=\count280
+\c@subparagraph=\count281
+\c@figure=\count282
+\c@table=\count283
+\abovecaptionskip=\skip49
+\belowcaptionskip=\skip50
+\bibindent=\dimen148
+)
+(C:\Program Files\MiKTeX\tex/latex/amsmath\amsmath.sty
+Package: amsmath 2025/07/09 v2.17z AMS math features
+\@mathmargin=\skip51
+
+For additional information on amsmath, use the `?' option.
+(C:\Program Files\MiKTeX\tex/latex/amsmath\amstext.sty
+Package: amstext 2024/11/17 v2.01 AMS text
+
+(C:\Program Files\MiKTeX\tex/latex/amsmath\amsgen.sty
+File: amsgen.sty 1999/11/30 v2.0 generic functions
+\@emptytoks=\toks17
+\ex@=\dimen149
+))
+(C:\Program Files\MiKTeX\tex/latex/amsmath\amsbsy.sty
+Package: amsbsy 1999/11/29 v1.2d Bold Symbols
+\pmbraise@=\dimen150
+)
+(C:\Program Files\MiKTeX\tex/latex/amsmath\amsopn.sty
+Package: amsopn 2022/04/08 v2.04 operator names
+)
+\inf@bad=\count284
+LaTeX Info: Redefining \frac on input line 233.
+\uproot@=\count285
+\leftroot@=\count286
+LaTeX Info: Redefining \overline on input line 398.
+LaTeX Info: Redefining \colon on input line 409.
+\classnum@=\count287
+\DOTSCASE@=\count288
+LaTeX Info: Redefining \ldots on input line 495.
+LaTeX Info: Redefining \dots on input line 498.
+LaTeX Info: Redefining \cdots on input line 619.
+\Mathstrutbox@=\box53
+\strutbox@=\box54
+LaTeX Info: Redefining \big on input line 721.
+LaTeX Info: Redefining \Big on input line 722.
+LaTeX Info: Redefining \bigg on input line 723.
+LaTeX Info: Redefining \Bigg on input line 724.
+\big@size=\dimen151
+LaTeX Font Info:    Redeclaring font encoding OML on input line 742.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 743.
+\macc@depth=\count289
+LaTeX Info: Redefining \bmod on input line 904.
+LaTeX Info: Redefining \pmod on input line 909.
+LaTeX Info: Redefining \smash on input line 939.
+LaTeX Info: Redefining \relbar on input line 969.
+LaTeX Info: Redefining \Relbar on input line 970.
+\c@MaxMatrixCols=\count290
+\dotsspace@=\muskip17
+\c@parentequation=\count291
+\dspbrk@lvl=\count292
+\tag@help=\toks18
+\row@=\count293
+\column@=\count294
+\maxfields@=\count295
+\andhelp@=\toks19
+\eqnshift@=\dimen152
+\alignsep@=\dimen153
+\tagshift@=\dimen154
+\tagwidth@=\dimen155
+\totwidth@=\dimen156
+\lineht@=\dimen157
+\@envbody=\toks20
+\multlinegap=\skip52
+\multlinetaggap=\skip53
+\mathdisplay@stack=\toks21
+LaTeX Info: Redefining \[ on input line 2950.
+LaTeX Info: Redefining \] on input line 2951.
+)
+(C:\Program Files\MiKTeX\tex/latex/amsfonts\amssymb.sty
+Package: amssymb 2013/01/14 v3.01 AMS font symbols
+
+(C:\Program Files\MiKTeX\tex/latex/amsfonts\amsfonts.sty
+Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+\symAMSa=\mathgroup4
+\symAMSb=\mathgroup5
+LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+))
+(C:\Users\Windows\AppData\Roaming\MiKTeX\tex/latex/amscls\amsthm.sty
+Package: amsthm 2020/05/29 v2.20.6
+\thm@style=\toks22
+\thm@bodyfont=\toks23
+\thm@headfont=\toks24
+\thm@notefont=\toks25
+\thm@headpunct=\toks26
+\thm@preskip=\skip54
+\thm@postskip=\skip55
+\thm@headsep=\skip56
+\dth@everypar=\toks27
+)
+(C:\Users\Windows\AppData\Roaming\MiKTeX\tex/latex/algorithm2e\algorithm2e.sty
+Package: algorithm2e 2017/07/18 v5.2 algorithms environments
+\c@AlgoLine=\count296
+
+(C:\Program Files\MiKTeX\tex/latex/base\ifthen.sty
+Package: ifthen 2024/03/16 v1.1e Standard LaTeX ifthen package (DPC)
+)
+\algocf@hangindent=\skip57
+
+(C:\Users\Windows\AppData\Roaming\MiKTeX\tex/latex/ifoddpage\ifoddpage.sty
+Package: ifoddpage 2022/10/18 v1.2 Conditionals for odd/even page detection
+\c@checkoddpage=\count297
+)
+(C:\Program Files\MiKTeX\tex/latex/tools\xspace.sty
+Package: xspace 2014/10/28 v1.13 Space after command names (DPC,MH)
+)
+(C:\Users\Windows\AppData\Roaming\MiKTeX\tex/latex/relsize\relsize.sty
+Package: relsize 2013/03/29 ver 4.1
+)
+\skiptotal=\skip58
+\skiplinenumber=\skip59
+\skiprule=\skip60
+\skiphlne=\skip61
+\skiptext=\skip62
+\skiplength=\skip63
+\algomargin=\skip64
+\skipalgocfslide=\skip65
+\algowidth=\dimen158
+\inoutsize=\dimen159
+\inoutindent=\dimen160
+\interspacetitleruled=\dimen161
+\interspacealgoruled=\dimen162
+\interspacetitleboxruled=\dimen163
+\algocf@ruledwidth=\skip66
+\algocf@inoutbox=\box55
+\algocf@inputbox=\box56
+\AlCapSkip=\skip67
+\AlCapHSkip=\skip68
+\algoskipindent=\skip69
+\algocf@nlbox=\box57
+\algocf@hangingbox=\box58
+\algocf@untilbox=\box59
+\algocf@skipuntil=\skip70
+\algocf@capbox=\box60
+\algocf@lcaptionbox=\skip71
+\algoheightruledefault=\skip72
+\algoheightrule=\skip73
+\algotitleheightruledefault=\skip74
+\algotitleheightrule=\skip75
+\c@algocfline=\count298
+\c@algocfproc=\count299
+\c@algocf=\count300
+\algocf@algoframe=\box61
+\algocf@algobox=\box62
+)
+(C:\Program Files\MiKTeX\tex/latex/pgf/frontendlayer\tikz.sty
+(C:\Program Files\MiKTeX\tex/latex/pgf/basiclayer\pgf.sty
+(C:\Program Files\MiKTeX\tex/latex/pgf/utilities\pgfrcs.sty
+(C:\Program Files\MiKTeX\tex/generic/pgf/utilities\pgfutil-common.tex
+\pgfutil@everybye=\toks28
+\pgfutil@tempdima=\dimen164
+\pgfutil@tempdimb=\dimen165
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/utilities\pgfutil-latex.def
+\pgfutil@abb=\box63
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/utilities\pgfrcs.code.tex
+(C:\Program Files\MiKTeX\tex/generic/pgf\pgf.revision.tex)
+Package: pgfrcs 2025-08-29 v3.1.11a (3.1.11a)
+))
+Package: pgf 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Program Files\MiKTeX\tex/latex/pgf/basiclayer\pgfcore.sty
+(C:\Program Files\MiKTeX\tex/latex/graphics\graphicx.sty
+Package: graphicx 2024/12/31 v1.2e Enhanced LaTeX Graphics (DPC,SPQR)
+
+(C:\Program Files\MiKTeX\tex/latex/graphics\keyval.sty
+Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
+\KV@toks@=\toks29
+)
+(C:\Program Files\MiKTeX\tex/latex/graphics\graphics.sty
+Package: graphics 2024/08/06 v1.4g Standard LaTeX Graphics (DPC,SPQR)
+
+(C:\Program Files\MiKTeX\tex/latex/graphics\trig.sty
+Package: trig 2023/12/02 v1.11 sin cos tan (DPC)
+)
+(C:\Program Files\MiKTeX\tex/latex/graphics-cfg\graphics.cfg
+File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
+)
+Package graphics Info: Driver file: pdftex.def on input line 106.
+
+(C:\Program Files\MiKTeX\tex/latex/graphics-def\pdftex.def
+File: pdftex.def 2025/09/29 v1.2d Graphics/color driver for pdftex
+))
+\Gin@req@height=\dimen166
+\Gin@req@width=\dimen167
+)
+(C:\Program Files\MiKTeX\tex/latex/pgf/systemlayer\pgfsys.sty
+(C:\Program Files\MiKTeX\tex/generic/pgf/systemlayer\pgfsys.code.tex
+Package: pgfsys 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Program Files\MiKTeX\tex/generic/pgf/utilities\pgfkeys.code.tex
+\pgfkeys@pathtoks=\toks30
+\pgfkeys@temptoks=\toks31
+
+(C:\Program Files\MiKTeX\tex/generic/pgf/utilities\pgfkeyslibraryfiltered.code.
+tex
+\pgfkeys@tmptoks=\toks32
+))
+\pgf@x=\dimen168
+\pgf@y=\dimen169
+\pgf@xa=\dimen170
+\pgf@ya=\dimen171
+\pgf@xb=\dimen172
+\pgf@yb=\dimen173
+\pgf@xc=\dimen174
+\pgf@yc=\dimen175
+\pgf@xd=\dimen176
+\pgf@yd=\dimen177
+\w@pgf@writea=\write3
+\r@pgf@reada=\read2
+\c@pgf@counta=\count301
+\c@pgf@countb=\count302
+\c@pgf@countc=\count303
+\c@pgf@countd=\count304
+\t@pgf@toka=\toks33
+\t@pgf@tokb=\toks34
+\t@pgf@tokc=\toks35
+\pgf@sys@id@count=\count305
+ (C:\Program Files\MiKTeX\tex/generic/pgf/systemlayer\pgf.cfg
+File: pgf.cfg 2025-08-29 v3.1.11a (3.1.11a)
+)
+Driver file for pgf: pgfsys-pdftex.def
+
+(C:\Program Files\MiKTeX\tex/generic/pgf/systemlayer\pgfsys-pdftex.def
+File: pgfsys-pdftex.def 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Program Files\MiKTeX\tex/generic/pgf/systemlayer\pgfsys-common-pdf.def
+File: pgfsys-common-pdf.def 2025-08-29 v3.1.11a (3.1.11a)
+)))
+(C:\Program Files\MiKTeX\tex/generic/pgf/systemlayer\pgfsyssoftpath.code.tex
+File: pgfsyssoftpath.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfsyssoftpath@smallbuffer@items=\count306
+\pgfsyssoftpath@bigbuffer@items=\count307
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/systemlayer\pgfsysprotocol.code.tex
+File: pgfsysprotocol.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+))
+(C:\Program Files\MiKTeX\tex/latex/xcolor\xcolor.sty
+Package: xcolor 2024/09/29 v3.02 LaTeX color extensions (UK)
+
+(C:\Program Files\MiKTeX\tex/latex/graphics-cfg\color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package xcolor Info: Driver file: pdftex.def on input line 274.
+
+(C:\Program Files\MiKTeX\tex/latex/graphics\mathcolor.ltx)
+Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1349.
+Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1353.
+Package xcolor Info: Model `RGB' extended on input line 1365.
+Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1367.
+Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1368.
+Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1369.
+Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1370.
+Package xcolor Info: Model `Gray' substituted by `gray' on input line 1371.
+Package xcolor Info: Model `wave' substituted by `hsb' on input line 1372.
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcore.code.tex
+Package: pgfcore 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfmath.code.tex
+(C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfmathutil.code.tex)
+(C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfmathparser.code.tex
+\pgfmath@dimen=\dimen178
+\pgfmath@count=\count308
+\pgfmath@box=\box64
+\pgfmath@toks=\toks36
+\pgfmath@stack@operand=\toks37
+\pgfmath@stack@operation=\toks38
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.code.tex)
+(C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.basic.code.tex)
+(C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.trigonometric.co
+de.tex)
+(C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.random.code.tex)
+
+(C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.comparison.code.
+tex)
+(C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.base.code.tex)
+(C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.round.code.tex)
+(C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.misc.code.tex)
+(C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.integerarithmeti
+cs.code.tex) (C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfmathcalc.code.tex
+) (C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfmathfloat.code.tex
+\c@pgfmathroundto@lastzeros=\count309
+))
+(C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfint.code.tex)
+(C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcorepoints.code.tex
+File: pgfcorepoints.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@picminx=\dimen179
+\pgf@picmaxx=\dimen180
+\pgf@picminy=\dimen181
+\pgf@picmaxy=\dimen182
+\pgf@pathminx=\dimen183
+\pgf@pathmaxx=\dimen184
+\pgf@pathminy=\dimen185
+\pgf@pathmaxy=\dimen186
+\pgf@xx=\dimen187
+\pgf@xy=\dimen188
+\pgf@yx=\dimen189
+\pgf@yy=\dimen190
+\pgf@zx=\dimen191
+\pgf@zy=\dimen192
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcorepathconstruct.code.t
+ex
+File: pgfcorepathconstruct.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@path@lastx=\dimen193
+\pgf@path@lasty=\dimen194
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcorepathusage.code.tex
+File: pgfcorepathusage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@shorten@end@additional=\dimen195
+\pgf@shorten@start@additional=\dimen196
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcorescopes.code.tex
+File: pgfcorescopes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfpic=\box65
+\pgf@hbox=\box66
+\pgf@layerbox@main=\box67
+\pgf@picture@serial@count=\count310
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcoregraphicstate.code.te
+x
+File: pgfcoregraphicstate.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgflinewidth=\dimen197
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcoretransformations.code
+.tex
+File: pgfcoretransformations.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@pt@x=\dimen198
+\pgf@pt@y=\dimen199
+\pgf@pt@temp=\dimen256
+) (C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcorequick.code.tex
+File: pgfcorequick.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcoreobjects.code.tex
+File: pgfcoreobjects.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcorepathprocessing.code.
+tex
+File: pgfcorepathprocessing.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcorearrows.code.tex
+File: pgfcorearrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfarrowsep=\dimen257
+) (C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcoreshade.code.tex
+File: pgfcoreshade.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@max=\dimen258
+\pgf@sys@shading@range@num=\count311
+\pgf@shadingcount=\count312
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcoreimage.code.tex
+File: pgfcoreimage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcoreexternal.code.tex
+File: pgfcoreexternal.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfexternal@startupbox=\box68
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcorelayers.code.tex
+File: pgfcorelayers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcoretransparency.code.te
+x
+File: pgfcoretransparency.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcorepatterns.code.tex
+File: pgfcorepatterns.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (C:\Program Files\MiKTeX\tex/generic/pgf/basiclayer\pgfcorerdf.code.tex
+File: pgfcorerdf.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)))
+(C:\Program Files\MiKTeX\tex/generic/pgf/modules\pgfmoduleshapes.code.tex
+File: pgfmoduleshapes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfnodeparttextbox=\box69
+)
+(C:\Program Files\MiKTeX\tex/generic/pgf/modules\pgfmoduleplot.code.tex
+File: pgfmoduleplot.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Program Files\MiKTeX\tex/latex/pgf/compatibility\pgfcomp-version-0-65.sty
+Package: pgfcomp-version-0-65 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@nodesepstart=\dimen259
+\pgf@nodesepend=\dimen260
+)
+(C:\Program Files\MiKTeX\tex/latex/pgf/compatibility\pgfcomp-version-1-18.sty
+Package: pgfcomp-version-1-18 2025-08-29 v3.1.11a (3.1.11a)
+)) (C:\Program Files\MiKTeX\tex/latex/pgf/utilities\pgffor.sty
+(C:\Program Files\MiKTeX\tex/latex/pgf/utilities\pgfkeys.sty
+(C:\Program Files\MiKTeX\tex/generic/pgf/utilities\pgfkeys.code.tex))
+(C:\Program Files\MiKTeX\tex/latex/pgf/math\pgfmath.sty
+(C:\Program Files\MiKTeX\tex/generic/pgf/math\pgfmath.code.tex))
+(C:\Program Files\MiKTeX\tex/generic/pgf/utilities\pgffor.code.tex
+Package: pgffor 2025-08-29 v3.1.11a (3.1.11a)
+\pgffor@iter=\dimen261
+\pgffor@skip=\dimen262
+\pgffor@stack=\toks39
+\pgffor@toks=\toks40
+))
+(C:\Program Files\MiKTeX\tex/generic/pgf/frontendlayer/tikz\tikz.code.tex
+Package: tikz 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Program Files\MiKTeX\tex/generic/pgf/libraries\pgflibraryplothandlers.code.
+tex
+File: pgflibraryplothandlers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@plot@mark@count=\count313
+\pgfplotmarksize=\dimen263
+)
+\tikz@lastx=\dimen264
+\tikz@lasty=\dimen265
+\tikz@lastxsaved=\dimen266
+\tikz@lastysaved=\dimen267
+\tikz@lastmovetox=\dimen268
+\tikz@lastmovetoy=\dimen269
+\tikzleveldistance=\dimen270
+\tikzsiblingdistance=\dimen271
+\tikz@figbox=\box70
+\tikz@figbox@bg=\box71
+\tikz@tempbox=\box72
+\tikz@tempbox@bg=\box73
+\tikztreelevel=\count314
+\tikznumberofchildren=\count315
+\tikznumberofcurrentchild=\count316
+\tikz@fig@count=\count317
+ (C:\Program Files\MiKTeX\tex/generic/pgf/modules\pgfmodulematrix.code.tex
+File: pgfmodulematrix.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfmatrixcurrentrow=\count318
+\pgfmatrixcurrentcolumn=\count319
+\pgf@matrix@numberofcolumns=\count320
+)
+\tikz@expandcount=\count321
+
+(C:\Program Files\MiKTeX\tex/generic/pgf/frontendlayer/tikz/libraries\tikzlibra
+rytopaths.code.tex
+File: tikzlibrarytopaths.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+))) (C:\Program Files\MiKTeX\tex/latex/listings\listings.sty
+\lst@mode=\count322
+\lst@gtempboxa=\box74
+\lst@token=\toks41
+\lst@length=\count323
+\lst@currlwidth=\dimen272
+\lst@column=\count324
+\lst@pos=\count325
+\lst@lostspace=\dimen273
+\lst@width=\dimen274
+\lst@newlines=\count326
+\lst@lineno=\count327
+\lst@maxwidth=\dimen275
+
+(C:\Program Files\MiKTeX\tex/latex/listings\lstpatch.sty
+File: lstpatch.sty 2025/11/14 1.11b (Carsten Heinz)
+)
+(C:\Program Files\MiKTeX\tex/latex/listings\lstmisc.sty
+File: lstmisc.sty 2025/11/14 1.11b (Carsten Heinz)
+\c@lstnumber=\count328
+\lst@skipnumbers=\count329
+\lst@framebox=\box75
+)
+(C:\Program Files\MiKTeX\tex/latex/listings\listings.cfg
+File: listings.cfg 2025/11/14 1.11b listings configuration
+))
+Package: listings 2025/11/14 1.11b (Carsten Heinz)
+
+==> First Aid for listings.sty no longer applied!
+    Expected:
+        2024/09/23 1.10c (Carsten Heinz)
+    but found:
+        2025/11/14 1.11b (Carsten Heinz)
+    so I'm assuming it got fixed.
+(C:\Users\Windows\AppData\Roaming\MiKTeX\tex/latex/colortbl\colortbl.sty
+Package: colortbl 2024/10/29 v1.0k Color table columns (DPC)
+
+(C:\Program Files\MiKTeX\tex/latex/tools\array.sty
+Package: array 2025/09/25 v2.6n Tabular extension package (FMi)
+\col@sep=\dimen276
+\ar@mcellbox=\box76
+\extrarowheight=\dimen277
+\NC@list=\toks42
+\extratabsurround=\skip76
+\backup@length=\skip77
+\ar@cellbox=\box77
+)
+\everycr=\toks43
+\minrowclearance=\skip78
+\rownum=\count330
+)
+(C:\Program Files\MiKTeX\tex/latex/l3backend\l3backend-pdftex.def
+File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
+\l__color_backend_stack_int=\count331
+)
+(test_minimal.aux)
+\openout1 = `test_minimal.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+ (C:\Program Files\MiKTeX\tex/context/base/mkii\supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count332
+\scratchdimen=\dimen278
+\scratchbox=\box78
+\nofMPsegments=\count333
+\nofMParguments=\count334
+\everyMPshowfont=\toks44
+\MPscratchCnt=\count335
+\MPscratchDim=\dimen279
+\MPnumerator=\count336
+\makeMPintoPDFobject=\count337
+\everyMPtoPDFconversion=\toks45
+) (C:\Program Files\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-base.sty
+Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
+85.
+
+(C:\Program Files\MiKTeX\tex/latex/00miktex\epstopdf-sys.cfg
+File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
+))
+\c@lstlisting=\count338
+
+(4_-_methodology.tex
+Chapter 1.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 5.
+(C:\Program Files\MiKTeX\tex/latex/amsfonts\umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Trying to load font information for U+msb on input line 5.
+
+(C:\Program Files\MiKTeX\tex/latex/amsfonts\umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
+
+LaTeX Warning: Reference `fig:system_workflow' on page 1 undefined on input lin
+e 7.
+
+
+! Package PGF Math Error: Unknown function `of' (in 'of s1').
+
+See the PGF Math package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.26 \node[box, fill=boxblue, right=of s1]
+                                            (s2) {Graph Build};
+This error message was generated by an \errmessage
+command, so I can't give any explicit help.
+Pretend that you're Hercule Poirot: Examine all clues,
+and deduce the truth by order and method.
+
+
+! Package PGF Math Error: Unknown function `of' (in 'of s2').
+
+See the PGF Math package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.27 \node[box, fill=boxorange, right=of s2]
+                                             (s3) {Baseline Dijkstra};
+(That was another \errmessage.)
+
+
+! Package PGF Math Error: Unknown function `of' (in 'of s3').
+
+See the PGF Math package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.28 \node[box, fill=boxgreen,  right=of s3]
+                                             (s4) {Pruned Dijkstra};
+(That was another \errmessage.)
+
+
+! Package PGF Math Error: Unknown function `of' (in 'of s4').
+
+See the PGF Math package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.29 \node[box, fill=boxgray,   right=of s4]
+                                             (s5) {Evaluation};
+(That was another \errmessage.)
+
+
+! Package pgf Error: Unknown arrow tip kind 'Stealth'.
+
+See the pgf package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.32 \draw[arrow]
+                  (s1) -- (s2);
+(That was another \errmessage.)
+
+Missing character: There is no [ in font nullfont!
+Missing character: There is no ] in font nullfont!
+Missing character: There is no p in font nullfont!
+Missing character: There is no g in font nullfont!
+Missing character: There is no f in font nullfont!
+Missing character: There is no @ in font nullfont!
+Missing character: There is no s in font nullfont!
+Missing character: There is no t in font nullfont!
+Missing character: There is no o in font nullfont!
+Missing character: There is no p in font nullfont!
+
+Package pgf Warning: Returning node center instead of a point on node border. D
+id you specify a point identical to the center of node ``s1''? on input line 32
+.
+
+
+! Package pgf Error: Unknown arrow tip kind 'Stealth'.
+
+See the pgf package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.33 \draw[arrow]
+                  (s2) -- (s3);
+(That was another \errmessage.)
+
+Missing character: There is no [ in font nullfont!
+Missing character: There is no ] in font nullfont!
+Missing character: There is no p in font nullfont!
+Missing character: There is no g in font nullfont!
+Missing character: There is no f in font nullfont!
+Missing character: There is no @ in font nullfont!
+Missing character: There is no s in font nullfont!
+Missing character: There is no t in font nullfont!
+Missing character: There is no o in font nullfont!
+Missing character: There is no p in font nullfont!
+
+! Package pgf Error: Unknown arrow tip kind 'Stealth'.
+
+See the pgf package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.34 \draw[arrow]
+                  (s3) -- (s4);
+(That was another \errmessage.)
+
+Missing character: There is no [ in font nullfont!
+Missing character: There is no ] in font nullfont!
+Missing character: There is no p in font nullfont!
+Missing character: There is no g in font nullfont!
+Missing character: There is no f in font nullfont!
+Missing character: There is no @ in font nullfont!
+Missing character: There is no s in font nullfont!
+Missing ch
