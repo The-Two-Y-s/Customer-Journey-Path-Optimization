@@ -477,7 +477,7 @@ python -m pytest tests/ -v
 │       ├── retailrocket/
 │       └── recsys2015/
 ├── tests/
-│   └── test_pipeline.py              # 41 unit tests
+│   └── test_pipeline.py              # 44 unit tests
 ├── results/
 │   ├── experiment_results.csv        # 2,160-row synthetic experiment output
 │   ├── real_data_results.csv         # 840-row real-data experiment output (300 fixed + 540 adaptive)
