@@ -5,7 +5,7 @@
     \large{\bf ABSTRACT}
 \end{center}
 
-This project addresses the problem of identifying optimal conversion paths in large-scale customer journey graphs. User interaction sequences are modeled as a directed weighted graph $G=(V,E)$, where edge weights encode the negative log-probability of each state transition, reducing the maximum-probability path search to shortest-path form amenable to Dijkstra's algorithm. Existing acceleration techniques---A* search, beam search, contraction hierarchies---either demand a problem-specific admissible heuristic, sacrifice optimality guarantees, or require heavy preprocessing ill-suited to behavioral data.
+This project addresses the problem of identifying optimal conversion paths in large-scale customer journey graphs. User interaction sequences are modeled as a directed weighted graph $G=(V,E)$, where edge weights encode the negative log-probability of each state transition, reducing the maximum-probability path search to shortest-path form amenable to Dijkstra's algorithm. Classical acceleration techniques for shortest-path search typically involve trade-offs: A* search requires problem-specific heuristic design, beam search sacrifices optimality guarantees for speed, and contraction hierarchies demand significant preprocessing ill-suited to dynamic behavioral data.
 
 Two algorithms are proposed and evaluated. The \textbf{Baseline Dijkstra} algorithm provides globally optimal solutions in $O(|E|\log|V|)$ time. The \textbf{Probability-Pruned Dijkstra} extends the baseline with a threshold parameter $\tau$ that discards low-probability partial paths during traversal, reducing the effective search space to $O(|E'|\log|V|)$ with $|E'|\leq|E|$ while provably converging to the baseline as $\tau\to 0$.
 

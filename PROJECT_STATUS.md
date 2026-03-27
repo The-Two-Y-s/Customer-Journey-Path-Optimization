@@ -3,7 +3,19 @@
 **Project:** Customer Journey Path Optimization
 **Course:** AT70.02 Algorithm Design and Analysis, Asian Institute of Technology
 **Team:** The Two Y's -- Aye Khin Khin Hpone (Yolanda Lim) st125970, Yosakorn Sirisoot st126512
-**Date:** March 22, 2026
+**Date:** March 27, 2026
+
+---
+
+## 0. Recent Changes (March 27, 2026)
+
+**Response to Professor Feedback:**
+
+Addressed professor's recommendations on novelty, parameter consistency, and claim separation:
+
+- **Parameters Unified:** τ values standardized across synthetic and real-data experiments to [0.001, 0.01, 0.05, 0.1, 0.5], ensuring consistency between report and code.
+- **Novelty Framing Revised:** Changed from "original algorithm contribution" to "well-motivated, controlled pruning framework with systematic empirical evaluation." Clarified that the main contributions are: (1) formal all-or-nothing correctness property proof, (2) empirical identification of critical τ, and (3) comprehensive evaluation framework.
+- **Theoretical vs. Empirical Claims Separated:** Added explicit section in Chapter 4b distinguishing proven theorems (5 formal results, including convergence and all-or-nothing property) from empirical findings (6 validated results and speedup numbers that are not formally guaranteed for arbitrary graphs) and acknowledged limitations (no formal approximation guarantee for τ > 0).
 
 ---
 
