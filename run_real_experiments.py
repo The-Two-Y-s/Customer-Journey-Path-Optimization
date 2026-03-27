@@ -27,7 +27,9 @@ from src.graph_builder import build_weighted_graph
 from src.dijkstra import dijkstra, dijkstra_pruned, reconstruct_path
 
 
-TAU_VALUES = [0.0001, 0.001, 0.01, 0.1, 0.5]
+TAU_VALUES = [0.001, 0.01, 0.05, 0.1, 0.5]
+# Adaptive τ fractions: relative to baseline path probability
+# These fractions of base probability are tested in addition to fixed τ values
 ADAPTIVE_FRACTIONS = [0.10, 0.30, 0.50, 0.70, 0.90, 0.95, 0.99, 1.0, 1.10]
 NUM_PAIRS = 20  # default source-target pairs per dataset
 

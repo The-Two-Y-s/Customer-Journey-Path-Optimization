@@ -113,3 +113,43 @@ All-or-nothing (Thm~\ref{thm:all_or_nothing}) & Never sub-optimal & 0 sub-optima
 \caption[Correctness validation summary]{Correctness validation summary.}
 \label{table:correctness_summary}
 \end{table}
+
+\section{Separation of Theoretical and Empirical Claims}
+
+\textit{This section distinguishes between formally proven results, empirically validated findings, and acknowledged limitations.}
+
+\subsection{Fully Proven Claims}
+
+The following statements are mathematical theorems with formal proofs, independent of experimental data:
+
+\begin{enumerate}
+\item[(T1)] The log-probability transformation $w(u,v) = -\log p(u,v)$ preserves path ordering (Theorem~\ref{thm:log_transform}).
+\item[(T2)] Baseline Dijkstra returns the globally optimal path in $O(|E|\log|V|)$ time (Theorem~\ref{thm:baseline_optimal}).
+\item[(T3)] When $\tau = 0$, Algorithm~2 is identical to Algorithm~1 (Theorem~\ref{thm:convergence}).
+\item[(T4)] When the optimal path's probability satisfies $\Pi^* \geq \tau$, Algorithm~2 returns it with zero gap (Theorem~\ref{thm:conditional}).
+\item[(T5)] Algorithm~2 never returns a sub-optimal path; it either returns the global optimum or reports no path (Theorem~\ref{thm:all_or_nothing}).
+\end{enumerate}
+
+\subsection{Empirically Validated Findings}
+
+The following results are supported by experimental data but **not formally guaranteed** for arbitrary graphs:
+
+\begin{enumerate}
+\item[(E1)] Wall-clock speedups range from $3.3\times$ ($\tau=0.001$) to $738\times$ ($\tau=0.5$) on synthetic graphs (Table~\ref{table:speedup_tau}, Chapter~\ref{chap:results}).
+\item[(E2)] Speedup scales monotonically with graph size $|V|$ at fixed $\tau$ (Table~\ref{table:speedup_size}).
+\item[(E3)] Erd\H{o}s--R\'{e}nyi graphs exhibit higher speedups than layered graphs at identical $\tau$ (Table~\ref{table:speedup_graph_type}).
+\item[(E4)] Critical $\tau_c$ exists in a narrow empirical range where speedup peaks without loss of reachability (Chapter~\ref{chap:results}, Section~5.5).
+\item[(E5)] On real-world datasets (RetailRocket, RecSys~2015), speedups reach $18{,}882\times$ and $2{,}309\times$, respectively, under fixed $\tau$ (Chapter~\ref{chap:results}, Section~5.6).
+\item[(E6)] Optimality gap remains exactly $0.0000\%$ across 706 path-found cases in combined synthetic and real experiments (all tested configurations).
+\end{enumerate}
+
+\subsection{Acknowledged Limitations}
+
+The following limitations are explicitly recognized:
+
+\begin{enumerate}
+\item[(L1)] No formal approximation guarantee exists for $\tau > 0$. While we prove convergence (\textit{T3, T4}), the pruned algorithm's behavior for a specific $\tau$ on an arbitrary graph is not formally characterized. Speedup and reachability trade-offs are purely empirical.
+\item[(L2)] Critical $\tau_c$ is defined empirically; we provide no theoretical method to predict it a priori for a given graph without experimental sweep.
+\item[(L3)] Results assume edge weights are non-negative (the log-probability transformation guarantees this, by construction). The framework does not extend to negative weights or negative-cycle detection.
+\item[(L4)] Real-world validation is limited to two e-commerce clickstream datasets. Generalization to other domains (social networks, transportation, etc.) is not formally justified and would require further empirical testing.
+\end{enumerate}
