@@ -533,7 +533,7 @@ Given the baseline optimal probability $\Pi^*$, fixed $\tau$ values would miss t
 
 In addition to single-path queries, the CLI (\texttt{main.py}) provides a $k$-shortest simple paths mode activated by the \texttt{--k} flag. This uses a best-first search with visited-set tracking to enumerate the top-$k$ distinct simple paths from $s$ to $t$ in non-decreasing cost order. When $k=1$, the result is identical to Dijkstra's shortest path. This feature is validated by five dedicated unit tests covering $k=1$ equivalence, ascending cost ordering, simple-path guarantee, $k=0$ boundary, and disconnected-graph behavior.
 
-\textbf{Complexity note.} Enumerating $k$ simple paths via best-first search has worst-case exponential complexity $O(k \cdot |V|!)$, since the number of simple paths in a dense graph can be factorial in $|V|$. In practice, the search terminates early once $k$ paths are found, and the \texttt{max\_path\_len} parameter bounds the depth of exploration. This utility is provided for interactive analysis of small queries and is not part of the theoretically analyzed pruning framework.
+\textbf{Complexity note:} Enumerating $k$ simple paths via best-first search has worst-case exponential complexity $O(k \cdot |V|!)$, since the number of simple paths in a dense graph can be factorial in $|V|$. In practice, the search terminates early once $k$ paths are found, and the \texttt{max\_path\_len} parameter bounds the depth of exploration. This utility is provided for interactive analysis of small queries and is not part of the theoretically analyzed pruning framework.
 
 \section{Data Structures}
 

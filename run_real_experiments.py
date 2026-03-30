@@ -84,8 +84,8 @@ def _make_row(name, n_nodes, n_edges, src, tgt, tau, tau_mode,
     pr_prob = math.exp(-pr_cost) if pr_cost < float("inf") else 0.0
     found = tgt in res_pr.dist
 
-    if found and base_prob > 0:
-        gap = abs(base_prob - pr_prob) / base_prob * 100
+    if found and base_cost > 0:
+        gap = abs(pr_cost - base_cost) / base_cost * 100
     else:
         gap = None
 

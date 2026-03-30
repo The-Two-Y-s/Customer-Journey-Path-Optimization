@@ -2,17 +2,21 @@
 
 \section{Summary of Contributions}
 
-This project investigated the effectiveness of probability-based pruning for shortest-path search in customer journey graphs. Two algorithms were implemented, tested, and compared: a baseline Dijkstra algorithm on log-probability-transformed graphs ($O(|E|\log|V|)$) and a probability-pruned Dijkstra variant with a tunable threshold $\tau$ ($O(|E'|\log|V|)$, $|E'|\leq|E|$).
+This study investigated the effectiveness of probability-based pruning for shortest-path search in customer journey graphs. Two algorithms were implemented, tested, and compared: a baseline Dijkstra algorithm on log-probability-transformed graphs ($O(|E|\log|V|)$) and a probability-pruned Dijkstra variant with a tunable threshold $\tau$ ($O(|E'|\log|V|)$, $|E'|\leq|E|$).
 
 The key contributions are summarized below.
 
-The pruning mechanism yields substantial speedups with zero quality loss. On synthetic benchmarks (2,160 rows), wall-clock speedups range from $3.4\times$ at $\tau=0.001$ to $735.2\times$ at $\tau=0.5$, with edge-relaxation speedups reaching $1{,}928\times$ (fair edge-examination speedups up to $710\times$). On real-world item-level graphs under fixed $\tau$, a maximum speedup of $18{,}882\times$ was recorded---reducing query time from ${\sim}153$\,ms to $0.008$\,ms, fast enough for real-time interactive analysis rather than batch processing. An adaptive-$\tau$ regime, where the threshold is calibrated to each query pair's baseline path probability, raised real-data path-found rates from near 0\% to over 80\%. In every case where a path was found, the optimality gap was exactly $0.0000\%$.
+The pruning mechanism yields substantial speedups with zero quality loss. On synthetic benchmarks (2,160 rows), wall-clock speedups range from $3.3\times$ at $\tau=0.001$ to $738\times$ at $\tau=0.5$, with edge-relaxation speedups reaching $1{,}986\times$ (fair edge-examination speedups up to $711\times$). On real-world item-level graphs under fixed $\tau$, a maximum speedup of $18{,}882\times$ was recorded---reducing query time from ${\sim}153$\,ms to $0.008$\,ms, fast enough for real-time interactive analysis rather than batch processing. An adaptive-$\tau$ regime, where the threshold is calibrated to each query pair's baseline path probability, raised real-data path-found rates from near 0\% to over 80\%. In every case where a path was found, the optimality gap was exactly $0.0000\%$.
 
 Formal correctness was established through five theorems: log-transform order preservation, baseline optimality, convergence at $\tau=0$, conditional optimality, and the all-or-nothing property. All five were confirmed empirically across all 2,160 synthetic and 840 real-data experiment rows (3,000 total).
 
 A scalable and reproducible experimental framework was constructed, incorporating deterministic \texttt{hashlib.md5} seeding, separate timing and memory measurement passes, two graph generators (Erd\H{o}s--R\'{e}nyi and layered), and two real-world datasets (RetailRocket and RecSys~2015 YOOCHOOSE).
 
-Finally, the reachability--speed trade-off was characterized in detail. Increasing $\tau$ yields faster search but reduces path-found rates, from 31.4\% at $\tau=0.001$ to 3.9\% at $\tau=0.5$ on synthetic data. This trade-off is inherent and well understood. On real-world graphs, the pruned algorithm's reachability was initially limited by aggressive fixed thresholding on sparse session-based structures, but the adaptive-$\tau$ approach resolved this limitation.
+
+Finally, the reachability--speed trade-off was characterized in detail. Increasing $\tau$ yields faster search but reduces path-found rates, from 30.6\% at $\tau=0.001$ to 4.2\% at $\tau=0.5$ on synthetic data. This trade-off is inherent and well understood. On real-world graphs, the pruned algorithm's reachability was initially limited by aggressive fixed thresholding on sparse session-based structures, but the adaptive-$\tau$ approach resolved this limitation.
+
+\medskip
+\noindent\textbf{Originality:} The deterministic, parameter-controlled pruning framework with formal all-or-nothing guarantees and adaptive-$\tau$ regime for real-world graphs presented in this work is, to our knowledge, not previously reported in the literature. This contribution extends the state of the art in probabilistic path search and scalable graph algorithms.
 
 \section{Limitations}
 
