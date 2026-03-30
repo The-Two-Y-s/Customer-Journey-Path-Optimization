@@ -40,3 +40,4 @@ Progress_Report/test_results.*
 *.fls
 Progress_Report/*.fdb_latexmk
 Progress_Report/*.synctex.gz
+!Progress_Report/main.pdf
