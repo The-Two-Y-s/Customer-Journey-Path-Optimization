@@ -455,7 +455,7 @@ python -m pytest tests/ -v
 | `TestRealDataLoaders` | RetailRocket + RecSys 2015 loading, Dijkstra on real graphs |
 | `TestRealDataPipeline` | End-to-end test on synthetic journey dataset |
 | `TestCriticalTau` | Critical-τ on ER/Layered graphs, unreachable target |
-| `TestScaleAndProperty` | 2,000- and 5,000-node correctness, randomised zero-gap property across 20 graphs |
+| `TestScaleAndProperty` | 2,000- and 5,000-node correctness, randomised zero-gap property across 20 graphs  |
 
 ---
 
