@@ -381,7 +381,7 @@ Plots are saved to `results/img/`.
 
 ## Results
 
-> **Simulation environment:** Python 3.12.3, Windows 11, AMD Ryzen 7 5800H, 16 GB RAM. Speedup numbers are environment-sensitive; see the [progress report](Progress_Report/) for the full simulation environment table.
+> **Simulation environment:** Python 3.13.3, Windows 11, AMD Ryzen 7 5800H, 16 GB RAM. Speedup numbers are environment-sensitive; see the [progress report](Progress_Report/) for the full simulation environment table.
 
 **Verdict: Hypothesis supported.** Across 1,800 pruned runs (synthetic) and 840 runs (real data — 300 fixed-τ + 540 adaptive-τ), every run that found a path returned the **exact same optimal path** as the baseline (0.00% optimality gap across all 706 found paths). **The real trade-off is path-found rate, not accuracy:** aggressive τ values yield massive speedups but reduce the chance of finding any path.
 
@@ -477,7 +477,7 @@ python -m pytest tests/ -v
 │       ├── retailrocket/
 │       └── recsys2015/
 ├── tests/
-│   └── test_pipeline.py              # 41 unit tests
+│   └── test_pipeline.py              # 44 unit tests
 ├── results/
 │   ├── experiment_results.csv        # 2,160-row synthetic experiment output
 │   ├── real_data_results.csv         # 840-row real-data experiment output (300 fixed + 540 adaptive)

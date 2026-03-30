@@ -128,7 +128,7 @@ Since $p(u,v) \in (0,1]$, it follows that $w(u,v) \geq 0$, satisfying Dijkstra's
 \max \prod_{(u,v)\in P^*} p(u,v) \;\iff\; \min \sum_{(u,v)\in P^*} -\log\, p(u,v)
 \]
 
-For a given source--target query, the system returns the optimal path $P^* = (v_0 = s, v_1, \ldots, v_k = t)$, the corresponding path probability $\Pi^* = \prod_{(u,v)\in P^*} p(u,v) = \exp(-C^*)$, and the log-cost $C^* = \sum_{(u,v)\in P^*} -\log\, p(u,v)$. Each run also records performance metrics---execution time, peak memory, nodes explored, edges relaxed, and maximum priority queue size---as well as the optimality gap $\Delta = |C^*_{\text{baseline}} - C^*_{\text{pruned}}| / C^*_{\text{baseline}} \times 100\%$.
+For a given source--target query, the system returns the optimal path $P^* = (v_0 = s, v_1, \ldots, v_k = t)$, the corresponding path probability $\Pi^* = \prod_{(u,v)\in P^*} p(u,v) = \exp(-C^*)$, and the log-cost $C^* = \sum_{(u,v)\in P^*} -\log\, p(u,v)$. Each run also records performance metrics---execution time, peak memory, nodes explored, edges examined, edges relaxed, and maximum priority queue size---as well as the optimality gap $\Delta = |C^*_{\text{baseline}} - C^*_{\text{pruned}}| / C^*_{\text{baseline}} \times 100\%$.
 
 \paragraph{Concrete worked example: RetailRocket event-level funnel.}
 The RetailRocket dataset~\citep{retailrocket2015} yields a 3-node event-type graph whose MLE transition probabilities, computed from 2.7\,million events, provide a concrete illustration of the formulation:
@@ -373,31 +373,37 @@ The ratio $\texttt{baseline\_edges\_examined}/\texttt{pruned\_edges\_examined}$ 
 The following is the actual pruned Dijkstra implementation from the codebase:
 
 \begin{lstlisting}[language=Python, caption={Pruned Dijkstra implementation (\texttt{src/dijkstra.py})}, label=lst:pruned_impl]
-def dijkstra_pruned(graph, source, target, tau):
-    T = -math.log(tau) if tau > 0 else float("inf")
-    dist = {source: 0.0}
-    parent = {source: None}
-    pq = [(0.0, source)]
+def dijkstra_pruned(graph: Graph, start: str, goal: str,
+                    tau: float = 0.01) -> DijkstraResult:
+    pq = [(0, start)]
+    dist = {start: 0}
+    parent = {}
     metrics = DijkstraMetrics()
+    metrics.max_pq_size = 1
+
+    # Pruning threshold in log-space; tau <= 0 means no pruning.
+    T = -math.log(tau) if tau > 0 else math.inf
 
     while pq:
-        d, u = heapq.heappop(pq)
-        if u == target:
+        cost, node = heapq.heappop(pq)
+        if node == goal:
+            metrics.nodes_explored += 1
             break
-        if d > dist.get(u, float("inf")):
+        if cost > dist.get(node, math.inf):
             continue  # stale entry
         metrics.nodes_explored += 1
-        metrics.max_pq_size = max(metrics.max_pq_size, len(pq)+1)
-        for v, w in graph.get(u, []):
-            new_cost = d + w
+        for neighbor, weight in graph.get(node, []):
+            new_cost = cost + weight
             metrics.edges_examined += 1
             if new_cost > T:
                 continue  # PRUNE
             metrics.edges_relaxed += 1
-            if new_cost < dist.get(v, float("inf")):
-                dist[v] = new_cost
-                parent[v] = u
-                heapq.heappush(pq, (new_cost, v))
+            if neighbor not in dist or new_cost < dist[neighbor]:
+                dist[neighbor] = new_cost
+                parent[neighbor] = node
+                heapq.heappush(pq, (new_cost, neighbor))
+                if len(pq) > metrics.max_pq_size:
+                    metrics.max_pq_size = len(pq)
     # ... path reconstruction and probability computation
 \end{lstlisting}
 
@@ -559,7 +565,7 @@ Table~\ref{table:simenv} summarizes the environment used for all experiments.
 \textbf{Component} & \textbf{Specification} \\
 \midrule
 Programming Language & Python 3.13.3 (standard library only for core algorithms) \\
-Graph Representation & Adjacency list (\texttt{dict} of \texttt{dict}) \\
+Graph Representation & Adjacency list (\texttt{dict} of \texttt{list}) \\
 Priority Queue & \texttt{heapq} (binary min-heap with lazy insertion) \\
 Runtime Measurement & \texttt{time.perf\_counter()} (separate pass from memory) \\
 Memory Measurement & \texttt{tracemalloc} peak allocation (separate pass from timing) \\

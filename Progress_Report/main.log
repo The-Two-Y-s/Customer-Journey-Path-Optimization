@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.3.15)  23 MAR 2026 21:58
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.3.15)  30 MAR 2026 13:28
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1379,27 +1379,27 @@ Overfull \hbox (28.39857pt too wide) in paragraph at lines 369--370
 [21]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 519.
+(hyperref)                removing `math shift' on input line 525.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\tau' on input line 519.
+(hyperref)                removing `\tau' on input line 525.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 519.
+(hyperref)                removing `math shift' on input line 525.
 
 [22]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 526.
+(hyperref)                removing `math shift' on input line 532.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 526.
+(hyperref)                removing `math shift' on input line 532.
 
 [23]
-Overfull \hbox (19.6726pt too wide) in paragraph at lines 578--579
+Overfull \hbox (19.6726pt too wide) in paragraph at lines 584--585
 \T1/ptm/m/n/12 Each ex-per-i-ment records ex-e-cu-tion time (wall-clock mil-lis
 ec-onds via \T1/pcr/m/n/12 time.perf_counter()\T1/ptm/m/n/12 ),
  []
@@ -1517,7 +1517,7 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 [35
 
 ]
-<plot1_speedup_vs_tau.png, id=971, 1004.0712pt x 351.2322pt>
+<plot1_speedup_vs_tau.png, id=977, 1004.0712pt x 351.2322pt>
 File: plot1_speedup_vs_tau.png Graphic file (type png)
 <use plot1_speedup_vs_tau.png>
 Package pdftex.def Info: plot1_speedup_vs_tau.png  used on input line 34.
@@ -1532,7 +1532,7 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 41.
 
 [36 <./plot1_speedup_vs_tau.png>]
-<plot5_memory_scaling.png, id=982, 1003.5894pt x 351.714pt>
+<plot5_memory_scaling.png, id=988, 1003.5894pt x 351.714pt>
 File: plot5_memory_scaling.png Graphic file (type png)
 <use plot5_memory_scaling.png>
 Package pdftex.def Info: plot5_memory_scaling.png  used on input line 66.
@@ -1589,7 +1589,7 @@ n/12 )$\T1/ptm/m/n/12 ) and a probability-
 
 ]) (7_-_project_plan.tex [45] [46]
 Chapter 8.
-<timeline.png, id=1049, 813.0375pt x 618.31pt>
+<timeline.png, id=1055, 813.0375pt x 618.31pt>
 File: timeline.png Graphic file (type png)
 <use timeline.png>
 Package pdftex.def Info: timeline.png  used on input line 11.
@@ -1638,10 +1638,10 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: ED536293B6828A6172913A53D40503B1;17354.
  ) 
 Here is how much of TeX's memory you used:
- 39804 strings out of 467871
- 895800 string characters out of 5417417
+ 39816 strings out of 467871
+ 895973 string characters out of 5417417
  1672085 words of memory out of 5000000
- 67660 multiletter control sequences out of 15000+600000
+ 67666 multiletter control sequences out of 15000+600000
  726703 words of font info for 193 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  84i,20n,116p,1677b,2062s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -1664,9 +1664,9 @@ w/times/utmb8a.pfb><C:/Users/ASUS/AppData/Local/Programs/MiKTeX-v2/fonts/type1/
 urw/times/utmbi8a.pfb><C:/Users/ASUS/AppData/Local/Programs/MiKTeX-v2/fonts/typ
 e1/urw/times/utmr8a.pfb><C:/Users/ASUS/AppData/Local/Programs/MiKTeX-v2/fonts/t
 ype1/urw/times/utmri8a.pfb>
-Output written on main.pdf (57 pages, 827355 bytes).
+Output written on main.pdf (57 pages, 828885 bytes).
 PDF statistics:
- 1218 PDF objects out of 1440 (max. 8388607)
- 314 named destinations out of 1000 (max. 500000)
+ 1225 PDF objects out of 1440 (max. 8388607)
+ 320 named destinations out of 1000 (max. 500000)
  708 words of extra memory for PDF output out of 10000 (max. 10000000)
 

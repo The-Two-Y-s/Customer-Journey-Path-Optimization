@@ -10,7 +10,7 @@ The implementation of the \textit{Customer Journey Path Optimization} framework 
 \noindent The repository is organized into the following components:
 
 \begin{itemize}[nosep]
-  \item \textbf{Core algorithms} (\texttt{src/dijkstra.py}) --- baseline Dijkstra with lazy deletion and the probability-pruned variant; both return structured results containing optimal path, log-cost, path probability, and five performance metrics.
+  \item \textbf{Core algorithms} (\texttt{src/dijkstra.py}) --- baseline Dijkstra with lazy deletion and the probability-pruned variant; both return structured results containing optimal path, log-cost, path probability, and four performance metrics (nodes explored, edges examined, edges relaxed, max priority-queue size).
   \item \textbf{Graph construction} (\texttt{src/graph\_builder.py}) --- builds a directed weighted graph from preprocessed transition data using an adjacency-list representation.
   \item \textbf{Preprocessing} (\texttt{src/preprocessing.py}) --- ingests raw clickstream CSV data and computes maximum-likelihood transition probabilities.
   \item \textbf{Critical-$\tau$ analysis} (\texttt{src/critical\_tau.py}) --- adaptive fraction-based sweep to identify the largest $\tau^*$ preserving path optimality.
