@@ -1,10 +1,11 @@
-# Python cache
+# Python cache / virtual env
 __pycache__/
 *.py[cod]
+.venv/
+.pytest_cache/
 
 # Generated outputs
 data/enhanced_synthetic_journey.csv
-results/
 output.png
 smoke_test.csv
 
@@ -41,3 +42,4 @@ Progress_Report/test_results.*
 Progress_Report/*.fdb_latexmk
 Progress_Report/*.synctex.gz
 !Progress_Report/main.pdf
+!Progress_Report/main.bbl
