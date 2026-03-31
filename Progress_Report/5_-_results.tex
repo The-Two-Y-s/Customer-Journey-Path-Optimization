@@ -126,7 +126,7 @@ A critical finding is the \textbf{zero optimality gap} across all experiments:
 \Delta = \frac{|C^*_{\text{baseline}} - C^*_{\text{pruned}}|}{C^*_{\text{baseline}}} \times 100\% = 0.0000\% \quad \forall\, \text{path-found rows}
 \]
 
-This confirms Theorem~\ref{thm:all_or_nothing} (All-or-Nothing): whenever the pruned algorithm returns a path, it is the globally optimal path. The cost-based gap formula (not probability-based) eliminates floating-point rounding noise involved in $\exp(-C^*)$ conversion. Using probability-based differences would have introduced \texttt{1e-15}-scale noise that has no algorithmic significance.
+This confirms Theorem~\ref{thm:all_or_nothing} (All-or-Nothing): whenever the pruned algorithm returns a path, it is the globally optimal path. Mechanistically, the zero gap arises because in every path-found configuration the optimal path's log-cost satisfies $C^* \leq T = -\log(\tau)$, so the optimal path is never pruned and is returned exactly by Algorithm~2 (Theorem~\ref{thm:conditional}). The cost-based gap formula (not probability-based) eliminates floating-point rounding noise involved in $\exp(-C^*)$ conversion. Using probability-based differences would have introduced \texttt{1e-15}-scale noise that has no algorithmic significance.
 
 \subsection{Interpreting All-Rows vs.\ Found-Only Speedups}\label{sec:found_only_analysis}
 
