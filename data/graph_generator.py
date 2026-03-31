@@ -133,11 +133,12 @@ def generate_erdos_renyi_graph(
         if distribution == "uniform":
             p = rng.uniform(0.01, 1.0)
         elif distribution == "power_law":
-            # Inverse-CDF power-law with exponent alpha=2, x_min=0.01
-            # P(X <= x) => x = x_min * (1 - U)^(-1/(alpha-1))
+            # Inverse-CDF Pareto(alpha=2, x_min=0.01)
+            # For Pareto(alpha, x_min): x = x_min * (1 - U)^(-1/alpha)
+            # With alpha=2: exponent = -1/2 = -0.5
             rand_val = rng.random()
             rand_val = min(rand_val, 1 - 1e-10)  # guard against division by zero
-            p = min(0.01 * (1 - rand_val) ** (-1.0), 1.0)
+            p = min(0.01 * (1 - rand_val) ** (-0.5), 1.0)
         else:
             raise ValueError(f"Unknown distribution: {distribution}")
         raw[u].append((v, p))
@@ -186,8 +187,8 @@ def generate_layered_graph(
         Expected out-degree per vertex.
     distribution : str
         ``"uniform"`` — forward edges use U(0.3, 0.8), backward edges
-        use U(0.05, 0.3).  ``"power_law"`` — power-law distributed
-        probabilities (alpha=2) regardless of direction.
+        use U(0.05, 0.3).  ``"power_law"`` — Pareto(alpha=2) distributed
+        probabilities regardless of direction.
     source, target : str
         Labels for the designated source / target nodes.
     seed : int
@@ -295,10 +296,10 @@ def generate_layered_graph(
         if distribution == "uniform":
             p = rng.uniform(0.05, 0.3) if is_bwd else rng.uniform(0.3, 0.8)
         elif distribution == "power_law":
-            # Inverse-CDF power-law with exponent alpha=2, x_min=0.01
+            # Inverse-CDF Pareto(alpha=2, x_min=0.01): x = x_min * (1 - U)^(-1/alpha)
             rand_val = rng.random()
             rand_val = min(rand_val, 1 - 1e-10)  # guard against division by zero
-            p = min(0.01 * (1 - rand_val) ** (-1.0), 1.0)
+            p = min(0.01 * (1 - rand_val) ** (-0.5), 1.0)
         else:
             raise ValueError(f"Unknown distribution: {distribution}")
         raw[u].append((v, p))

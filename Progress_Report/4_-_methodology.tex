@@ -131,7 +131,8 @@ Since $p(u,v) \in (0,1]$, it follows that $w(u,v) \geq 0$, satisfying Dijkstra's
 For a given source--target query, the system returns the optimal path $P^* = (v_0 = s, v_1, \ldots, v_k = t)$, the corresponding path probability $\Pi^* = \prod_{(u,v)\in P^*} p(u,v) = \exp(-C^*)$, and the log-cost $C^* = \sum_{(u,v)\in P^*} -\log\, p(u,v)$. Each run also records performance metrics---execution time, peak memory, nodes explored, edges examined, edges relaxed, and maximum priority queue size---as well as the optimality gap $\Delta = |C^*_{\text{baseline}} - C^*_{\text{pruned}}| / C^*_{\text{baseline}} \times 100\%$.
 
 \paragraph{Concrete worked example: RetailRocket event-level funnel.}
-The RetailRocket dataset~\citep{retailrocket2015} yields a 3-node event-type graph whose MLE transition probabilities, computed from 2.7\,million events, provide a concrete illustration of the formulation:
+The RetailRocket dataset~\citep{retailrocket2015} yields a compact 3-node graph.
+Its MLE transition probabilities, computed from 2.7\,million events, provide a concrete illustration of the formulation:
 
 \begin{center}
 \small
@@ -139,19 +140,19 @@ The RetailRocket dataset~\citep{retailrocket2015} yields a 3-node event-type gra
 \toprule
 \textbf{Transition} & \textbf{Probability} & \textbf{Log-weight} \\
 \midrule
-view $\to$ addtocart    & $p = 0.041$ & $w = -\ln(0.041) = 3.20$ \\
+view $\to$ addtocart    & $p = 0.041$ & $w = -\ln(0.041) = 3.19$ \\
 addtocart $\to$ transaction & $p = 0.226$ & $w = -\ln(0.226) = 1.49$ \\
-view $\to$ transaction (direct) & $p = 0.004$ & $w = -\ln(0.004) = 5.55$ \\
+view $\to$ transaction (direct) & $p = 0.004$ & $w = -\ln(0.004) = 5.52$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \noindent Two candidate $s{\to}t$ paths exist from \emph{view} to \emph{transaction}:
 \begin{itemize}[nosep]
-  \item \textbf{Funnel path:} view $\to$ addtocart $\to$ transaction, $\Pi = 0.041 \times 0.226 = 0.0093$ (log-cost $4.69$).
-  \item \textbf{Direct skip:} view $\to$ transaction, $\Pi = 0.004$ (log-cost $5.55$).
+  \item \textbf{Funnel path:} view $\to$ addtocart $\to$ transaction, $\Pi = 0.041 \times 0.226 = 0.0093$ (log-cost $4.68$).
+  \item \textbf{Direct skip:} view $\to$ transaction, $\Pi = 0.004$ (log-cost $5.52$).
 \end{itemize}
-Dijkstra selects the \emph{funnel path} because it has lower log-cost ($4.69 < 5.55$), equivalently higher probability ($0.93\% > 0.39\%$). This $2.3\times$ probability advantage quantifies the value of the add-to-cart step: users who add items to their cart are substantially more likely to complete a transaction than those who skip directly.
+Dijkstra selects the \emph{funnel path} because it has lower log-cost ($4.68 < 5.52$), equivalently higher probability ($0.93\% > 0.39\%$). This $2.3\times$ probability advantage quantifies the value of the add-to-cart step: users who add items to their cart are substantially more likely to complete a transaction than those who skip directly.
 
 \subsection{Constraints and Assumptions}
 
@@ -183,8 +184,8 @@ def generate_erdos_renyi_graph(n, avg_degree, distribution, seed, ...):
         for v in targets:
             if distribution == "uniform":
                 raw = rng.uniform(0.01, 1.0)
-            else:  # power_law: inverse-CDF Pareto(alpha=2, x_min=0.01)
-                raw = min(0.01 * (1 - rng.random()) ** (-1.0), 1.0)
+            else:  # power_law: Pareto(alpha=2): x_min * (1-U)^(-1/alpha) with alpha=2
+                raw = min(0.01 * (1 - rng.random()) ** (-0.5), 1.0)
             graph[u][v] = raw
     _normalize_and_log_transform(graph)
     _ensure_connectivity(graph, source, target)
@@ -366,7 +367,8 @@ Pruned & \texttt{edges\_relaxed} & Only edges that \textbf{survived} $\tau$ & Af
 \label{table:edges_relaxed}
 \end{table}
 
-The ratio $\texttt{baseline\_edges\_examined}/\texttt{pruned\_edges\_examined}$ gives a fair like-for-like \emph{examination speedup}, while $\texttt{baseline\_edges\_relaxed}/\texttt{pruned\_edges\_relaxed}$ quantifies the work eliminated by the threshold---a useful measure of pruning aggressiveness but not a direct efficiency comparison, since the denominators count different populations.
+Examination speedup is defined as the baseline-to-pruned ratio for \texttt{edges\_examined}, providing a fair like-for-like comparison.
+Relaxation speedup is defined as the baseline-to-pruned ratio for \texttt{edges\_relaxed}; it captures pruning aggressiveness, but is not a direct efficiency comparison because the two denominators count different populations.
 
 \subsubsection{Actual Python Implementation}
 
@@ -510,11 +512,11 @@ Figure~\ref{fig:algo_flowchart} illustrates the decision-flow difference between
 \toprule
 \textbf{Criterion} & \textbf{Baseline Dijkstra} & \textbf{Probability-Pruned Dijkstra} \\
 \midrule
-\textbf{Optimality} & Guaranteed globally optimal & Optimal when path cost $\leq T$; otherwise no path returned \\[4pt]
+\textbf{Optimality} & Guaranteed globally optimal & Optimality is guaranteed if and only if the optimal path satisfies $C^* \leq T$; otherwise, the algorithm reports infeasibility \\[4pt]
 \textbf{Time} & $O(|E|\log|V|)$ & $O(|E'|\log|V|)$, $|E'| \leq |E|$ \\[4pt]
 \textbf{Space} & $O(|V|+|E|)$ & $O(|V|+|E|)$ (unchanged) \\[4pt]
 \textbf{Trade-off} & None & Reachability vs.\ speed \\[4pt]
-\textbf{Convergence} & Always optimal & Identical to baseline as $\tau \to 0$ \\
+\textbf{Convergence} & Always optimal & Identical to baseline as $\tau \to 0$; as $\tau$ decreases, the feasible search space expands monotonically \\
 \bottomrule
 \end{tabular}%
 }
@@ -522,14 +524,14 @@ Figure~\ref{fig:algo_flowchart} illustrates the decision-flow difference between
 \label{table:algo_compare}
 \end{table}
 
-\subsection{Critical-$\tau$ Finder}
+\subsection{Critical-\texorpdfstring{$\tau$}{tau} Finder}
 \label{sec:critical_tau}
 
 A practical question is: \emph{what is the largest threshold $\tau^*$ that still preserves the optimal path?} The module \texttt{src/critical\_tau.py} answers this with an adaptive sweep centred on the baseline path probability.
 
 Given the baseline optimal probability $\Pi^*$, fixed $\tau$ values would miss the interesting region when $\Pi^*$ is very small (e.g.\ $10^{-4}$). Instead, the sweep generates $\tau$ candidates as fractions of $\Pi^*$---specifically $\{0.10, 0.30, 0.50, 0.70, 0.90, 0.95, 0.99, 1.00, 1.10\} \times \Pi^*$. The $110\%$ probe intentionally exceeds the optimal probability to identify the \emph{cliff point} where the pruned algorithm first fails to find a path. For each candidate, the pruned algorithm is timed, and speedup (both node-count and wall-clock) and optimality gap are recorded. The critical threshold $\tau^*$ is the largest tested $\tau$ for which the gap remains below a user-defined tolerance (default 1\%).
 
-\subsection{$k$-Shortest Simple Paths}
+\subsection{\texorpdfstring{$k$}{k}-Shortest Simple Paths}
 
 In addition to single-path queries, the CLI (\texttt{main.py}) provides a $k$-shortest simple paths mode activated by the \texttt{--k} flag. This uses a best-first search with visited-set tracking to enumerate the top-$k$ distinct simple paths from $s$ to $t$ in non-decreasing cost order. When $k=1$, the result is identical to Dijkstra's shortest path. This feature is validated by five dedicated unit tests covering $k=1$ equivalence, ascending cost ordering, simple-path guarantee, $k=0$ boundary, and disconnected-graph behavior.
 
@@ -581,11 +583,13 @@ Graph Generators & Erd\H{o}s--R\'{e}nyi + Layered (in-house, \texttt{data/graph\
 
 \subsection{Evaluation Metrics}
 
-Each experiment records execution time (wall-clock milliseconds via \texttt{time.perf\_counter()}), peak memory (bytes via \texttt{tracemalloc.get\_traced\_memory()}), nodes explored (vertices extracted from the priority queue), edges examined (total outgoing edges visited from settled nodes), edges relaxed (edge operations that survived the $\tau$ threshold; see Table~\ref{table:edges_relaxed}), maximum priority queue size, and path probability $\Pi^* = \exp(-C^*)$. The optimality gap is defined as:
+Execution time and peak memory are measured via \texttt{time.perf\_counter()} and \texttt{tracemalloc.get\_traced\_memory()}, respectively.
+Each run also records nodes explored (vertices extracted from the priority queue), edges examined (total outgoing edges visited from settled nodes), edges relaxed (edge operations that survived the $\tau$ threshold; see Table~\ref{table:edges_relaxed}), and maximum priority queue size.
+The path probability is $\Pi^* = \exp(-C^*)$. The optimality gap is defined as:
     \[
     \Delta = \frac{|C^*_{\text{baseline}} - C^*_{\text{pruned}}|}{C^*_{\text{baseline}}} \times 100\%
     \]
-    This cost-based comparison (rather than probability-based) eliminates floating-point rounding noise.
+    This metric is defined only when both algorithms return a path. The cost-based comparison (rather than probability-based) eliminates floating-point rounding noise.
 
 \subsection{Experimental Parameters}
 

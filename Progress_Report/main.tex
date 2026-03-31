@@ -48,6 +48,9 @@
 % ---- AIT: No paragraph indent, small skip between paragraphs ----
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{4pt}
+% Global line-break flexibility to minimize non-critical overfull boxes.
+\setlength{\emergencystretch}{2em}
+\hfuzz=2pt
 
 % ---- Colours ----
 \usepackage[table]{xcolor}

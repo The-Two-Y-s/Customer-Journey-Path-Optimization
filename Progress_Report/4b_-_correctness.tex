@@ -5,7 +5,7 @@ This chapter provides formal correctness proofs for both algorithms and presents
 \section{Correctness of the Log-Probability Transformation}
 
 \begin{theorem}[Order-Preserving Log Transform]\label{thm:log_transform}
-The path $P^*$ that minimizes $\sum_{(u,v)\in P} -\log\,p(u,v)$ is identical to the path that maximizes $\prod_{(u,v)\in P} p(u,v)$.
+The path $P^*$ with minimum total log-cost is identical to the path with maximum total probability.
 \end{theorem}
 
 \begin{proof}
@@ -46,17 +46,17 @@ This contradicts the assumption that a shorter path exists through $x$. Therefor
 
 \section{Correctness of Probability-Pruned Dijkstra}
 
-\subsection{Convergence at $\tau = 0$}
+\subsection{Convergence at \texorpdfstring{$\tau = 0$}{tau = 0}}
 
 \begin{theorem}[Convergence]\label{thm:convergence}
-When $\tau = 0$, Algorithm~2 is identical to Algorithm~1.
+As $\tau \to 0^+$, Algorithm~2 converges to Algorithm~1.
 \end{theorem}
 
 \begin{proof}
-When $\tau = 0$, the implementation sets $T = \mathtt{math.inf}$ (i.e.\ $T = +\infty$), since $\lim_{\tau\to 0^+}(-\log\tau) = +\infty$. The pruning condition $\mathit{new\_cost} > T$ is never satisfied since all finite costs are $< +\infty$. Therefore no edge is pruned, and every code path of Algorithm~2 behaves identically to Algorithm~1. Correctness follows directly from Theorem~\ref{thm:baseline_optimal}.
+As $\tau \to 0^+$, we have $T = -\log(\tau) \to +\infty$. Setting $\tau = 0$ is equivalent to $T = \mathtt{math.inf}$ in the implementation. The pruning condition $\mathit{new\_cost} > T$ is never satisfied since all finite costs are $< +\infty$. Therefore no edge is pruned, and every code path of Algorithm~2 behaves identically to Algorithm~1. Correctness follows directly from Theorem~\ref{thm:baseline_optimal}.
 \end{proof}
 
-\subsection{Conditional Optimality for $\tau > 0$}
+\subsection{Conditional Optimality for \texorpdfstring{$\tau > 0$}{tau > 0}}
 
 \begin{theorem}[Conditional Optimality]\label{thm:conditional}
 If the optimal path $P^*$ has probability $\Pi^* = \prod_{(u,v)\in P^*}p(u,v) \geq \tau$, then Algorithm~2 returns $P^*$ with $\Delta = 0\%$.
@@ -75,10 +75,20 @@ Algorithm~2 either returns the globally optimal path (identical to the baseline)
 \begin{proof}
 Suppose Algorithm~2 returns a path $P'$ from $s$ to $t$. Since the pruning check ($\mathit{new\_cost} > T$) only skips edges---it does not alter edge weights or the priority queue ordering---the settled-node invariant from Theorem~\ref{thm:baseline_optimal} holds for all nodes explored by the pruned algorithm. Therefore, among all paths that survive the threshold, $P'$ minimizes log-cost. If $P^*$ also survives (Theorem~\ref{thm:conditional}), then $P' = P^*$. If $P^*$ is pruned, then $t$ is unreachable in the pruned subgraph and no path is returned.
 
+To make this explicit, let $C^*$ be the baseline optimal cost and $T=-\log\tau$. If $P^*$ is pruned, then $C^*>T$. For any alternative $s\to t$ path $Q$, baseline optimality implies $C(Q)\ge C^*>T$. Hence no $s\to t$ path can satisfy the pruning constraint, so $t$ is unreachable in the pruned graph. Therefore Algorithm~2 cannot return a different (sub-optimal) path when $P^*$ is pruned.
+
 In either case, the algorithm never returns a sub-optimal path: the gap $\Delta$ is exactly 0\% whenever a path is found.
 \end{proof}
 
-\section{Empirical Validation Results}
+\section{Empirical Validation and Reachability}
+
+Because we prioritize optimality, the primary ``cost'' of pruning is the potential failure to find a path. We define \textbf{Reachability ($R$)} as the core empirical metric to evaluate this trade-off.
+
+\begin{definition}[Reachability]
+The Reachability $R$ is the ratio of successful path-finding by the pruned algorithm compared to the baseline:
+\\[-1em]
+\[ R = \frac{\text{Count}(\text{Path Found}_{\text{Pruned}})}{\text{Count}(\text{Path Found}_{\text{Baseline}})} \]
+\end{definition}
 
 All five correctness properties were verified experimentally.
 
@@ -135,11 +145,11 @@ The following statements are mathematical theorems with formal proofs, independe
 The following results are supported by experimental data but \textbf{not formally guaranteed} for arbitrary graphs:
 
 \begin{enumerate}
-\item[(E1)] Wall-clock speedups range from $3.3\times$ ($\tau=0.001$) to $738\times$ ($\tau=0.5$) on synthetic graphs (Table~\ref{table:speedup_tau}, Chapter~\ref{chap:results}).
+\item[(E1)] All-rows wall-clock speedups range from $3.3\times$ ($\tau=0.001$) to $738\times$ ($\tau=0.5$) on synthetic graphs, though these figures are dominated by runs where the pruned algorithm terminated without finding a path. Restricting to path-found configurations, wall-clock speedups are $1.6\times$ to $7.2\times$ (Table~\ref{table:speedup_tau}, Chapter~\ref{chap:results}).
 \item[(E2)] Speedup scales monotonically with graph size $|V|$ at fixed $\tau$ (Table~\ref{table:speedup_size}).
 \item[(E3)] Erd\H{o}s--R\'{e}nyi graphs exhibit higher speedups than layered graphs at identical $\tau$ (Table~\ref{table:speedup_graph_type}).
-\item[(E4)] Critical $\tau_c$ exists in a narrow empirical range where speedup peaks without loss of reachability (Chapter~\ref{chap:results}, Section~5.5).
-\item[(E5)] On real-world datasets (RetailRocket, RecSys~2015), speedups reach $18{,}882\times$ and $2{,}309\times$, respectively, under fixed $\tau$ (Chapter~\ref{chap:results}, Section~5.6).
+\item[(E4)] Critical $\tau_c$ exists in a narrow empirical range where speedup peaks without loss of reachability (Chapter~\ref{chap:results}, Section~\ref{sec:speedup_vs_tau}).
+\item[(E5)] On real-world datasets under fixed $\tau$, all-rows speedups reach $18{,}882\times$ (RetailRocket item-level) and $2{,}309\times$ (RecSys~2015), reflecting rapid termination without path recovery. Under adaptive $\tau$, found-only speedups are up to $5.8\times$ (Chapter~\ref{chap:results}, Section~\ref{sec:real_results}).
 \item[(E6)] Optimality gap remains exactly $0.0000\%$ across 706 path-found cases in combined synthetic and real experiments (all tested configurations).
 \end{enumerate}
 
