@@ -5,7 +5,7 @@
     \large{\bf ABSTRACT}
 \end{center}
 
-Optimizing customer conversion paths is a central problem in computational marketing, where user interactions are modeled as a directed graph and the objective is to identify the highest-probability route from entry to conversion. As graph scale increases, exhaustive search becomes intractable. This work formulates the problem as a shortest-path query on a directed weighted graph whose edge weights are negative log-transition probabilities, reducing maximum-probability path search to standard shortest-path form.
+Optimizing customer conversion paths is a central problem in computational marketing, where user interactions are modeled as a directed graph and the objective is to identify the highest-probability route from entry to conversion. As graph scale increases, exhaustive search becomes intractable. This work proposes a principled pruning framework for log-probability graphs, providing a formal characterization of the trade-off between search efficiency and path reachability. 
 
 A \textbf{Probability-Pruned Dijkstra} variant is proposed that introduces a threshold parameter $\tau$ to discard low-probability partial paths during traversal, reducing the effective edge set from $|E|$ to $|E'|\leq|E|$ with guaranteed convergence to the baseline as $\tau\to 0$. Five formal correctness theorems are established, including an all-or-nothing property: the pruned algorithm either returns the globally optimal path or reports no path at all.
 
