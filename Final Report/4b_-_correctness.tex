@@ -41,6 +41,10 @@ As $\tau \to 0^+$, we have $T = -\log(\tau) \to +\infty$. Setting $\tau = 0$ is 
 If the optimal path $P^*$ has a total probability $\Pi^* \geq \tau$, Algorithm 2 returns $P^*$ with an optimality gap $\Delta = 0\%$.
 \end{theorem}
 
+\begin{proof}
+Let $C^* = \sum_{(u,v)\in P^*} -\log\,p(u,v)$ be the optimal log-cost and $T = -\log(\tau)$ the pruning threshold. By hypothesis $\Pi^* \geq \tau$, so $C^* = -\log(\Pi^*) \leq -\log(\tau) = T$. Consider any prefix $(s = v_0, v_1, \ldots, v_j)$ of $P^*$. Because Dijkstra settles nodes in non-decreasing cost order and $P^*$ is optimal, the cost of each prefix satisfies $\sum_{i=0}^{j-1} w(v_i, v_{i+1}) \leq C^* \leq T$. Therefore no edge along $P^*$ triggers the pruning condition $\mathit{new\_cost} > T$, and $P^*$ remains in the search space. Since the pruned algorithm preserves the priority-queue ordering and settled-node invariant of Theorem~\ref{thm:baseline_optimal} for all unpruned edges, it settles $t$ with cost $C^*$. Hence $\Delta = 0\%$.
+\end{proof}
+
 \subsection{The All-or-Nothing Property}
 
 Unlike traditional approximation algorithms that may return a sub-optimal path within an $\epsilon$-bound, the proposed pruning method prioritizes \textbf{Optimality over Reachability}.
