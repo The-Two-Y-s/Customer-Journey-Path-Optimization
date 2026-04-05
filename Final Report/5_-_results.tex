@@ -71,6 +71,15 @@ Baseline execution time scales linearly with $|V|$ ($1.67 \to 7.12 \to 15.83$~ms
 
 \begin{figure}[htbp]
 \centering
+\includegraphics[width=\textwidth]{plot3_scalability.png}
+\caption[Execution time scaling]{Execution time (ms) vs.\ $|V|$ at $\tau=0.01$ on log--log axes for baseline and pruned Dijkstra across ER (left) and layered (right) graphs. Solid lines represent baseline; dashed lines represent the pruned variant.}
+\label{fig:scalability}
+\end{figure}
+
+Figure~\ref{fig:scalability} visualises this scaling behaviour on log--log axes. Baseline execution time (solid lines) rises linearly with $|V|$, whereas pruned execution time (dashed lines) remains flat at approximately 0.04--0.06~ms regardless of graph size. The widening gap between the two sets of curves confirms that the pruning advantage grows with $|V|$, consistent with the theoretical $O(|V|\log|V|)$ baseline versus effectively constant pruned complexity established in Chapter~\ref{chap:complexity}. Higher average degree $d$ shifts both baseline and pruned curves upward, but the relative separation is preserved.
+
+\begin{figure}[htbp]
+\centering
 \includegraphics[width=\textwidth]{plot5_memory_scaling.png}
 \caption[Peak memory scaling]{Peak memory (KB) vs.\ $|V|$ at $\tau=0.01$ for baseline and pruned Dijkstra.}
 \label{fig:memory_scaling}
@@ -127,6 +136,15 @@ A critical finding is the \textbf{zero optimality gap} across all experiments:
 \]
 
 This confirms Theorem~\ref{thm:all_or_nothing} (All-or-Nothing): whenever the pruned algorithm returns a path, it is the globally optimal path. Mechanistically, the zero gap arises because in every path-found configuration the optimal path's log-cost satisfies $C^* \leq T = -\log(\tau)$, so the optimal path is never pruned and is returned exactly by Algorithm~2 (Theorem~\ref{thm:conditional}). The cost-based gap formula (not probability-based) eliminates floating-point rounding noise involved in $\exp(-C^*)$ conversion. Using probability-based differences would have introduced \texttt{1e-15}-scale noise that has no algorithmic significance.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{plot2_optimality_gap_vs_tau.png}
+\caption[Mean optimality gap vs.\ $\tau$]{Mean optimality gap (\%) vs.\ pruning threshold $\tau$ for ER (left) and layered (right) graphs. Because the gap is $0\%$ whenever a path is found and is recorded as $100\%$ when the pruned algorithm fails to return any path, the mean gap is numerically equivalent to the path-loss rate.}
+\label{fig:optimality_gap_vs_tau}
+\end{figure}
+
+Although the optimality gap is identically zero on every path-found row, a complementary view is provided by examining the \emph{mean gap across all rows}, where runs in which the pruned algorithm finds no path are recorded with a sentinel gap of $100\%$. Figure~\ref{fig:optimality_gap_vs_tau} plots this quantity against $\tau$. Because the gap is $0\%$ when a path is found and $100\%$ otherwise, the mean gap is numerically equal to the path-loss rate: the fraction of source--target pairs whose optimal path is pruned at each threshold. On both ER and layered graphs the path-loss rate increases monotonically with $\tau$, rising from approximately $40$--$50\%$ at $\tau = 0.001$ to near $100\%$ at $\tau = 0.5$. Larger graphs and higher average degree $d$ push the curves upward, reflecting the increasing proportion of high-cost (low-probability) optimal paths removed by the threshold. Layered graphs show a sharper transition: at $\tau = 0.001$, small layered graphs ($|V|=1{,}000$) still retain $\sim$$40\%$ of their paths, but above $\tau = 0.01$ nearly all paths are pruned. This behaviour reinforces the practical finding from the critical-$\tau$ analysis (Section~\ref{sec:critical_tau}): practitioners must calibrate $\tau$ carefully to balance speedup against path retention.
 
 \subsection{Interpreting All-Rows vs.\ Found-Only Speedups}\label{sec:found_only_analysis}
 
@@ -263,4 +281,80 @@ Speedup grows with graph size---all-rows wall-clock from $9.4\times$ at $|V|=1{,
 
 \textbf{Practical business impact.} The algorithm serves two complementary use cases. For \emph{infeasibility screening}, the peak $18{,}882\times$ all-rows speedup on the RetailRocket item-level graph (44,711 items) enables rapid rejection of source--target pairs whose optimal paths fall below a probability threshold, replacing a full ${\sim}153$\,ms baseline search with a $0.008$\,ms pruned check. For \emph{guaranteed path recovery}, the adaptive-$\tau$ regime delivers found-only speedups of up to $5.8\times$ with an 84\% path-found rate and zero optimality gap. Across the tested datasets (RetailRocket and RecSys~2015), the two-regime approach spans probability regimes from dense event-level funnels (where fixed $\tau$ suffices) to sparse item-level graphs (where adaptive $\tau$ is needed), suggesting potential for supporting real-time exploration of conversion funnels; however, generalization to other domains requires further empirical validation.
 
-\textbf{Critical-$\tau$ analysis.} A detailed critical-$\tau$ analysis, including per-configuration $\tau^*$ heatmaps and practical threshold recommendations, will be presented in the final report following additional experimentation across the full parameter matrix.
+\textbf{Critical-$\tau$ analysis.}
+The critical threshold $\tau^*$ is defined as the largest $\tau$ for which the pruned algorithm still finds the optimal path (Section~\ref{sec:critical_tau}). Across all 110 synthetic configurations that admitted at least one path-found $\tau$ value, $\tau^*$ was \emph{always} at or below the baseline path probability $\Pi^*$; zero configurations violated this bound. The median ratio $\tau^*/\Pi^*$ was $0.50$ (mean $0.52$, range $[0.11, 0.99]$), confirming that the critical threshold is tightly coupled to the optimal-path probability.
+
+\begin{table}[htbp]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\caption[Median critical $\tau^*$ heatmap]{Median critical $\tau^*$ by graph size $|V|$ and average degree $d$. Left: Erd\H{o}s--R\'{e}nyi; right: Layered. Values are medians across runs; ``---'' indicates no path was found at any tested $\tau$.}
+\label{table:critical_tau_heatmap}
+\vspace{4pt}
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\small
+\textbf{Erd\H{o}s--R\'{e}nyi}
+\vspace{2pt}
+
+\begin{tabular}{@{}rrrr@{}}
+\toprule
+$|V|$ & $d{=}2$ & $d{=}5$ & $d{=}10$ \\
+\midrule
+1{,}000  & 0.500 & 0.001 & 0.001 \\
+5{,}000  & 0.500 & 0.001 & 0.001 \\
+10{,}000 & 0.500 & 0.001 & --- \\
+\bottomrule
+\end{tabular}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\small
+\textbf{Layered}
+\vspace{2pt}
+
+\begin{tabular}{@{}rrrr@{}}
+\toprule
+$|V|$ & $d{=}2$ & $d{=}5$ & $d{=}10$ \\
+\midrule
+1{,}000  & 0.001 & 0.001 & 0.001 \\
+5{,}000  & 0.001 & 0.001 & 0.001 \\
+10{,}000 & 0.001 & 0.001 & 0.001 \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\end{table}
+
+Table~\ref{table:critical_tau_heatmap} presents median $\tau^*$ values across the full parameter matrix. Two structural patterns emerge. First, ER graphs with low average degree ($d{=}2$) consistently support $\tau^* = 0.500$---the most aggressive threshold tested---because low connectivity produces long, high-cost optimal paths whose cumulative probability is well above $0.5$, so even a harsh threshold preserves them. At higher degrees ($d \geq 5$), increased connectivity creates shorter optimal paths with much lower costs, shrinking $\tau^*$ to $0.001$. Second, layered graphs uniformly report $\tau^* = 0.001$ regardless of size or degree. The layered generator's forward bias creates many parallel, similarly-weighted paths to the target; even the most conservative threshold ($\tau = 0.001$) is close to the optimal path probability for these dense, forward-biased graphs.
+
+\begin{table}[htbp]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\caption[Adaptive-$\tau$ path-found rate by fraction $f$]{Path-found rate by adaptive fraction $f = \tau / \Pi^*$ across all real-data datasets (60 pairs per fraction level, except rounding-affected bins).}
+\label{table:adaptive_cliff}
+\begin{tabular}{@{}rrrl@{}}
+\toprule
+$f$ & Paths Found & Total & Found (\%) \\
+\midrule
+0.10 & 60  & 60  & 100.0 \\
+0.30 & 60  & 60  & 100.0 \\
+0.50 & 60  & 60  & 100.0 \\
+0.70 & 60  & 60  & 100.0 \\
+0.90 & 60  & 60  & 100.0 \\
+0.95 & 60  & 60  & 100.0 \\
+0.99 & 59  & 60  & 98.3  \\
+1.00 & 29  & 59  & 49.2  \\
+1.10 &  0  & 60  &  0.0  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{table:adaptive_cliff} reveals the \emph{cliff structure} of the critical threshold on real-world graphs. For $f \leq 0.95$ (i.e.\ $\tau \leq 0.95\,\Pi^*$), the path-found rate is 100\%: the threshold lies safely below the optimal-path probability and therefore never prunes it (Theorem~\ref{thm:all_or_nothing}). At $f = 0.99$, one pair is lost (98.3\% found), likely due to floating-point rounding placing $\tau$ marginally above the true optimal cost. At $f = 1.00$, exactly half the pairs lose their path (49.2\%), consistent with the theoretical prediction that $\tau = \Pi^*$ sits exactly at the boundary of the cost threshold $T = -\log(\tau) = C^*$ and numerical noise determines which side each pair falls on. At $f = 1.10$, no paths are found, confirming the sharp cutoff predicted by the all-or-nothing property.
+
+\textbf{Practical threshold recommendations.}
+Based on these findings, practitioners should set $\tau$ as follows:
+\begin{enumerate}
+  \item \emph{Adaptive mode (recommended):} Run one baseline query to obtain $\Pi^*$, then set $\tau = 0.90\,\Pi^*$. This guarantees the optimal path is preserved (100\% found rate in all experiments) while maximally pruning irrelevant edges.
+  \item \emph{Fixed mode (synthetic/dense graphs only):} For ER-like graphs with $d \leq 2$, $\tau = 0.5$ is safe; for denser or layered graphs, $\tau = 0.001$ is the only fixed threshold that reliably preserves paths in the tested parameter space.
+  \item \emph{Infeasibility screening:} For applications that only need to \emph{test} whether a high-probability path exists, any $\tau$ above $\Pi^*$ provides near-instant rejection with dramatic speedups ($100$--$18{,}882\times$).
+\end{enumerate}

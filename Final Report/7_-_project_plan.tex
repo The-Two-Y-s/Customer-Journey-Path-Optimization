@@ -1,0 +1,20 @@
+\chapter{PROJECT PLAN}
+
+\section{Project Timeline}
+
+Figure~\ref{fig:timeline} presents the 10-week project timeline for the \textit{Probabilistic Path Optimization using Pruned Dijkstra} project.
+
+\textbf{Current status:} All project phases have been completed. The \textit{Experimental Execution} stage (Weeks~5--7), \textit{Analysis and Visualization} stage (Weeks~6--8), and \textit{Report Completion} milestone (Week~9) are finalized. Core implementation, unit testing, all experimental runs (2,160 synthetic rows + 840 real-data rows), critical-$\tau$ analysis, and result consolidation have been carried out as planned. The final presentation is scheduled for Week~10.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.85\textwidth]{timeline.png}
+\caption[Project timeline]{Ten-week project timeline.}
+\label{fig:timeline}
+\end{figure}
+
+Tasks are organized in three overlapping phases along a central spine. Blue entries (Weeks~1--4) cover core implementation, green entries (Weeks~4--7) cover testing and experimentation, and orange entries (Weeks~7--10) correspond to writing and presentation. Each phase overlaps with the next to allow iterative refinement, ensuring that correctness is validated before experimentation begins and that experimental results directly inform the final report.
+
+\section{Milestones}
+
+The project is structured around four key milestones. The first milestone, \textbf{Core Implementation}, was completed by the end of Week~4: both the baseline Dijkstra algorithm and the probability-pruned Dijkstra variant were fully implemented, tested on small hand-computed graphs, and validated for correctness against ground-truth optimal paths. The second milestone, \textbf{Experiments}, was completed by the end of Week~7; all experimental runs across small, medium, and large graph configurations have been executed, with all metrics (execution time, peak memory, nodes explored, edges examined, edges relaxed, path probability, optimality gap, MaxPQSize) recorded and verified. The \textbf{Analysis and Visualization} stage was completed by the end of Week~8, with experimental results analyzed, critical-$\tau$ sweeps completed, and all visualizations generated to validate the theoretical complexity claims and illustrate the time--memory--optimality trade-off. The third milestone, \textbf{Report Completion}, was achieved at the end of Week~9, with the full project report finalized incorporating experimental results, visualizations, complexity validation, critical-$\tau$ analysis, and practical threshold recommendations. The fourth milestone, \textbf{Final Presentation}, targets Week~10, when presentation slides and a live demonstration of the implementation will be prepared for the final project presentation in the third week of April~2026.

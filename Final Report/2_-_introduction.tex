@@ -34,7 +34,7 @@ In addition to correctness, the project formally analyzes the theoretical time a
 \medskip
 \noindent\textbf{Novelty and Prior Work.} While pruning strategies, heuristic search, and threshold-based filtering are individually well-studied in shortest-path literature~\citep{hart1968astar,pearl1984heuristics,cormen2009}, to the best of our knowledge, such integration has not been extensively studied in the context of probabilistic customer journey graphs. Specifically, the combination of (i)~a deterministic, parameter-controlled pruning mechanism with provable convergence, (ii)~a formal all-or-nothing optimality guarantee (Theorem~\ref{thm:all_or_nothing}), and (iii)~an adaptive-$\tau$ regime empirically validated on real-world e-commerce graphs has not been previously reported. This positions the present work at the intersection of classical graph algorithms and applied clickstream optimization, addressing a gap identified in Chapter~3.
 
-Intuitively, $\tau$ acts as a lower bound on acceptable cumulative path probability, controlling the trade-off between search completeness and computational efficiency.
+Formally, $\tau$ acts as a lower bound on acceptable cumulative path probability, controlling the trade-off between search completeness and computational efficiency.
 
 
 \section{Research Hypothesis}
