@@ -45,6 +45,8 @@ The following hypothesis guides the experimental evaluation:
 Probability-Pruned Dijkstra provides meaningful speedup over baseline Dijkstra while preserving path optimality at conservative $\tau$ values.
 \end{quote}
 
+\noindent Here, ``meaningful speedup'' is understood to encompass two operational regimes: rapid infeasibility detection (when the threshold exceeds the optimal-path probability) and genuine path-recovery speedup (when the optimal path survives the threshold). The experimental evaluation characterises both regimes and quantifies the inherent reachability--speed trade-off.
+
 \noindent The experimental evidence supporting this hypothesis is presented in Chapter~\ref{chap:results}; a summary of findings is provided in Chapter~\ref{chap:conclusion}.
 
 \section{Scope and Applicability}
