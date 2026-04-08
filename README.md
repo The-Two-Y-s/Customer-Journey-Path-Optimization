@@ -2,7 +2,6 @@
 
 **AT70.02 · Algorithm Design and Analysis** — Asian Institute of Technology
 
-**Team The Two Y's**
 | Name | Student ID |
 |------|-----------|
 | Aye Khin Khin Hpone (Yolanda Lim) | st125970 |
@@ -10,38 +9,22 @@
 
 ---
 
+🔗 **[Live Demo → the-two-y-customer-journey-path-optimization.vercel.app](https://the-two-y-customer-journey-path-optimization.vercel.app/)**
+
+---
+
 ## Table of Contents
 
-- [Customer Journey Path Optimization](#customer-journey-path-optimization)
-  - [Table of Contents](#table-of-contents)
-  - [Overview](#overview)
-    - [Hypothesis](#hypothesis)
-  - [Quick Start](#quick-start)
-    - [Installation](#installation)
-    - [Basic Usage](#basic-usage)
-  - [Algorithms](#algorithms)
-    - [Log-Probability Transform](#log-probability-transform)
-    - [Baseline Dijkstra](#baseline-dijkstra)
-    - [Probability-Pruned Dijkstra](#probability-pruned-dijkstra)
-    - [Pruning Correctness](#pruning-correctness)
-    - [Metric: `edges_relaxed` and `edges_examined`](#metric-edges_relaxed-and-edges_examined)
-  - [Pipeline](#pipeline)
-  - [Data](#data)
-    - [Input Formats](#input-formats)
-    - [Synthetic Graph Generators](#synthetic-graph-generators)
-    - [Real-World Datasets](#real-world-datasets)
-  - [Experiments](#experiments)
-    - [Synthetic Experiment Runner](#synthetic-experiment-runner)
-    - [Real-Data Experiment Runner](#real-data-experiment-runner)
-    - [Critical-τ Finder](#critical-τ-finder)
-    - [Analysis Notebook](#analysis-notebook)
-  - [Results](#results)
-    - [Synthetic Data — Speedup by τ](#synthetic-data--speedup-by-τ)
-    - [Real-Data Validation — Fixed τ](#real-data-validation--fixed-τ)
-    - [Real-Data Validation — Adaptive τ](#real-data-validation--adaptive-τ)
-    - [Key Findings](#key-findings)
-  - [Testing](#testing)
-  - [Project Structure](#project-structure)
+- [Overview](#overview)
+- [Live Dashboard](#live-dashboard)
+- [Quick Start](#quick-start)
+- [Algorithms](#algorithms)
+- [Pipeline](#pipeline)
+- [Data](#data)
+- [Experiments](#experiments)
+- [Results](#results)
+- [Testing](#testing)
+- [Project Structure](#project-structure)
 
 ---
 
@@ -66,6 +49,40 @@ We expect:
 
 ---
 
+## Live Dashboard
+
+An interactive React dashboard visualises the experiment results and algorithm behaviour in real time.
+
+🔗 **[https://the-two-y-customer-journey-path-optimization.vercel.app/](https://the-two-y-customer-journey-path-optimization.vercel.app/)**
+
+The dashboard includes:
+- Speedup vs τ curves (synthetic & real data)
+- Optimality gap analysis
+- Scalability plots (execution time and memory vs |V|)
+- Critical τ\* heatmap
+- KPI summary cards
+
+### Run the dashboard locally
+
+```bash
+cd customer-journey-dashboard
+npm install
+npm run dev
+```
+
+Opens at `http://localhost:5173`.
+
+### Build for deployment
+
+```bash
+cd customer-journey-dashboard
+npm run build   # output goes to dist/
+```
+
+Deployed on **Vercel** — every push to `main` auto-redeploys.
+
+---
+
 ## Quick Start
 
 ### Installation
@@ -75,6 +92,8 @@ pip install -r requirements.txt
 ```
 
 Dependencies: `pandas ≥ 1.5`, `numpy ≥ 1.23`, `matplotlib ≥ 3.6`, `scipy ≥ 1.10`, `pytest ≥ 7.0`.
+
+> Requires **Python ≥ 3.10**.
 
 ### Basic Usage
 
@@ -162,7 +181,7 @@ Since `P(v|u) ∈ (0, 1]`, every weight `-log(p)` is non-negative — Dijkstra's
 
 ### Baseline Dijkstra
 
-Standard Dijkstra (Algorithm 1) with lazy-deletion via stale-entry skip. Uses a binary min-heap priority queue.
+Standard Dijkstra with lazy-deletion via stale-entry skip. Uses a binary min-heap priority queue.
 
 - **Complexity:** `O((V + E) log V)`
 - **Implementation:** `src/dijkstra.py → dijkstra()`
@@ -186,18 +205,16 @@ The threshold `T = -log(τ)` acts as a uniform upper bound on path cost. This pr
 
 > **Why no suboptimal paths?** Dijkstra settles nodes in non-decreasing cost order. Any node settled with cost ≤ T receives its true shortest-path distance, because all cheaper alternatives were already explored. The pruned algorithm either finds the optimal path intact or misses the target entirely — it can never return a worse path.
 
-### Metric: `edges_relaxed` and `edges_examined`
-
-Two edge counters provide complementary views of algorithmic work:
+### Edge Counters: `edges_relaxed` vs `edges_examined`
 
 | Algorithm | `edges_examined` | `edges_relaxed` |
 |-----------|-----------------|-----------------|
 | **Baseline** | Every outgoing edge from a settled node | Same as `edges_examined` (no pruning) |
 | **Pruned** | Every outgoing edge from a settled node (before threshold check) | Only edges that **survived** the τ threshold |
 
-- The ratio `baseline_edges_examined / pruned_edges_examined` is an **apples-to-apples** comparison of total edge work.
-- The ratio `baseline_edges_relaxed / pruned_edges_relaxed` measures **pruning aggressiveness** — how much work the threshold eliminates — but is not a strict like-for-like comparison since the pruned counter excludes threshold-rejected edges.
-- The difference `pruned_edges_examined − pruned_edges_relaxed` isolates the **pruning overhead** (edges checked then discarded).
+- `baseline_edges_examined / pruned_edges_examined` — apples-to-apples comparison of total edge work.
+- `baseline_edges_relaxed / pruned_edges_relaxed` — measures pruning aggressiveness.
+- `pruned_edges_examined − pruned_edges_relaxed` — isolates pruning overhead (edges checked then discarded).
 
 ---
 
@@ -274,7 +291,7 @@ graph = generate_layered_graph(
 )
 ```
 
-Nodes are distributed evenly across stages. Edges go primarily forward (up to +2 stages); `backward_prob` controls backward links modelling user loops. Under the `"uniform"` distribution, forward edges draw raw weights from U(0.3, 0.8) while backward edges draw from U(0.05, 0.3); these raw weights are then normalised per source node so that outgoing probabilities sum to 1. Forward progression is therefore more likely than backtracking.
+Nodes are distributed evenly across stages. Edges go primarily forward (up to +2 stages); `backward_prob` controls backward links modelling user loops. Under the `"uniform"` distribution, forward edges draw raw weights from U(0.3, 0.8) while backward edges draw from U(0.05, 0.3); these are then normalised per source node so outgoing probabilities sum to 1.
 
 </details>
 
@@ -293,8 +310,8 @@ Two e-commerce clickstream datasets are used for validation (not included in the
 ```python
 from data.real_data_loader import load_retailrocket, load_recsys2015
 
-df_rr = load_retailrocket(granularity="event")              # 3-node funnel
-df_rr = load_retailrocket(granularity="item", max_sessions=50000)  # large graph
+df_rr = load_retailrocket(granularity="event")                       # 3-node funnel
+df_rr = load_retailrocket(granularity="item", max_sessions=50000)   # large graph
 df_rc = load_recsys2015(max_sessions=50000)
 ```
 
@@ -317,17 +334,20 @@ python run_experiments.py
 ```
 
 Runs both algorithms across the full parameter matrix:
-- **Graph types:** Erdős–Rényi, Layered
-- **|V|:** 1,000 / 5,000 / 10,000 (pass `--sizes 50000` for larger)
-- **Avg degree:** 2 / 5 / 10
-- **Distribution:** uniform / power-law
-- **τ:** 0, 0.001, 0.01, 0.05, 0.1, 0.5
-- **Runs:** 10 per configuration (deterministic `hashlib.md5` seeds)
 
-Timing and memory are measured in **separate passes** so tracemalloc overhead does not corrupt the stopwatch. Default matrix produces **2,160 rows** → `results/experiment_results.csv`. The `results/` directory is created automatically on first run.
+| Parameter | Values |
+|-----------|--------|
+| Graph types | Erdős–Rényi, Layered |
+| \|V\| | 1,000 / 5,000 / 10,000 |
+| Avg degree | 2 / 5 / 10 |
+| Distribution | uniform / power-law |
+| τ | 0, 0.001, 0.01, 0.05, 0.1, 0.5 |
+| Runs per config | 10 (deterministic `hashlib.md5` seeds) |
+
+Timing and memory are measured in **separate passes** so tracemalloc overhead does not corrupt the stopwatch. Default matrix produces **2,160 rows** → `results/experiment_results.csv`.
 
 <details>
-<summary>Customisation</summary>
+<summary>Customisation flags</summary>
 
 ```bash
 python run_experiments.py --graph-types erdos_renyi \
@@ -344,7 +364,7 @@ Output CSV columns: `graph_type`, `graph_size`, `avg_degree`, `distribution`, `t
 python run_real_experiments.py
 ```
 
-Tests three dataset configurations (RetailRocket event-level, RetailRocket item-level, RecSys 2015) with 20 random reachable source-target pairs each across 5 τ values → **300 rows** → `results/real_data_results.csv`. The `results/` directory is created automatically on first run.
+Tests three dataset configurations (RetailRocket event-level, RetailRocket item-level, RecSys 2015) with 20 random reachable source-target pairs each across 5 τ values → **300 rows** → `results/real_data_results.csv`.
 
 ```bash
 python run_real_experiments.py --recsys-sessions 50000 --pairs 20 --seed 42
@@ -362,18 +382,20 @@ print(result.critical_tau)              # e.g. 0.00069
 print(result.max_speedup_at_critical)   # e.g. 1.2×
 ```
 
-Uses an adaptive sweep centered on the baseline path probability — including a 110% probe above the optimal to identify the cliff point where the path is lost. Reports both node-count speedup and wall-clock speedup per τ value.
+Uses an adaptive sweep centered on the baseline path probability — including a 110% probe above the optimal to identify the cliff point where the path is lost.
 
 ### Analysis Notebook
 
 `analysis.ipynb` loads the experiment CSV and produces five plots + statistical tests:
 
-1. **Speedup vs τ** — per graph type, size, and distribution
-2. **Optimality gap vs τ** — accuracy trade-off
-3. **Scalability** — execution time vs |V| (log-log), baseline vs pruned
-4. **Critical τ\* heatmap** — largest τ preserving < 5% gap
-5. **Memory scaling** — peak memory vs |V|
-6. **Statistical testing** — Wilcoxon signed-rank (paired by run)
+| Plot | Description |
+|------|-------------|
+| Speedup vs τ | Per graph type, size, and distribution |
+| Optimality gap vs τ | Accuracy trade-off |
+| Scalability | Execution time vs \|V\| (log-log), baseline vs pruned |
+| Critical τ\* heatmap | Largest τ preserving < 5% gap |
+| Memory scaling | Peak memory vs \|V\| |
+| Statistical testing | Wilcoxon signed-rank (paired by run) |
 
 Plots are saved to `results/img/`.
 
@@ -381,35 +403,33 @@ Plots are saved to `results/img/`.
 
 ## Results
 
-> **Simulation environment:** Python 3.13.3, Windows 11, AMD Ryzen 7 5800H, 16 GB RAM. Speedup numbers are environment-sensitive; see the [progress report](Progress_Report/) for the full simulation environment table.
+> **Simulation environment:** Python 3.13.3, Windows 11, AMD Ryzen 7 5800H, 16 GB RAM. Speedup numbers are environment-sensitive.
 
-**Verdict: Hypothesis supported.** Across 1,800 pruned runs (synthetic) and 840 runs (real data — 300 fixed-τ + 540 adaptive-τ), every run that found a path returned the **exact same optimal path** as the baseline (0.00% optimality gap across all 706 found paths). **The real trade-off is path-found rate, not accuracy:** aggressive τ values yield massive speedups but reduce the chance of finding any path.
+**Verdict: Hypothesis supported.** Across 1,800 pruned runs (synthetic) and 840 runs (real data — 300 fixed-τ + 540 adaptive-τ), every run that found a path returned the **exact same optimal path** as the baseline (0.00% optimality gap across all 706 found paths). **The real trade-off is path-found rate, not accuracy.**
 
 ### Synthetic Data — Speedup by τ
 
 | τ | Wall-Clock Speedup | Edges Examined (% of baseline) | Path-Found Rate | Gap (when found) |
-|---|---------------|----------------|-----------------|------------------|
+|---|-------------------|-------------------------------|-----------------|------------------|
 | 0.001 | 3.3× | 53.3% | 30.6% | 0.00% |
 | 0.01 | 24.7× | 7.1% | 5.6% | 0.00% |
-| 0.05 | 123.6× | 1.4% | 4.7% | 0.00% |
-| 0.1 | 242.6× | 0.7% | 4.4% | 0.00% |
+| 0.05 | 110.7× | 1.4% | 4.7% | 0.00% |
+| 0.1 | 226.1× | 0.7% | 4.4% | 0.00% |
 | 0.5 | 738× | 0.1% | 4.2% | 0.00% |
 
 ### Real-Data Validation — Fixed τ
-
-Three dataset configurations (20 random source-target pairs × 5 τ values = 300 rows). "Best speedup" is the maximum wall-clock speedup across all runs, including runs where the pruned variant terminates quickly because it prunes all paths:
 
 | Dataset | Nodes | Edges | Best Speedup | Path-Found Rate | Max Gap |
 |---------|-------|-------|-------------|-----------------|--------|
 | RetailRocket (event-level funnel) | 3 | 9 | 6× | 78% | 0.00% |
 | RetailRocket (item-level, 50K sessions) | 44,711 | 101,528 | 18,882× | 1% | 0.00% |
-| RecSys 2015 (50K sessions) | 12,935 | 70,442 | 2,309× | 0% | --- |
+| RecSys 2015 (50K sessions) | 12,935 | 70,442 | 2,309× | 0% | — |
 
-The near-zero path-found rates on item-level and session-level graphs are a mathematical certainty — baseline path probabilities (~10⁻⁶) fall far below even τ = 0.0001 (cost threshold 9.21).
+The near-zero path-found rates on item-level and session-level graphs are expected — baseline path probabilities (~10⁻⁶) fall far below even τ = 0.0001.
 
 ### Real-Data Validation — Adaptive τ
 
-To address this, an **adaptive-τ regime** sets τ as a fraction (10%–110%) of each pair's baseline path probability, ensuring the threshold is always in the relevant probability range. 20 pairs × 9 fractions = 180 rows per dataset, 540 total:
+An **adaptive-τ regime** sets τ as a fraction (10%–110%) of each pair's baseline path probability, ensuring the threshold is always in the relevant probability range. 20 pairs × 9 fractions = 180 rows per dataset, 540 total:
 
 | Dataset | Paths Found | Path-Found Rate | Max Speedup | Max Gap |
 |---------|-------------|-----------------|-------------|--------|
@@ -417,17 +437,17 @@ To address this, an **adaptive-τ regime** sets τ as a fraction (10%–110%) of
 | RetailRocket (item-level) | 152 / 180 | 84% | 3.4× | 0.00% |
 | RecSys 2015 | 150 / 180 | 83% | 1.8× | 0.00% |
 
-> **Key insight:** Adaptive τ raises path-found rates from 0–1% (item-level and session-level graphs under fixed τ) to 82–84% while maintaining **exactly 0% optimality gap** across all 449 adaptive found paths. The event-level funnel already achieves 78% under fixed τ due to its small, fully connected structure. The speedups are modest because the threshold is close to the optimal cost, but the algorithm's correctness guarantee holds perfectly.
+> Adaptive τ raises path-found rates from 0–1% to 82–84% while maintaining **exactly 0% optimality gap** across all 449 found paths.
 
 ### Key Findings
 
 1. **179/180** synthetic configurations show statistically significant speedup (Wilcoxon signed-rank, p < 0.05)
-2. **100% exact optimality** — every path found by the pruned variant matches the baseline (0.00% gap), on both synthetic and real data (0/178 synthetic, 0/528 real with non-zero gap)
-3. Normalised transition probabilities (`Σ P(v|u) = 1`) make individual edge probabilities small, so pruning is aggressive — speedups up to **18,882×** on real data (wall-clock)
-4. The trade-off is **reachability, not accuracy**: at τ = 0.5 only 4.2% of synthetic runs find a path, but those that do are guaranteed optimal
-5. Both uniform and power-law distributions exhibit consistent behaviour
-6. **Real-data validation** on RetailRocket and RecSys 2015 confirms the hypothesis generalises beyond synthetic graphs
-7. **Adaptive τ** calibrated to each pair's baseline path probability resolves near-zero path-found rates on sparse graphs (0% → 83% for RecSys 2015)
+2. **100% exact optimality** — every path found by the pruned variant matches the baseline (0/706 found paths have any gap)
+3. Speedups up to **18,882×** on real data (wall-clock)
+4. The trade-off is **reachability, not accuracy** — at τ = 0.5 only 4.2% of synthetic runs find a path, but those that do are guaranteed optimal
+5. **Adaptive τ** resolves near-zero path-found rates on sparse graphs (0% → 83% for RecSys 2015)
+6. Both uniform and power-law distributions exhibit consistent behaviour
+7. Memory stays near-constant for the pruned variant (~4.5 KB vs ~655 KB baseline at 10K nodes)
 
 ---
 
@@ -439,7 +459,7 @@ To address this, an **adaptive-τ regime** sets τ as a fraction (10%–110%) of
 python -m pytest tests/ -v
 ```
 
-> **Note on skipped tests:** Seven tests in `TestRealDataLoaders` are skipped when the real-world datasets (RetailRocket, RecSys 2015) are not present in `data/real_dataset/`. These are data-availability guards, not suppressed failures. Download the datasets to run them.
+> **Note on skipped tests:** Seven tests in `TestRealDataLoaders` are skipped when the real-world datasets are not present in `data/real_dataset/`. These are data-availability guards, not suppressed failures.
 
 | Test class | Coverage |
 |-----------|----------|
@@ -455,7 +475,7 @@ python -m pytest tests/ -v
 | `TestRealDataLoaders` | RetailRocket + RecSys 2015 loading, Dijkstra on real graphs |
 | `TestRealDataPipeline` | End-to-end test on synthetic journey dataset |
 | `TestCriticalTau` | Critical-τ on ER/Layered graphs, unreachable target |
-| `TestScaleAndProperty` | 2,000- and 5,000-node correctness, randomised zero-gap property across 20 graphs  |
+| `TestScaleAndProperty` | 2,000- and 5,000-node correctness, randomised zero-gap property across 20 graphs |
 
 ---
 
@@ -468,22 +488,46 @@ python -m pytest tests/ -v
 │   ├── graph_builder.py              # Weighted graph construction (-log transform)
 │   ├── preprocessing.py              # Clickstream data → transitions → probabilities
 │   └── critical_tau.py               # Critical-τ finder (adaptive sweep)
+│
 ├── data/
 │   ├── graph_generator.py            # ER & Layered graph generators
 │   ├── synthetic_data_generator.py   # Markov-chain clickstream generator
 │   ├── real_data_loader.py           # RetailRocket & RecSys 2015 loaders
-│   ├── enhanced_synthetic_journey.csv
 │   └── real_dataset/                 # (download manually — not in repo)
 │       ├── retailrocket/
 │       └── recsys2015/
+│
+├── customer-journey-dashboard/       # Interactive React dashboard (Vite)
+│   ├── src/
+│   │   ├── App.jsx                   # Entire dashboard UI (~700 lines)
+│   │   └── main.jsx                  # React mount point
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
+│
 ├── tests/
 │   └── test_pipeline.py              # 44 unit tests
+│
 ├── results/
 │   ├── experiment_results.csv        # 2,160-row synthetic experiment output
-│   ├── real_data_results.csv         # 840-row real-data experiment output (300 fixed + 540 adaptive)
+│   ├── real_data_results.csv         # 840-row real-data output (300 fixed + 540 adaptive)
+│   ├── speedup_summary.csv           # Summary statistics by configuration
 │   └── img/                          # Saved plots from analysis notebook
+│       ├── plot1_speedup_vs_tau.png
+│       ├── plot2_optimality_gap_vs_tau.png
+│       ├── plot3_scalability.png
+│       ├── plot4_critical_tau_heatmap.png
+│       ├── plot5_memory_scaling.png
+│       └── demo_animation.gif
+│
+├── Final Report/                     # LaTeX source + compiled PDF
+│   ├── main.tex
+│   ├── main.pdf
+│   └── *.tex / *.bib / figures
+│
 ├── run_experiments.py                # Synthetic experiment matrix runner
 ├── run_real_experiments.py           # Real-data experiment runner
+├── demo_animation.py                 # GIF generator for algorithm walkthrough
 ├── analysis.ipynb                    # Results analysis & visualisation
 ├── main.py                           # CLI entry point
 ├── requirements.txt
