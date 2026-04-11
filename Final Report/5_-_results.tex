@@ -364,3 +364,62 @@ Based on these findings, practitioners should set $\tau$ as follows:
   \item \emph{Fixed mode (synthetic/dense graphs only):} For ER-like graphs with $d \leq 2$, $\tau = 0.5$ is safe; for denser or layered graphs, $\tau = 0.001$ is the only fixed threshold that reliably preserves paths in the tested parameter space.
   \item \emph{Infeasibility screening:} For applications that only need to \emph{test} whether a high-probability path exists, any $\tau$ above $\Pi^*$ provides near-instant rejection with dramatic speedups ($100$--$18{,}882\times$).
 \end{enumerate}
+
+\section{Interactive Dashboard}\label{sec:dashboard}
+
+To complement the static analysis presented in this chapter, an interactive web dashboard was developed to visualise both the experimental results and the algorithm's real-time behaviour. Built with \textbf{React~18} and \textbf{Vite}, the single-page application is deployed on Vercel with continuous deployment from the \texttt{main} branch and is publicly accessible at \textbf{\url{https://the-two-y-customer-journey-path-optimization.vercel.app/}}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{dashboard_screencapture/overview.png}
+\captionsetup{font=small}
+\caption{Dashboard overview with KPI cards and live pathfinding graph.}
+\label{fig:dash_overview}
+\end{figure}
+
+\vspace{-0.5em}
+\noindent The application consists of three tabs:
+
+\begin{enumerate}[nosep]
+    \item \textbf{Live Pathfinding} --- Animates the probability-pruned Dijkstra algorithm on a sample customer journey graph. Users select a~$\tau$ value, run in continuous or step-by-step mode, and observe edge relaxation, pruning, and optimal-path discovery in real time. An execution log shows each algorithmic action; upon completion the dashboard displays the recovered path, its cost, probability, and the optimality gap~$\Delta$.
+    \item \textbf{$\tau$ Explorer} --- An interactive slider lets the user sweep $\tau$ across five thresholds and instantly view the resulting speedup, path-found rate, and edge-examination ratio, illustrating the reachability--speed trade-off characterised in this chapter.
+    \item \textbf{Full Results} --- Presents the complete experimental summary: speedup bar charts comparing all-run vs.\ found-only regimes across $\tau$ values, memory scaling ($O(|V|)$ baseline vs.\ $O(1)$ pruned), the adaptive-$\tau$ breakthrough (fixed vs.\ adaptive path-found rates for all three real-world datasets), and hypothesis validation statistics (179/180 significant Wilcoxon tests, 0/706 non-zero gaps, 47 unit tests across 14 classes).
+\end{enumerate}
+
+\noindent A persistent header displays four KPI cards---\textit{Experiments} (3,000), \textit{Optimality Gap} (0\%), \textit{Max Speedup} ($18{,}882\times$), and \textit{Adaptive~$\tau$} (82--84\%)---providing an at-a-glance summary of the project's key findings.
+
+\begin{figure}[H]
+\centering
+\begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{dashboard_screencapture/stepfunctionwithexecutionlog.png}
+    \captionsetup{font=small}
+    \captionof{figure}{Step-by-step mode with execution log showing edge relaxations and pruning events.}
+    \label{fig:dash_step}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{dashboard_screencapture/LivePathfinding.png}
+    \captionsetup{font=small}
+    \captionof{figure}{Live pathfinding result at $\tau=0.01$, showing the optimal path and $\Delta=0.0000\%$.}
+    \label{fig:dash_pathfinding}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{dashboard_screencapture/tauexplorer.png}
+    \captionsetup{font=small}
+    \captionof{figure}{$\tau$ Explorer tab: interactive slider with live speedup and path-found rate display.}
+    \label{fig:dash_tau}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{dashboard_screencapture/fullresult.png}
+    \captionsetup{font=small}
+    \captionof{figure}{Full results tab: speedup regimes, memory scaling, adaptive-$\tau$ breakthrough, and hypothesis validation.}
+    \label{fig:dash_results}
+\end{minipage}
+\end{figure}

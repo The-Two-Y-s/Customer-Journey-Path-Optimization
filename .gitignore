@@ -24,6 +24,9 @@ audit*.py
 # VS Code workspace settings
 .vscode/
 
+# Video recordings (large; GIF derivative committed instead)
+*.mp4
+
 # LaTeX temp/log files
 texput.log
 Progress_Report/texput.log

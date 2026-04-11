@@ -17,6 +17,9 @@
 
 - [Overview](#overview)
 - [Live Dashboard](#live-dashboard)
+  - [Video Demo](#video-demo)
+  - [Dashboard Screenshots](#dashboard-screenshots)
+  - [Dashboard Features](#dashboard-features)
 - [Quick Start](#quick-start)
 - [Algorithms](#algorithms)
 - [Pipeline](#pipeline)
@@ -51,16 +54,60 @@ We expect:
 
 ## Live Dashboard
 
-An interactive React dashboard visualises the experiment results and algorithm behaviour in real time.
+An interactive React 18 + Vite dashboard visualises the experiment results and algorithm behaviour in real time.
 
-🔗 **[https://the-two-y-customer-journey-path-optimization.vercel.app/](https://the-two-y-customer-journey-path-optimization.vercel.app/)**
+🔗 **[Live Deployment → the-two-y-customer-journey-path-optimization.vercel.app](https://the-two-y-customer-journey-path-optimization.vercel.app/)**
 
-The dashboard includes:
-- Speedup vs τ curves (synthetic & real data)
-- Optimality gap analysis
-- Scalability plots (execution time and memory vs |V|)
-- Critical τ\* heatmap
-- KPI summary cards
+### Video Demo
+
+🎬 **[Watch on YouTube](https://youtu.be/H79DZrMIvFo)**
+
+<p align="center">
+  <img src="results/img/dashboard_demo.gif" alt="Dashboard Demo" width="100%" />
+</p>
+
+### Dashboard Screenshots
+
+<table>
+  <tr>
+    <td colspan="2" align="center">
+      <strong>Dashboard Overview — KPI cards & Live Pathfinding graph</strong><br/>
+      <img src="Final%20Report/dashboard_screencapture/overview.png" width="100%" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Live Pathfinding Result (τ = 0.01)</strong><br/>
+      <img src="Final%20Report/dashboard_screencapture/LivePathfinding.png" width="100%" />
+    </td>
+    <td align="center" width="50%">
+      <strong>Step-by-Step Mode & Execution Log</strong><br/>
+      <img src="Final%20Report/dashboard_screencapture/stepfunctionwithexecutionlog.png" width="100%" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>τ Explorer — Interactive Trade-off Slider</strong><br/>
+      <img src="Final%20Report/dashboard_screencapture/tauexplorer.png" width="100%" />
+    </td>
+    <td align="center" width="50%">
+      <strong>Full Results — Speedup, Memory, Adaptive-τ</strong><br/>
+      <img src="Final%20Report/dashboard_screencapture/fullresult.png" width="100%" />
+    </td>
+  </tr>
+</table>
+
+### Dashboard Features
+
+The dashboard consists of three tabs:
+
+| Tab | Description |
+|-----|-------------|
+| **Live Pathfinding** | Animates probability-pruned Dijkstra on a sample journey graph. Supports continuous and step-by-step mode with a live execution log. Displays recovered path, cost, probability, and optimality gap Δ. |
+| **τ Explorer** | Interactive slider sweeps τ across five thresholds — instantly shows speedup, path-found rate, and edge-examination ratio. |
+| **Full Results** | Speedup bar charts (all-run vs found-only), memory scaling (O(\|V\|) vs O(1)), adaptive-τ breakthrough, and hypothesis validation (179/180 Wilcoxon, 0/706 gaps, 47 tests). |
+
+A persistent header shows four KPI cards: **Experiments** (3,000), **Optimality Gap** (0%), **Max Speedup** (18,882×), **Adaptive τ** (82–84%).
 
 ### Run the dashboard locally
 

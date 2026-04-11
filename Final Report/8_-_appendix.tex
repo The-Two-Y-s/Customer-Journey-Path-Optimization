@@ -1,5 +1,5 @@
-\chapter*{APPENDIX A: SOURCE CODE AND DASHBOARD}
-\addcontentsline{toc}{chapter}{APPENDIX A: SOURCE CODE AND DASHBOARD}
+\chapter*{APPENDIX A: SOURCE CODE}
+\addcontentsline{toc}{chapter}{APPENDIX A: SOURCE CODE}
 
 \noindent\begin{sloppypar}The complete source code for the \textit{Customer Journey Path Optimization} framework (Python~3.12) is publicly available at:\end{sloppypar}
 
@@ -11,9 +11,9 @@
 The codebase is organised into four layers:
 
 \begin{table}[h!]
-\centering\small
+\centering\footnotesize
 \renewcommand{\arraystretch}{1.15}
-\begin{tabular}{@{}ll@{}}
+\begin{tabular}{@{}lp{0.50\textwidth}@{}}
 \toprule
 \textbf{Module} & \textbf{Description} \\
 \midrule
@@ -22,6 +22,7 @@ The codebase is organised into four layers:
 \texttt{src/preprocessing.py}       & Clickstream CSV ingestion \& MLE probability computation \\
 \texttt{src/critical\_tau.py}        & Adaptive fraction sweep for critical $\tau^*$ \\
 \texttt{data/graph\_generator.py}    & ER \& layered synthetic generators (deterministic \texttt{md5} seeds) \\
+\texttt{data/synthetic\_data\_generator.py} & Markov-chain clickstream generator \\
 \texttt{data/real\_data\_loader.py}   & RetailRocket \& RecSys~2015 YOOCHOOSE parsers \\
 \texttt{run\_experiments.py}         & Synthetic experiment runner (2,160 configurations) \\
 \texttt{run\_real\_experiments.py}    & Real-data experiment runner (840 configurations) \\
@@ -33,11 +34,6 @@ The codebase is organised into four layers:
 \noindent Both algorithms return structured results containing the optimal path, log-cost, path probability, and four performance counters (nodes explored, edges examined, edges relaxed, max priority-queue size). Installation instructions and reproduction commands are provided in the repository README.
 
 \medskip
-\noindent\textbf{Live interactive dashboard.}
-An interactive visualisation of the experimental results is deployed at:
+\noindent\textbf{Live deployment.}\\{\small\url{https://the-two-y-customer-journey-path-optimization.vercel.app/}}
 
-\smallskip
-\centerline{\textbf{\url{https://the-two-y-customer-journey-path-optimization.vercel.app/}}}
-
-\smallskip
-\noindent Built with React~18 and Vite, auto-deployed on Vercel, the dashboard presents speedup vs.\ $\tau$ curves, optimality gap analysis, scalability plots, the critical~$\tau^*$ heatmap, and KPI summary cards derived from the experiment CSV files.
+\noindent\textbf{Video demo.} \url{https://youtu.be/H79DZrMIvFo}
