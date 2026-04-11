@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 /* ═══ PALETTE ═════════════════════════════════════════ */
 const C = {
@@ -17,7 +17,9 @@ const C = {
   gR: "linear-gradient(135deg,#dc2626,#f87171)",
   gH: "linear-gradient(135deg,#7c3aed,#2563eb,#0891b2,#059669)",
 };
-const F = "'Sora','DM Sans',system-ui,sans-serif";
+const F = "'Inter','DM Sans',system-ui,sans-serif";
+const FH = "'Sora','Inter',system-ui,sans-serif";
+const FM = "'JetBrains Mono','Fira Code',monospace";
 
 /* ═══ GRAPH ═══════════════════════════════════════════ */
 const NODES = [
@@ -120,7 +122,8 @@ function solveDijkstra(tau = 0) {
   }
   const path = []; let c = "checkout";
   while (prev[c]) { const e = EDGES.find(x => x.f === prev[c] && x.t === c); if (e) path.unshift(e); c = prev[c]; }
-  steps.push({ type: "done", path, found: path.length > 0 && dist.checkout < Infinity, prob: dist.checkout < Infinity ? Math.exp(-dist.checkout) : 0 });
+  const cost = dist.checkout < Infinity ? dist.checkout : null;
+  steps.push({ type: "done", path, found: path.length > 0 && dist.checkout < Infinity, prob: dist.checkout < Infinity ? Math.exp(-dist.checkout) : 0, cost });
   return steps;
 }
 
@@ -182,34 +185,82 @@ function JourneyGraph({ tau, onTauChange }) {
   const [speed, setSpeed] = useState(300);
   const [stepLog, setStepLog] = useState([]);
   const [stepIdx, setStepIdx] = useState(-1);
+  const [stepping, setStepping] = useState(false);
+  const [baselineCost, setBaselineCost] = useState(null);
+  const [prunedCost, setPrunedCost] = useState(null);
   const tmr = useRef(null);
+  const stepsRef = useRef([]);
+  const idxRef = useRef(0);
 
   const reset = useCallback(() => {
     if (tmr.current) clearInterval(tmr.current);
     setVisited(new Set()); setRelaxing(null); setPruned(new Set());
-    setPathE([]); setDone(false); setRunning(false); setStepLog([]); setStepIdx(-1);
+    setPathE([]); setDone(false); setRunning(false); setStepping(false);
+    setStepLog([]); setStepIdx(-1); setBaselineCost(null); setPrunedCost(null);
+    stepsRef.current = []; idxRef.current = 0;
+  }, []);
+
+  /* compute baseline cost once for gap display */
+  const getBaselineCost = useCallback(() => {
+    const bs = solveDijkstra(0);
+    const last = bs[bs.length - 1];
+    return last && last.cost != null ? last.cost : null;
+  }, []);
+
+  const applyStep = useCallback((s) => {
+    if (s.type === "visit") setVisited(p => new Set([...p, s.node]));
+    if (s.type === "relax") setRelaxing(s.edge);
+    if (s.type === "prune") { setRelaxing(s.edge); setPruned(p => new Set([...p, `${s.edge.f}-${s.edge.t}`])); }
+    if (s.type === "done") { setPathE(s.path); setDone(true); setRelaxing(null); setPrunedCost(s.cost); }
   }, []);
 
   const run = useCallback(() => {
     reset();
     const steps = solveDijkstra(tau);
-    setRunning(true); let i = 0;
+    stepsRef.current = steps;
+    setBaselineCost(getBaselineCost());
+    idxRef.current = 0;
+    setRunning(true);
+  }, [tau, reset, getBaselineCost]);
+
+  const startStepping = useCallback(() => {
+    reset();
+    const steps = solveDijkstra(tau);
+    stepsRef.current = steps;
+    setBaselineCost(getBaselineCost());
+    setStepping(true); idxRef.current = 0;
+  }, [tau, reset, getBaselineCost]);
+
+  const advanceStep = useCallback(() => {
+    const i = idxRef.current;
+    if (i >= stepsRef.current.length) { setStepping(false); return; }
+    const s = stepsRef.current[i]; setStepIdx(i);
+    setStepLog(prev => [...prev.slice(-8), s]);
+    applyStep(s);
+    idxRef.current = i + 1;
+    if (i + 1 >= stepsRef.current.length) setStepping(false);
+  }, [applyStep]);
+
+  /* restart interval when speed changes mid-run */
+  useEffect(() => {
+    if (!running) return;
+    if (tmr.current) clearInterval(tmr.current);
     tmr.current = setInterval(() => {
-      if (i >= steps.length) { clearInterval(tmr.current); setRunning(false); return; }
-      const s = steps[i]; setStepIdx(i);
+      const i = idxRef.current;
+      if (i >= stepsRef.current.length) { clearInterval(tmr.current); setRunning(false); return; }
+      const s = stepsRef.current[i]; setStepIdx(i);
       setStepLog(prev => [...prev.slice(-8), s]);
-      if (s.type === "visit") setVisited(p => new Set([...p, s.node]));
-      if (s.type === "relax") setRelaxing(s.edge);
-      if (s.type === "prune") { setRelaxing(s.edge); setPruned(p => new Set([...p, `${s.edge.f}-${s.edge.t}`])); }
-      if (s.type === "done") { setPathE(s.path); setDone(true); setRelaxing(null); }
-      i++;
+      applyStep(s);
+      idxRef.current = i + 1;
     }, speed);
-  }, [tau, speed, reset]);
+    return () => { if (tmr.current) clearInterval(tmr.current); };
+  }, [running, speed, applyStep]);
 
   useEffect(() => () => { if (tmr.current) clearInterval(tmr.current); }, []);
 
   const isOnPath = (f, t) => pathE.some(e => e.f === f && e.t === t);
   const isPruned = (f, t) => pruned.has(`${f}-${t}`);
+  const activeEdges = useMemo(() => EDGES.filter(e => !pruned.has(`${e.f}-${e.t}`)), [pruned]);
 
   /* ── FIX: select dropdown style ── */
   const selectStyle = {
@@ -222,15 +273,32 @@ function JourneyGraph({ tau, onTauChange }) {
     <div>
       {/* Controls */}
       <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
-        <button onClick={run} disabled={running} style={{
+        <button onClick={run} disabled={running || stepping} style={{
           padding: "9px 24px", borderRadius: 12, border: "none", fontSize: 12, fontWeight: 700,
-          cursor: running ? "default" : "pointer", fontFamily: F,
-          background: running ? "rgba(255,255,255,0.05)" : C.gH, color: C.wh,
-          boxShadow: running ? "none" : "0 4px 20px rgba(124,58,237,0.3)",
-          transition: "all .3s", opacity: running ? .6 : 1
+          cursor: (running || stepping) ? "default" : "pointer", fontFamily: F,
+          background: (running || stepping) ? "rgba(255,255,255,0.05)" : C.gH, color: C.wh,
+          boxShadow: (running || stepping) ? "none" : "0 4px 20px rgba(124,58,237,0.3)",
+          transition: "all .3s", opacity: (running || stepping) ? .6 : 1
         }}>
           {running ? `Step ${stepIdx + 1}...` : done ? "Run again" : "Run Dijkstra"}
         </button>
+        {!running && !done && !stepping && (
+          <button onClick={startStepping} style={{
+            padding: "9px 18px", borderRadius: 12, border: `1px solid rgba(124,58,237,0.3)`,
+            background: "rgba(124,58,237,0.08)", color: C.v2, fontSize: 12, fontWeight: 600,
+            cursor: "pointer", fontFamily: F
+          }}>Step mode</button>
+        )}
+        {stepping && (
+          <button onClick={advanceStep} style={{
+            padding: "9px 24px", borderRadius: 12, border: "none", fontSize: 12, fontWeight: 700,
+            cursor: "pointer", fontFamily: F,
+            background: C.gA, color: C.wh,
+            boxShadow: "0 4px 16px rgba(217,119,6,0.3)"
+          }}>
+            Next step {stepIdx >= 0 ? `(${stepIdx + 1}/${stepsRef.current.length})` : ""}
+          </button>
+        )}
         <button onClick={reset} style={{
           padding: "9px 18px", borderRadius: 12, border: `1px solid ${C.bdr2}`,
           background: "rgba(255,255,255,0.03)", color: C.mu, fontSize: 12, fontWeight: 600,
@@ -276,7 +344,7 @@ function JourneyGraph({ tau, onTauChange }) {
           ))}
         </svg>
 
-        <Particles edges={EDGES.filter(e => !isPruned(e.f, e.t))} pathEdges={pathE} W={W} H={H} />
+        <Particles edges={activeEdges} pathEdges={pathE} W={W} H={H} />
 
         <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", display: "block", position: "relative", zIndex: 2 }}>
           <defs>
@@ -367,11 +435,11 @@ function JourneyGraph({ tau, onTauChange }) {
         </svg>
 
         {/* Live log - bottom left, inside graph but small */}
-        {running && stepLog.length > 0 && (
+        {(running || stepping) && stepLog.length > 0 && (
           <div style={{ position: "absolute", bottom: 14, left: 14, background: "rgba(5,8,15,0.9)", borderRadius: 14, padding: "10px 14px", backdropFilter: "blur(12px)", maxWidth: 300, border: `1px solid ${C.bdr}`, maxHeight: 120, overflow: "hidden" }}>
             <div style={{ fontSize: 9, color: C.dm, marginBottom: 4, textTransform: "uppercase", letterSpacing: ".1em" }}>Execution log</div>
-            {stepLog.slice(-5).map((s, i) => (
-              <div key={i} style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", marginBottom: 1, opacity: .45 + i * .11,
+            {stepLog.filter(s => s.type !== "done").slice(-5).map((s, i) => (
+              <div key={i} style={{ fontSize: 10, fontFamily: FM, marginBottom: 1, opacity: .45 + i * .11,
                 color: s.type === "visit" ? C.c2 : s.type === "relax" ? (s.better ? C.e2 : C.dm) : s.type === "prune" ? C.r2 : C.a2 }}>
                 {s.type === "visit" && `\u25B8 Visit ${s.node} (cost=${s.cost.toFixed(2)})`}
                 {s.type === "relax" && `  ${s.better ? "\u2713" : "\u00B7"} Relax ${s.edge.f}\u2192${s.edge.t} (${s.cost.toFixed(2)})`}
@@ -386,7 +454,7 @@ function JourneyGraph({ tau, onTauChange }) {
       {done && (
         <Glass style={{ padding: "16px 24px", marginTop: 12 }} glow={pathE.length ? C.e1 : C.r1}>
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-            <div style={{ fontSize: 15, fontWeight: 700, background: pathE.length ? C.gE : C.gR, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, fontFamily: FH, background: pathE.length ? C.gE : C.gR, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               {pathE.length ? "Optimal path found" : "No path found"}
             </div>
             {pathE.length > 0 && (
@@ -400,8 +468,21 @@ function JourneyGraph({ tau, onTauChange }) {
                     </span>
                   ))}
                 </div>
-                <div style={{ fontSize: 11, color: C.dm }}>P = {pathE.reduce((acc, e) => acc * e.p, 1).toExponential(3)} · Cost = {pathE.reduce((acc, e) => acc + (-Math.log(e.p)), 0).toFixed(2)}</div>
-                <div style={{ fontSize: 13, fontWeight: 700, background: C.gE, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Gap: 0.00%</div>
+                <div style={{ fontSize: 11, color: C.dm }}>P = {pathE.reduce((acc, e) => acc * e.p, 1).toExponential(3)} {"\u00b7"} Cost = {pathE.reduce((acc, e) => acc + (-Math.log(e.p)), 0).toFixed(4)}</div>
+                {tau > 0 && baselineCost != null && prunedCost != null ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", background: "rgba(5,150,105,0.06)", border: "1px solid rgba(5,150,105,0.12)", borderRadius: 10 }}>
+                    <div style={{ fontSize: 11, color: C.dm, lineHeight: 1.5 }}>
+                      <span style={{ color: C.mu, fontWeight: 600 }}>Baseline</span> C* = <span style={{ fontFamily: FM, color: C.e2 }}>{baselineCost.toFixed(4)}</span>
+                      <span style={{ margin: "0 6px", color: C.dm }}>{"\u2261"}</span>
+                      <span style={{ color: C.mu, fontWeight: 600 }}>Pruned</span> C* = <span style={{ fontFamily: FM, color: C.e2 }}>{prunedCost.toFixed(4)}</span>
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, background: C.gE, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", marginLeft: 8 }}>
+                      {"\u0394"} = {baselineCost > 0 ? (Math.abs(baselineCost - prunedCost) / baselineCost * 100).toFixed(4) : "0.0000"}%
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 13, fontWeight: 700, background: C.gE, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Gap: 0.00%</div>
+                )}
               </React.Fragment>
             )}
             {!pathE.length && <div style={{ fontSize: 12, color: C.dm }}>{"\u03C4"} = {tau} pruned the optimal path entirely.</div>}
@@ -430,7 +511,7 @@ function TauExplorer() {
   const vis = useStagger(4, 120);
   return (
     <Glass style={{ padding: "28px 32px" }} glow={C.v1} animate delay={0}>
-      <div style={{ fontSize: 17, fontWeight: 700, color: C.tx, marginBottom: 4 }}>Explore the {"\u03C4"} trade-off</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color: C.tx, marginBottom: 4, fontFamily: FH }}>Explore the {"\u03C4"} trade-off</div>
       <div style={{ fontSize: 12, color: C.dm, marginBottom: 20 }}>Data from 2,160 synthetic experiment runs</div>
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24 }}>
         <span style={{ fontSize: 13, color: C.mu, fontWeight: 600 }}>{"\u03C4"}</span>
@@ -465,7 +546,7 @@ function SpeedupBars() {
   const data = [{ tau: "0.001", all: 3.3, found: 1.6 }, { tau: "0.01", all: 24.7, found: 4.4 }, { tau: "0.05", all: 123.6, found: 5.7 }, { tau: "0.1", all: 242.6, found: 6.4 }, { tau: "0.5", all: 738, found: 7.2 }];
   return (
     <Glass style={{ padding: "28px 32px" }} glow={C.a1} animate delay={0}>
-      <div style={{ fontSize: 17, fontWeight: 700, color: C.tx, marginBottom: 4 }}>Two speedup regimes</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color: C.tx, marginBottom: 4, fontFamily: FH }}>Two speedup regimes</div>
       <div style={{ fontSize: 12, color: C.dm, marginBottom: 8 }}>All runs include fast failures. Found-only is the honest comparison.</div>
       <div style={{ display: "flex", gap: 20, marginBottom: 20 }}>
         {[{ g: C.gA, l: "All runs" }, { g: C.gC, l: "Found only" }].map((x, i) => (
@@ -501,7 +582,7 @@ function Results() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         {/* Memory */}
         <Glass style={{ padding: "28px 32px" }} glow={C.a1} animate delay={100}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: C.tx, marginBottom: 4 }}>Memory: O(V) vs O(1)</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: C.tx, marginBottom: 4, fontFamily: FH }}>Memory: O(V) vs O(1)</div>
           <div style={{ fontSize: 12, color: C.dm, marginBottom: 18 }}>Peak memory (KB) {"\u2014"} pruned {"\u03C4"}=0.01</div>
           {MD.map((r, i) => (
             <div key={i} style={{ marginBottom: 16 }}>
@@ -523,7 +604,7 @@ function Results() {
         </Glass>
         {/* Adaptive */}
         <Glass style={{ padding: "28px 32px" }} glow={C.e1} animate delay={200}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: C.tx, marginBottom: 4 }}>Adaptive {"\u03C4"} breakthrough</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: C.tx, marginBottom: 4, fontFamily: FH }}>Adaptive {"\u03C4"} breakthrough</div>
           <div style={{ fontSize: 12, color: C.dm, marginBottom: 18 }}>Path-found rate: fixed vs adaptive</div>
           {AD.map((d, i) => (
             <div key={i} style={{ marginBottom: 16 }}>
@@ -551,18 +632,18 @@ function Results() {
       </div>
       {/* Hypothesis */}
       <Glass style={{ padding: "28px 32px" }} glow={C.v1} animate delay={300}>
-        <div style={{ fontSize: 17, fontWeight: 700, color: C.tx, marginBottom: 16 }}>Hypothesis: supported</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: C.tx, marginBottom: 16, fontFamily: FH }}>Hypothesis: supported</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
           {[{ s: "179/180", d: "significant speedup (Wilcoxon p < 0.05)", g: C.gV },
             { s: "0/706", d: "paths with non-zero gap", g: C.gE },
             { s: "18,882\u00D7", d: "max speedup (incl. fast failures)", g: C.gA },
-            { s: "44", d: "tests across 13 classes", g: C.gC }].map((f, i) => (
+            { s: "47", d: "tests across 14 classes", g: C.gC }].map((f, i) => (
             <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "16px 12px",
               background: "rgba(255,255,255,0.02)", borderRadius: 16, textAlign: "center", border: `1px solid ${C.bdr}`,
               transition: "transform .2s", cursor: "default" }}
               onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
               onMouseLeave={e => e.currentTarget.style.transform = ""}>
-              <div style={{ fontSize: 24, fontWeight: 800, fontVariantNumeric: "tabular-nums", background: f.g, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{f.s}</div>
+              <div style={{ fontSize: 26, fontWeight: 800, fontVariantNumeric: "tabular-nums", fontFamily: FH, background: f.g, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{f.s}</div>
               <div style={{ fontSize: 10, color: C.dm, marginTop: 6, lineHeight: 1.4 }}>{f.d}</div>
             </div>
           ))}
@@ -589,7 +670,7 @@ function AN({ value, suffix = "", gradient, size = 28 }) {
     r.current = requestAnimationFrame(t);
     return () => cancelAnimationFrame(r.current);
   }, [value]);
-  return <span style={{ fontSize: size, fontWeight: 800, fontVariantNumeric: "tabular-nums", letterSpacing: "-.02em", background: gradient, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{d}{suffix}</span>;
+  return <span style={{ fontSize: size, fontWeight: 800, fontVariantNumeric: "tabular-nums", letterSpacing: "-.02em", background: gradient, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", fontFamily: FH }}>{d}{suffix}</span>;
 }
 
 /* ═══ APP ═════════════════════════════════════════════ */
@@ -607,13 +688,21 @@ export default function App() {
   ];
 
   return (
-    <div style={{ fontFamily: F, background: C.bg, color: C.tx, minHeight: "100vh", padding: "24px 16px 60px", opacity: loaded ? 1 : 0, transition: "opacity .6s ease", position: "relative" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      <style>{`*{box-sizing:border-box}input[type=range]{height:5px}
+    <div style={{ fontFamily: F, background: C.bg, color: C.tx, minHeight: "100vh", padding: "24px 16px 60px", opacity: loaded ? 1 : 0, transition: "opacity .6s ease", position: "relative", WebkitFontSmoothing: "antialiased", MozOsxFontSmoothing: "grayscale" }}>
+      <style>{`*{box-sizing:border-box}
+        html{scroll-behavior:smooth}
+        input[type=range]{height:5px;cursor:pointer}
+        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#7c3aed;border:2px solid rgba(255,255,255,0.15);box-shadow:0 0 8px rgba(124,58,237,0.4)}
         select{color-scheme:dark}
         select:focus{outline:1px solid ${C.v1}}
         ::selection{background:rgba(124,58,237,0.3)}
-        option{background:#0d1224;color:#c8d0e8}`}</style>
+        option{background:#0d1224;color:#c8d0e8}
+        ::-webkit-scrollbar{width:6px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
+        ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.15)}
+        button{transition:all .25s ease !important}
+        button:hover{filter:brightness(1.1)}`}</style>
 
       {/* Background aurora */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
@@ -624,10 +713,17 @@ export default function App() {
       <div style={{ maxWidth: 940, margin: "0 auto", position: "relative", zIndex: 1 }}>
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ fontSize: 10, letterSpacing: ".2em", color: C.dm, textTransform: "uppercase", marginBottom: 8 }}>AT70.02 Algorithm Design & Analysis</div>
-          <h1 style={{ fontSize: 30, fontWeight: 800, margin: "0 0 8px", letterSpacing: "-.02em", background: C.gH, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          <div style={{ fontSize: 11, letterSpacing: ".25em", color: C.dm, textTransform: "uppercase", marginBottom: 10, fontFamily: F, fontWeight: 500 }}>The Two Y's</div>
+          <h1 style={{ fontSize: 32, fontWeight: 800, margin: "0 0 10px", letterSpacing: "-.025em", background: C.gH, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", fontFamily: FH, lineHeight: 1.2 }}>
             Customer Journey Path Optimization</h1>
-          <div style={{ fontSize: 14, color: C.mu }}>The Two Y's {"\u2014"} Yolanda Lim & Yosakorn Sirisoot {"\u2014"} AIT 2026</div>
+          <div style={{ display: "inline-grid", gridTemplateColumns: "1fr auto 1fr", columnGap: 8, rowGap: 2, marginTop: 4, alignItems: "center" }}>
+            <span style={{ fontSize: 14, color: C.mu, fontWeight: 500, textAlign: "right" }}>Aye Khin Khin Hpone</span>
+            <span style={{ fontSize: 14, color: C.dm }}>|</span>
+            <span style={{ fontSize: 14, color: C.mu, fontWeight: 500, textAlign: "left" }}>Yosakorn Sirisoot</span>
+            <span style={{ fontSize: 12, color: C.dm, textAlign: "right" }}>(Yolanda Lim) 125970</span>
+            <span style={{ fontSize: 12, color: C.dm }}>|</span>
+            <span style={{ fontSize: 12, color: C.dm, textAlign: "left" }}>126512</span>
+          </div>
         </div>
 
         {/* KPIs */}
@@ -645,9 +741,9 @@ export default function App() {
               transition: "opacity .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1)"
             }}>
               <div style={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, background: `radial-gradient(circle,${k.gl}10,transparent 70%)`, pointerEvents: "none" }} />
-              <div style={{ fontSize: 10, color: C.dm, textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 8 }}>{k.l}</div>
+              <div style={{ fontSize: 10, color: C.dm, textTransform: "uppercase", letterSpacing: ".12em", marginBottom: 8, fontWeight: 500 }}>{k.l}</div>
               <AN value={k.v} suffix={k.s} gradient={k.g} />
-              <div style={{ fontSize: 11, color: C.dm, marginTop: 6 }}>{k.d}</div>
+              <div style={{ fontSize: 11, color: C.dm, marginTop: 6, lineHeight: 1.4 }}>{k.d}</div>
             </div>
           ))}
         </div>
@@ -659,7 +755,7 @@ export default function App() {
               flex: 1, padding: "12px 16px", borderRadius: 12, border: "none",
               background: tab === t.id ? "rgba(124,58,237,0.1)" : "transparent",
               color: tab === t.id ? C.tx : C.dm, fontSize: 13, fontWeight: 600,
-              cursor: "pointer", fontFamily: F, transition: "all .25s",
+              cursor: "pointer", fontFamily: FH, transition: "all .25s",
               boxShadow: tab === t.id ? "inset 0 0 0 1px rgba(124,58,237,0.2)" : "none"
             }}>
               <span style={{ marginRight: 6, opacity: .6 }}>{t.icon}</span>{t.label}
@@ -683,7 +779,7 @@ export default function App() {
               ].map((m, i) => (
                 <Glass key={i} style={{ padding: "16px 20px" }} animate delay={i * 80}>
                   <div style={{ fontSize: 9, color: C.dm, textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 4 }}>{m.t}</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, background: m.g, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{m.v}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, fontFamily: FH, background: m.g, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{m.v}</div>
                   <div style={{ fontSize: 11, color: C.dm, marginTop: 6, lineHeight: 1.5, whiteSpace: "pre-line" }}>{m.d}</div>
                 </Glass>
               ))}
@@ -693,8 +789,8 @@ export default function App() {
         {tab === "explore" && <TauExplorer />}
         {tab === "analysis" && <Results />}
 
-        <div style={{ textAlign: "center", marginTop: 40, fontSize: 11, color: C.dm }}>
-          The Two Y's {"\u00B7"} Aye Khin Khin Hpone (Yolanda) {"\u00B7"} Yosakorn Sirisoot {"\u00B7"} Asian Institute of Technology 2026
+        <div style={{ textAlign: "center", marginTop: 48, paddingTop: 20, borderTop: `1px solid ${C.bdr}`, fontSize: 11, color: C.dm, letterSpacing: ".03em" }}>
+          Aye Khin Khin Hpone (Yolanda Lim) {"·"} The Two Y's {"·"} Yosakorn Sirisoot
         </div>
       </div>
     </div>

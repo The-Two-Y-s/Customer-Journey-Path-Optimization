@@ -1,34 +1,43 @@
-\chapter*{APPENDIX A: SOURCE CODE AVAILABILITY}
-\addcontentsline{toc}{chapter}{APPENDIX A: SOURCE CODE AVAILABILITY}
+\chapter*{APPENDIX A: SOURCE CODE AND DASHBOARD}
+\addcontentsline{toc}{chapter}{APPENDIX A: SOURCE CODE AND DASHBOARD}
 
-The implementation of the \textit{Customer Journey Path Optimization} framework was developed in \textbf{Python~3.13}. The complete source code is publicly available at:
+\noindent\begin{sloppypar}The complete source code for the \textit{Customer Journey Path Optimization} framework (Python~3.12) is publicly available at:\end{sloppypar}
 
 \smallskip
-\centerline{\textbf{\url{https://github.com/The-Two-Y-s/Customer-Journey-Path-Optimization}}}
+\noindent\centerline{\textbf{\url{https://github.com/The-Two-Y-s/Customer-Journey-Path-Optimization}}}
+
 \smallskip
+\noindent\textbf{Repository structure.}
+The codebase is organised into four layers:
 
-\noindent The repository is organized into the following components:
+\begin{table}[h!]
+\centering\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Module} & \textbf{Description} \\
+\midrule
+\texttt{src/dijkstra.py}            & Baseline \& probability-pruned Dijkstra (Algorithms 1--2) \\
+\texttt{src/graph\_builder.py}       & Adjacency-list graph construction from transition data \\
+\texttt{src/preprocessing.py}       & Clickstream CSV ingestion \& MLE probability computation \\
+\texttt{src/critical\_tau.py}        & Adaptive fraction sweep for critical $\tau^*$ \\
+\texttt{data/graph\_generator.py}    & ER \& layered synthetic generators (deterministic \texttt{md5} seeds) \\
+\texttt{data/real\_data\_loader.py}   & RetailRocket \& RecSys~2015 YOOCHOOSE parsers \\
+\texttt{run\_experiments.py}         & Synthetic experiment runner (2,160 configurations) \\
+\texttt{run\_real\_experiments.py}    & Real-data experiment runner (840 configurations) \\
+\texttt{analysis.ipynb}             & Plotting \& Wilcoxon signed-rank statistical tests \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\begin{itemize}[nosep]
-  \item \textbf{Core algorithms} (\texttt{src/dijkstra.py}) --- baseline Dijkstra with lazy deletion and the probability-pruned variant; both return structured results containing optimal path, log-cost, path probability, and four performance metrics (nodes explored, edges examined, edges relaxed, max priority-queue size).
-  \item \textbf{Graph construction} (\texttt{src/graph\_builder.py}) --- builds a directed weighted graph from preprocessed transition data using an adjacency-list representation.
-  \item \textbf{Preprocessing} (\texttt{src/preprocessing.py}) --- ingests raw clickstream CSV data and computes maximum-likelihood transition probabilities.
-  \item \textbf{Critical-$\tau$ analysis} (\texttt{src/critical\_tau.py}) --- adaptive fraction-based sweep to identify the largest $\tau^*$ preserving path optimality.
-  \item \textbf{Synthetic generators} (\texttt{data/graph\_generator.py}) --- Erd\H{o}s--R\'{e}nyi and layered stage-based graphs with BFS connectivity guarantees and deterministic \texttt{hashlib.md5} seeding.
-  \item \textbf{Real-data loaders} (\texttt{data/real\_data\_loader.py}) --- parsers for RetailRocket (event-level and item-level) and RecSys~2015 YOOCHOOSE datasets.
-  \item \textbf{Experiment runners} (\texttt{run\_experiments.py}, \texttt{run\_real\_experiments.py}) --- execute the full parameter matrix (2,160 synthetic + 840 real-data configurations).
-  \item \textbf{Analysis notebook} (\texttt{analysis.ipynb}) --- generates all plots and statistical tests (Wilcoxon signed-rank) from experiment CSV files.
-\end{itemize}
+\noindent Both algorithms return structured results containing the optimal path, log-cost, path probability, and four performance counters (nodes explored, edges examined, edges relaxed, max priority-queue size). Installation instructions and reproduction commands are provided in the repository README.
 
-\noindent Installation instructions, reproduction commands, and usage details are documented in the repository README.
-
-\bigskip
-\section*{Live Interactive Dashboard}
-
-An interactive dashboard visualising the experimental results and algorithm behaviour is publicly accessible at:
+\medskip
+\noindent\textbf{Live interactive dashboard.}
+An interactive visualisation of the experimental results is deployed at:
 
 \smallskip
 \centerline{\textbf{\url{https://the-two-y-customer-journey-path-optimization.vercel.app/}}}
-\smallskip
 
-\noindent The dashboard is built with React~18 and Vite, deployed on Vercel, and auto-redeploys on every push to the \texttt{main} branch. It presents speedup vs.\ $\tau$ curves, optimality gap analysis, scalability plots, the critical~$\tau^*$ heatmap, and KPI summary cards derived from the experiment CSV files.
+\smallskip
+\noindent Built with React~18 and Vite, auto-deployed on Vercel, the dashboard presents speedup vs.\ $\tau$ curves, optimality gap analysis, scalability plots, the critical~$\tau^*$ heatmap, and KPI summary cards derived from the experiment CSV files.

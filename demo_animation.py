@@ -193,26 +193,21 @@ def animate(frame):
 
     draw_frame(axes[0], 'Baseline Dijkstra  (explores everything)',
                b_settled, baseline_path, set(), COLORS['settled_b'], show_path)
-    draw_frame(axes[1], f'Pruned Dijkstra  \u03c4 = 0.15  (stops early)',
+    draw_frame(axes[1], f'Pruned Dijkstra  \u03c4 = 0.1  (stops early)',
                p_settled, pruned_path, set(), COLORS['settled_p'], show_path)
 
     # Speedup label when done
     if show_path:
-        speedup = len(baseline_settled) / max(len(pruned_settled), 1)
-        gap = abs(pruned_cost - baseline_cost) / baseline_cost * 100 if baseline_cost > 0 else 0.0
-        fig.text(0.5, 0.02,
-                 f'Pruned explored {len(pruned_settled)} nodes vs {len(baseline_settled)} baseline  '
-                 f'\u2192  {speedup:.1f}\u00d7 fewer nodes  |  Optimality gap: {gap:.2f}%',
-                 ha='center', color=COLORS['path'], fontsize=13, fontweight='bold')
+        speedup = baseline_cost / pruned_cost if pruned_cost > 0 else 0
+        gap = abs(baseline_cost - pruned_cost) / baseline_cost * 100 if baseline_cost > 0 else 0
+        fig.suptitle(
+            f'Explored: {len(baseline_settled)} vs {len(pruned_settled)} nodes  |  '
+            f'Gap: {gap:.1f}%  |  Same optimal path: {baseline_path == pruned_path}',
+            color=COLORS['text'], fontsize=14, fontweight='bold', y=0.02)
 
-# Legend
-legend_elements = [
-    mpatches.Patch(color=COLORS['source'],   label='Source (Landing)'),
-    mpatches.Patch(color=COLORS['target'],   label='Target (Checkout)'),
-    mpatches.Patch(color=COLORS['settled_b'],label='Baseline: explored'),
-    mpatches.Patch(color=COLORS['settled_p'],label='Pruned: explored'),
-    mpatches.Patch(color=COLORS['path'],     label='Optimal path'),
-]
+anim = animation.FuncAnimation(fig, animate, frames=max_frames, interval=350, repeat=False)
+plt.tight_layout(rect=[0, 0.05, 1, 1])
+plt.show()
 fig.legend(handles=legend_elements, loc='upper center', ncol=5,
            facecolor='#2d3561', labelcolor='white', fontsize=11,
            framealpha=0.9, bbox_to_anchor=(0.5, 0.98))
