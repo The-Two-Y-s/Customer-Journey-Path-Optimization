@@ -199,9 +199,10 @@ def animate(frame):
     # Speedup label when done
     if show_path:
         speedup = len(baseline_settled) / max(len(pruned_settled), 1)
+        gap = abs(pruned_cost - baseline_cost) / baseline_cost * 100 if baseline_cost > 0 else 0.0
         fig.text(0.5, 0.02,
                  f'Pruned explored {len(pruned_settled)} nodes vs {len(baseline_settled)} baseline  '
-                 f'\u2192  {speedup:.1f}\u00d7 fewer nodes  |  Optimality gap: 0.00%',
+                 f'\u2192  {speedup:.1f}\u00d7 fewer nodes  |  Optimality gap: {gap:.2f}%',
                  ha='center', color=COLORS['path'], fontsize=13, fontweight='bold')
 
 # Legend

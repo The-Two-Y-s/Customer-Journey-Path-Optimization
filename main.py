@@ -35,7 +35,11 @@ def k_shortest_simple_paths(
     k: int,
     max_path_len: int | None = None,
 ) -> List[Tuple[float, List[str]]]:
-    """Best-first search for top-k simple paths by total weight."""
+    """Best-first search for top-k simple paths by total weight.
+
+    Warning: worst-case exponential time/space — enumerates all simple paths.
+    Use only with small k on sparse graphs.
+    """
     if k <= 0:
         return []
 
@@ -194,14 +198,16 @@ def main() -> None:
             print(f"  Execution time:    {(t1 - t0) * 1000:.3f} ms")
             print(f"  Peak memory:       {peak_mem / 1024:.2f} KB")
 
-            # Optimality gap
+            # Optimality gap (cost-based, matching report §3.8.2)
             if args.target in result_baseline.dist and args.target in result_pruned.dist:
-                prob_base = math.exp(-result_baseline.dist[args.target])
-                prob_pruned = math.exp(-result_pruned.dist[args.target])
-                if prob_base > 0:
-                    gap = abs(prob_base - prob_pruned) / prob_base * 100
+                cost_base = result_baseline.dist[args.target]
+                cost_pruned = result_pruned.dist[args.target]
+                if cost_base > 0:
+                    gap = abs(cost_pruned - cost_base) / cost_base * 100
                     print(f"\n  Optimality gap:    {gap:.4f}%")
     else:
+        if args.tau > 0:
+            print(f"Warning: --tau {args.tau} is ignored when --k > 1 (k-shortest paths does not support pruning).")
         paths = k_shortest_simple_paths(graph, args.source, args.target, args.k)
         if not paths:
             print(f"No path found from {args.source} to {args.target}.")

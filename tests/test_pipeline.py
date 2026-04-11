@@ -212,6 +212,17 @@ class TestEdgeCases(unittest.TestCase):
         self.assertEqual(result.dist["A"], 0)
         self.assertEqual(reconstruct_path(result.parent, "A", "A"), ["A"])
 
+    def test_source_equals_target_nontrivial_graph(self):
+        """start == goal on a multi-node graph should return cost 0 and path [start]."""
+        graph = {
+            "A": [("B", 1.0), ("C", 2.0)],
+            "B": [("C", 1.0)],
+            "C": [],
+        }
+        result = dijkstra(graph, "A", "A")
+        self.assertEqual(result.dist["A"], 0)
+        self.assertEqual(reconstruct_path(result.parent, "A", "A"), ["A"])
+
     def test_probability_one_edges(self):
         """Probability-1 edges have weight -log(1)=0, so total cost = 0."""
         graph = {
@@ -222,6 +233,29 @@ class TestEdgeCases(unittest.TestCase):
         result = dijkstra(graph, "A", "C")
         self.assertAlmostEqual(result.dist["C"], 0.0)
         self.assertAlmostEqual(math.exp(-result.dist["C"]), 1.0)
+
+
+class TestEdgesExaminedInvariant(unittest.TestCase):
+    """edges_examined >= edges_relaxed must always hold."""
+
+    def test_baseline_examined_geq_relaxed(self):
+        graph = generate_erdos_renyi_graph(n=300, avg_degree=5, seed=42)
+        result = dijkstra(graph, "s", "t")
+        self.assertGreaterEqual(
+            result.metrics.edges_examined,
+            result.metrics.edges_relaxed,
+            "Baseline: edges_examined must be >= edges_relaxed",
+        )
+
+    def test_pruned_examined_geq_relaxed(self):
+        graph = generate_erdos_renyi_graph(n=300, avg_degree=5, seed=42)
+        for tau in [0.001, 0.01, 0.05, 0.1, 0.5]:
+            result = dijkstra_pruned(graph, "s", "t", tau=tau)
+            self.assertGreaterEqual(
+                result.metrics.edges_examined,
+                result.metrics.edges_relaxed,
+                f"Pruned (tau={tau}): edges_examined must be >= edges_relaxed",
+            )
 
 
 class TestGraphGenerator(unittest.TestCase):

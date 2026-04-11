@@ -124,7 +124,9 @@ def find_critical_tau(
 
         if target in result_p.dist:
             p_prob = math.exp(-result_p.dist[target])
-            gap = abs(base_prob - p_prob) / base_prob * 100 if base_prob > 0 else 0.0
+            p_cost = result_p.dist[target]
+            base_cost = result_base.dist[target]
+            gap = abs(p_cost - base_cost) / base_cost * 100 if base_cost > 0 else 0.0
         else:
             p_prob = 0.0
             gap = 100.0

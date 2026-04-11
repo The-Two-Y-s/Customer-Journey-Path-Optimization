@@ -15,7 +15,7 @@ Table~\ref{table:speedup_tau} summarizes median speedups aggregated across all g
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}rrrrrrrr@{}}
 \toprule
-$\tau$ & Edge Spd & Exam.\ Spd & Wall Spd (all) & Wall Spd (found) & Base (ms) & Pruned (ms) & Found (\%) \\
+$\tau$ & \textbf{Edge Speedup} & \textbf{Exam.\ Speedup} & \textbf{Wall Speedup (all)} & \textbf{Wall Speedup (found)} & \textbf{Base (ms)} & \textbf{Pruned (ms)} & \textbf{Found (\%)} \\
 \midrule
 0.001 &   8.7$\times$ &   1.9$\times$ &   3.3$\times$ &  1.6$\times$ & 4.98 & 1.561 & 30.6 \\
 0.01  &  79.2$\times$ &  14.0$\times$ &  24.7$\times$ &  4.4$\times$ & 4.98 & 0.206 & 5.6  \\
@@ -25,11 +25,11 @@ $\tau$ & Edge Spd & Exam.\ Spd & Wall Spd (all) & Wall Spd (found) & Base (ms) &
 \bottomrule
 \end{tabular}
 }
-\caption[Speedup by pruning threshold $\tau$]{Median speedups by pruning threshold $\tau$. ``Wall Spd (all)'' includes rows where the pruned algorithm terminated without finding a path; ``Wall Spd (found)'' is restricted to configurations where a path was returned.}
+\caption[Speedup by pruning threshold $\tau$]{Median speedups by pruning threshold $\tau$. ``Wall Speedup (all)'' includes rows where the pruned algorithm terminated without finding a path; ``Wall Speedup (found)'' is restricted to configurations where a path was returned.}
 \label{table:speedup_tau}
 \end{table}
 
-All reported speedup values represent the median of per-configuration ratios (baseline time divided by pruned time), not the ratio of the per-column median times. Two wall-clock columns are provided: \emph{Wall Spd (all)} includes every configuration---including those where the pruned algorithm terminated without finding a path---while \emph{Wall Spd (found)} is restricted to configurations where a path was actually returned.
+All reported speedup values represent the median of per-configuration ratios (baseline time divided by pruned time), not the ratio of the per-column median times. Two wall-clock columns are provided: \emph{Wall Speedup (all)} includes every configuration---including those where the pruned algorithm terminated without finding a path---while \emph{Wall Speedup (found)} is restricted to configurations where a path was actually returned.
 
 The all-rows speedups scale monotonically with $\tau$, ranging from $3.3\times$ at $\tau=0.001$ to $738\times$ at $\tau=0.5$, but these figures are dominated by the ${\sim}90\%$ of rows in which the pruned algorithm quickly terminated without recovering a path. When restricted to path-found configurations only, the wall-clock speedup is markedly more modest: $1.6\times$ at $\tau=0.001$ rising to $7.2\times$ at $\tau=0.5$. This gap reflects a fundamental property of threshold-based pruning on Dijkstra's algorithm: when the optimal path survives the threshold, the pruned algorithm must still examine essentially the same set of edges because Dijkstra's priority-queue ordering already processes nodes in non-decreasing cost order. The modest found-only speedup arises from fewer heap-push operations on pruned edges, not from exploring a smaller portion of the graph.
 
@@ -115,7 +115,7 @@ Across all rows, Erd\H{o}s--R\'{e}nyi graphs show higher speedups (40.1$\times$ 
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
-\textbf{Distribution} & \textbf{Edge Speedup} & \textbf{Exam.\ Speedup} & \textbf{Wall Spd (all)} & \textbf{Wall Spd (found)} \\
+\textbf{Distribution} & \textbf{Edge Speedup} & \textbf{Exam.\ Speedup} & \textbf{Wall Speedup (all)} & \textbf{Wall Speedup (found)} \\
 \midrule
 Power-law ($\alpha=2$) & 73.0$\times$ & 13.9$\times$ & 25.1$\times$ & 3.7$\times$ \\
 Uniform                & 83.8$\times$ & 14.1$\times$ & 22.4$\times$ & 5.9$\times$ \\

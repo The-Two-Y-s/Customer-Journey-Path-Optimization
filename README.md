@@ -1,6 +1,6 @@
 # Customer Journey Path Optimization
 
-**AT70.02 · Algorithm Design and Analysis** — Asian Institute of Technology
+**AT70.24 · Algorithm Design and Analysis** — Asian Institute of Technology
 
 **Team The Two Y's**
 | Name | Student ID |
