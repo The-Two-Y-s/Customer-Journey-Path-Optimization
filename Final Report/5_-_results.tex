@@ -4,6 +4,10 @@ This chapter presents the results of the full experimental evaluation and evalua
 
 \section{Synthetic Experiment Results}\label{sec:synth_results}
 
+\begin{sloppypar}
+\noindent\textbf{Reading note.} Throughout this chapter, ``all-rows'' speedups include runs where the pruned algorithm found no path (fast infeasibility detection), while ``found-only'' speedups restrict to runs that returned a path. Section~\ref{sec:found_only_analysis} provides a detailed interpretation.
+\end{sloppypar}
+
 \subsection{Speedup vs.\ Pruning Threshold \texorpdfstring{$\tau$}{tau}}\label{sec:speedup_vs_tau}
 
 Table~\ref{table:speedup_tau} summarizes median speedups aggregated across all graph types, sizes, degrees, and distributions.
@@ -19,8 +23,8 @@ $\tau$ & \textbf{Edge Speedup} & \textbf{Exam.\ Speedup} & \textbf{Wall Speedup 
 \midrule
 0.001 &   8.7$\times$ &   1.9$\times$ &   3.3$\times$ &  1.6$\times$ & 4.98 & 1.561 & 30.6 \\
 0.01  &  79.2$\times$ &  14.0$\times$ &  24.7$\times$ &  4.4$\times$ & 4.98 & 0.206 & 5.6  \\
-0.05  & 368.4$\times$ &  70.4$\times$ & 110.7$\times$ &  5.7$\times$ & 4.98 & 0.040 & 4.7  \\
-0.1   & 810.5$\times$ & 136.9$\times$ & 226.1$\times$ &  6.4$\times$ & 4.98 & 0.020 & 4.4  \\
+0.05  & 368.4$\times$ &  70.4$\times$ & 123.6$\times$ &  5.7$\times$ & 4.98 & 0.040 & 4.7  \\
+0.1   & 810.5$\times$ & 136.9$\times$ & 242.6$\times$ &  6.4$\times$ & 4.98 & 0.020 & 4.4  \\
 0.5   & 1,986$\times$ & 711.1$\times$ & 738.2$\times$ &  7.2$\times$ & 4.98 & 0.006 & 4.2  \\
 \bottomrule
 \end{tabular}
@@ -113,6 +117,7 @@ Across all rows, Erd\H{o}s--R\'{e}nyi graphs show higher speedups (40.1$\times$ 
 \begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 \textbf{Distribution} & \textbf{Edge Speedup} & \textbf{Exam.\ Speedup} & \textbf{Wall Speedup (all)} & \textbf{Wall Speedup (found)} \\
@@ -120,7 +125,8 @@ Across all rows, Erd\H{o}s--R\'{e}nyi graphs show higher speedups (40.1$\times$ 
 Power-law ($\alpha=2$) & 73.0$\times$ & 13.9$\times$ & 25.1$\times$ & 3.7$\times$ \\
 Uniform                & 83.8$\times$ & 14.1$\times$ & 22.4$\times$ & 5.9$\times$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption[Speedup by probability distribution]{Median speedups at $\tau = 0.01$ by probability distribution. ``All'' includes termination-without-path rows; ``found'' is restricted to path-found rows.}
 \label{table:speedup_dist}
 \end{table}

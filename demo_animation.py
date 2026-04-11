@@ -80,7 +80,7 @@ def dijkstra_steps(graph, start, goal, tau=0.0):
     return settled, pruned_edges, path, dist.get(goal, math.inf)
 
 baseline_settled, _, baseline_path, baseline_cost = dijkstra_steps(graph, 'Landing', 'Checkout')
-pruned_settled,  pruned_pruned, pruned_path, pruned_cost  = dijkstra_steps(graph, 'Landing', 'Checkout', tau=0.15)
+pruned_settled,  pruned_pruned, pruned_path, pruned_cost  = dijkstra_steps(graph, 'Landing', 'Checkout', tau=0.1)
 
 # ── 3. Layout ────────────────────────────────────────────────────────
 pos = {

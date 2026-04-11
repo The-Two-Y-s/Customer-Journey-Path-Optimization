@@ -8,9 +8,10 @@ Runs both Baseline Dijkstra and Probability-Pruned Dijkstra across:
   - τ  ∈ {0, 0.001, 0.01, 0.05, 0.1, 0.5}
   - ≥10 runs per configuration (deterministic seeds via hashlib for reproducibility)
 
-Records all 7 evaluation metrics per run (§3.8.2):
-  execution_time_ms, peak_memory_bytes, nodes_explored, edges_relaxed,
-  max_pq_size, path_probability, optimality_gap_pct
+Records all 11 evaluation metrics per run (§3.8.2):
+  execution_time_ms, peak_memory_bytes, nodes_explored, edges_examined,
+  edges_relaxed, max_pq_size, path_cost, path_probability, path_length,
+  path_found, optimality_gap_pct
 
 Results are saved to a CSV file for analysis.
 

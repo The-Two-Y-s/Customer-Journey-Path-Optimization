@@ -61,6 +61,10 @@ To make this explicit, let $C^*$ be the baseline optimal cost and $T=-\log\tau$.
 In either case, the algorithm never returns a sub-optimal path: the gap $\Delta$ is exactly 0\% whenever a path is found.
 \end{proof}
 
+\begin{corollary}[Returned Path Is Optimal]
+If Algorithm~2 returns a path, that path is the globally optimal shortest path.
+\end{corollary}
+
 \section{Empirical Validation and Reachability}
 
 Because we prioritize optimality, the primary ``cost'' of pruning is the potential failure to find a path. We define \textbf{Reachability ($R$)} as the core empirical metric to evaluate this trade-off.

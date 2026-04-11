@@ -627,7 +627,7 @@ export default function App() {
           <div style={{ fontSize: 10, letterSpacing: ".2em", color: C.dm, textTransform: "uppercase", marginBottom: 8 }}>AT70.02 Algorithm Design & Analysis</div>
           <h1 style={{ fontSize: 30, fontWeight: 800, margin: "0 0 8px", letterSpacing: "-.02em", background: C.gH, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             Customer Journey Path Optimization</h1>
-          <div style={{ fontSize: 14, color: C.mu }}>The Two Y's {"\u2014"} Yolanda Lim & Yosakorn Sirisoot {"\u2014"} AIT 2025</div>
+          <div style={{ fontSize: 14, color: C.mu }}>The Two Y's {"\u2014"} Yolanda Lim & Yosakorn Sirisoot {"\u2014"} AIT 2026</div>
         </div>
 
         {/* KPIs */}
@@ -694,7 +694,7 @@ export default function App() {
         {tab === "analysis" && <Results />}
 
         <div style={{ textAlign: "center", marginTop: 40, fontSize: 11, color: C.dm }}>
-          The Two Y's {"\u00B7"} Aye Khin Khin Hpone (Yolanda) {"\u00B7"} Yosakorn Sirisoot {"\u00B7"} Asian Institute of Technology 2025
+          The Two Y's {"\u00B7"} Aye Khin Khin Hpone (Yolanda) {"\u00B7"} Yosakorn Sirisoot {"\u00B7"} Asian Institute of Technology 2026
         </div>
       </div>
     </div>

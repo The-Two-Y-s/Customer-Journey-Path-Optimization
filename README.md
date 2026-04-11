@@ -403,7 +403,7 @@ Plots are saved to `results/img/`.
 
 ## Results
 
-> **Simulation environment:** Python 3.13.3, Windows 11, AMD Ryzen 7 5800H, 16 GB RAM. Speedup numbers are environment-sensitive.
+> **Simulation environment:** Python 3.12.3, Windows 11, AMD Ryzen 7 5800H, 16 GB RAM. Speedup numbers are environment-sensitive.
 
 **Verdict: Hypothesis supported.** Across 1,800 pruned runs (synthetic) and 840 runs (real data — 300 fixed-τ + 540 adaptive-τ), every run that found a path returned the **exact same optimal path** as the baseline (0.00% optimality gap across all 706 found paths). **The real trade-off is path-found rate, not accuracy.**
 
@@ -413,8 +413,8 @@ Plots are saved to `results/img/`.
 |---|-------------------|-------------------------------|-----------------|------------------|
 | 0.001 | 3.3× | 53.3% | 30.6% | 0.00% |
 | 0.01 | 24.7× | 7.1% | 5.6% | 0.00% |
-| 0.05 | 110.7× | 1.4% | 4.7% | 0.00% |
-| 0.1 | 226.1× | 0.7% | 4.4% | 0.00% |
+| 0.05 | 123.6× | 1.4% | 4.7% | 0.00% |
+| 0.1 | 242.6× | 0.7% | 4.4% | 0.00% |
 | 0.5 | 738× | 0.1% | 4.2% | 0.00% |
 
 ### Real-Data Validation — Fixed τ
@@ -453,7 +453,7 @@ An **adaptive-τ regime** sets τ as a fraction (10%–110%) of each pair's base
 
 ## Testing
 
-44 unit tests across 13 test classes:
+47 unit tests across 14 test classes:
 
 ```bash
 python -m pytest tests/ -v
@@ -467,7 +467,8 @@ python -m pytest tests/ -v
 | `TestGraphAndDijkstra` | Graph building, baseline & pruned Dijkstra, missing-sink handling |
 | `TestConvergence` | Pruned → baseline as τ → 0 (costs, `edges_examined`, and `edges_relaxed`) |
 | `TestProbabilityConsistency` | exp(−C\*) = Π edge probs along path |
-| `TestEdgeCases` | Disconnected graph, single node, probability-1 edges |
+| `TestEdgeCases` | Disconnected graph, single node, start==goal on non-trivial graph, probability-1 edges |
+| `TestEdgesExaminedInvariant` | `edges_examined` ≥ `edges_relaxed` for baseline and pruned across multiple τ values |
 | `TestGraphGenerator` | ER size, connectivity, power-law support |
 | `TestLayeredGenerator` | Layered size, connectivity, stage labels, DAG mode |
 | `TestProbabilityNormalization` | Outgoing probs sum to 1 (both generators × both distributions) |
@@ -506,7 +507,7 @@ python -m pytest tests/ -v
 │   └── vite.config.js
 │
 ├── tests/
-│   └── test_pipeline.py              # 44 unit tests
+│   └── test_pipeline.py              # 47 unit tests
 │
 ├── results/
 │   ├── experiment_results.csv        # 2,160-row synthetic experiment output

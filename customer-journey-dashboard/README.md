@@ -1,6 +1,6 @@
 # Customer Journey Path Optimization — Dashboard
 
-**AT70.02 · Algorithm Design & Analysis — The Two Y's · AIT 2025**
+**AT70.02 · Algorithm Design & Analysis — The Two Y's · AIT 2026**
 
 Interactive visualization of Probability-Pruned Dijkstra on customer journey graphs.
 
