@@ -1,4 +1,13 @@
-# Customer Journey Path Optimization
+<div align="center">
+
+# 🛒 Customer Journey Path Optimization
+
+**Finding the most probable conversion path via log-transformed Dijkstra with probability pruning**
+
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://python.org)
+[![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev)
+[![Deployed on Vercel](https://img.shields.io/badge/Vercel-Live-000000?logo=vercel)](https://the-two-y-customer-journey-path-optimization.vercel.app/)
+[![Tests — 47 passed](https://img.shields.io/badge/Tests-47%20passed-brightgreen?logo=pytest&logoColor=white)](tests/test_pipeline.py)
 
 **AT70.24 · Algorithm Design and Analysis** — Asian Institute of Technology
 
@@ -7,48 +16,7 @@
 | Aye Khin Khin Hpone (Yolanda Lim) | st125970 |
 | Yosakorn Sirisoot | st126512 |
 
----
-
-🔗 **[Live Demo → the-two-y-customer-journey-path-optimization.vercel.app](https://the-two-y-customer-journey-path-optimization.vercel.app/)**
-
----
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Live Dashboard](#live-dashboard)
-  - [Video Demo](#video-demo)
-  - [Dashboard Screenshots](#dashboard-screenshots)
-  - [Dashboard Features](#dashboard-features)
-- [Quick Start](#quick-start)
-- [Algorithms](#algorithms)
-- [Pipeline](#pipeline)
-- [Data](#data)
-- [Experiments](#experiments)
-- [Results](#results)
-- [Testing](#testing)
-- [Project Structure](#project-structure)
-
----
-
-## Overview
-
-This project finds the **most probable customer conversion path** in clickstream data by modelling page transitions as a weighted directed graph and running shortest-path search.
-
-Transition probabilities are converted to non-negative edge weights via `w(u,v) = -log(p(u,v))`, so minimising total weight is equivalent to maximising path probability. A **Probability-Pruned Dijkstra** variant discards partial paths whose cumulative probability falls below a threshold τ, trading reachability for speed.
-
-### Hypothesis
-
-> **Probability-Pruned Dijkstra provides meaningful speedup over baseline Dijkstra while preserving path optimality at conservative τ values.**
-
-We expect:
-1. Pruning reduces the number of edges examined, yielding large speedups.
-2. When the pruned algorithm finds a path, it returns the **exact same optimal path** as the baseline (0% optimality gap).
-3. The only cost is reduced **reachability** — at aggressive τ values, the optimal path may be pruned entirely, so no path is returned.
-
-**Verdict:** Hypothesis supported — see [Results](#results).
-
-> **Markov assumption.** Transition probabilities are memoryless — `P(next | current)` is independent of earlier pages. This is a standard simplifying assumption in clickstream analysis.
+</div>
 
 ---
 
@@ -56,11 +24,15 @@ We expect:
 
 An interactive React 18 + Vite dashboard visualises the experiment results and algorithm behaviour in real time.
 
-🔗 **[Live Deployment → the-two-y-customer-journey-path-optimization.vercel.app](https://the-two-y-customer-journey-path-optimization.vercel.app/)**
+<div align="center">
+
+[![Open Live Demo](https://img.shields.io/badge/Open_Live_Demo-Visit_Dashboard-blue?style=for-the-badge)](https://the-two-y-customer-journey-path-optimization.vercel.app/)
+
+</div>
 
 ### Video Demo
 
-🎬 **[Watch on YouTube](https://youtu.be/H79DZrMIvFo)**
+**[Watch on YouTube](https://youtu.be/H79DZrMIvFo)**
 
 <p align="center">
   <img src="results/img/dashboard_demo.gif" alt="Dashboard Demo" width="100%" />
@@ -99,34 +71,67 @@ An interactive React 18 + Vite dashboard visualises the experiment results and a
 
 ### Dashboard Features
 
-The dashboard consists of three tabs:
-
 | Tab | Description |
 |-----|-------------|
 | **Live Pathfinding** | Animates probability-pruned Dijkstra on a sample journey graph. Supports continuous and step-by-step mode with a live execution log. Displays recovered path, cost, probability, and optimality gap Δ. |
 | **τ Explorer** | Interactive slider sweeps τ across five thresholds — instantly shows speedup, path-found rate, and edge-examination ratio. |
 | **Full Results** | Speedup bar charts (all-run vs found-only), memory scaling (O(\|V\|) vs O(1)), adaptive-τ breakthrough, and hypothesis validation (179/180 Wilcoxon, 0/706 gaps, 47 tests). |
 
-A persistent header shows four KPI cards: **Experiments** (3,000), **Optimality Gap** (0%), **Max Speedup** (18,882×), **Adaptive τ** (82–84%).
+> **KPI Cards:** Experiments (3,000) · Optimality Gap (0%) · Max Speedup (18,882×) · Adaptive τ (82–84%)
 
-### Run the dashboard locally
+<details>
+<summary><strong>Run locally / Build for deployment</strong></summary>
 
 ```bash
 cd customer-journey-dashboard
 npm install
-npm run dev
+npm run dev        # opens at http://localhost:5173
 ```
 
-Opens at `http://localhost:5173`.
-
-### Build for deployment
+**Build:**
 
 ```bash
-cd customer-journey-dashboard
-npm run build   # output goes to dist/
+npm run build      # output goes to dist/
 ```
 
 Deployed on **Vercel** — every push to `main` auto-redeploys.
+
+</details>
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Quick Start](#quick-start)
+- [Algorithms](#algorithms)
+- [Pipeline](#pipeline)
+- [Data](#data)
+- [Experiments](#experiments)
+- [Results](#results)
+- [Testing](#testing)
+- [Project Structure](#project-structure)
+
+---
+
+## Overview
+
+This project finds the **most probable customer conversion path** in clickstream data by modelling page transitions as a weighted directed graph and running shortest-path search.
+
+Transition probabilities are converted to non-negative edge weights via `w(u,v) = -log(p(u,v))`, so minimising total weight is equivalent to maximising path probability. A **Probability-Pruned Dijkstra** variant discards partial paths whose cumulative probability falls below a threshold τ, trading reachability for speed.
+
+### Hypothesis
+
+> **Probability-Pruned Dijkstra provides meaningful speedup over baseline Dijkstra while preserving path optimality at conservative τ values.**
+
+We expect:
+1. Pruning reduces the number of edges examined, yielding large speedups.
+2. When the pruned algorithm finds a path, it returns the **exact same optimal path** as the baseline (0% optimality gap).
+3. The only cost is reduced **reachability** — at aggressive τ values, the optimal path may be pruned entirely, so no path is returned.
+
+**Verdict:** Hypothesis supported — see [Results](#results).
+
+> **Markov assumption.** Transition probabilities are memoryless — `P(next | current)` is independent of earlier pages. This is a standard simplifying assumption in clickstream analysis.
 
 ---
 
