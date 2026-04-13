@@ -4,7 +4,7 @@
 
 The foundation of this work rests on Dijkstra's algorithm~\citep{dijkstra1959}, a cornerstone of graph theory for finding the shortest path in non-negative weighted graphs. By maintaining a priority queue to explore nodes in order of increasing accumulated cost, Dijkstra's algorithm guarantees the identification of the globally optimal path. When implemented with a binary min-heap, the algorithm achieves a time complexity of $O(|E|\log|V|)$~\citep{cormen2009}, which is utilized as our primary baseline.
 
-In the context of customer journeys, we apply a log-probability transformation $w(u,v) = -\log\,p(u,v)$. This exploits the monotone relationship between probability maximization and additive cost minimization---a standard technique in probabilistic graph optimization~\citep{manning1999nlp}. Adopting the foundations established by \citet{cormen2009}, our implementation utilizes adjacency lists for $O(|V|+|E|)$ space efficiency and hash maps for $O(1)$ distance lookups, ensuring scalability for the large-scale e-commerce graphs analyzed in Chapter~\ref{chap:results}.
+In the context of customer journeys, we apply a log-probability transformation $w(u,v) = -\log\,p(u,v)$. This exploits the monotone relationship between probability maximization and additive cost minimization---a standard technique in probabilistic graph optimization~\citep{manning1999nlp}. Adopting the foundations established by \citet{cormen2009}, our implementation utilizes adjacency lists for $O(|V|+|E|)$ space efficiency and hash maps for $O(1)$ cost lookups, ensuring scalability for the large-scale e-commerce graphs analyzed in Chapter~\ref{chap:results}.
 
 \section{Heuristic vs. Threshold-Based Approximation}
 

@@ -6,7 +6,7 @@ The \textit{Customer Journey Path Optimization} system models user interactions 
 
 Figure~\ref{fig:system_workflow} presents the end-to-end workflow. It is organized into five sequential components: (1) data generation and preprocessing, (2) graph construction, (3) baseline path optimization using Dijkstra's algorithm, (4) optimized path search using probability-pruned Dijkstra, and (5) experimental evaluation and comparative analysis.
 
-Two algorithms were implemented and compared throughout this chapter. Algorithm~1 (Baseline Dijkstra on Log-Weights) applies standard Dijkstra's algorithm to the log-probability-transformed graph, guaranteeing globally optimal paths in $O(|E|\log|V|)$ time. Algorithm~2 (Probability-Pruned Dijkstra) extends Algorithm~1 with a pruning threshold $\tau$ that discards partial paths whose cumulative probability falls below $\tau$, reducing expected runtime to $O(|E'|\log|V|)$, $|E'| \leq |E|$, with convergence to Algorithm~1 as $\tau \to 0$.
+Though baseline and pruned variants were initially compared, the final implementation adopts a parsimonious unified search engine. Algorithm~1 (Baseline mode) applies standard Dijkstra's algorithm to the log-probability-transformed graph ($O(|E|\log|V|)$), while Algorithm~2 (Pruned mode) introduces a pruning threshold $\tau$ that discards partial paths whose cumulative probability falls below $\tau$ ($O(|E'|\log|V|)$ with $|E'| \leq |E|$). Both behaviors are handled by a single function, `dijkstra_search`, ensuring identical heap-management logic across variants.
 
 % ----------------------------------------------------------------
 % FIGURE 1: System Workflow
@@ -259,24 +259,24 @@ The baseline applies Dijkstra's algorithm~\citep{dijkstra1959} to the log-transf
 \caption{Dijkstra on Transformed Probabilities~\citep{dijkstra1959,cormen2009}}\label{alg:baseline}
 \SetAlgoLined
 \KwIn{Graph $G=(V,E)$ with weights $w(u,v)=-\log p(u,v)$, source $s$, target $t$}
-\KwOut{Shortest-path distance $\mathit{dist}[t]$, probability $\exp(-\mathit{dist}[t])$, path $P^*$}
-Initialise $\mathit{dist}[v] \leftarrow \infty$ for all $v \in V$; $\mathit{parent}[v] \leftarrow \mathrm{NIL}$\;
-$\mathit{dist}[s] \leftarrow 0$; insert $(0, s)$ into min-heap $Q$\;
+\KwOut{Shortest-path distance $\mathit{best\_costs}[t]$, probability $\exp(-\mathit{best\_costs}[t])$, path $P^*$}
+Initialise $\mathit{best\_costs}[v] \leftarrow \infty$ for all $v \in V$; $\mathit{parent}[v] \leftarrow \mathrm{NIL}$\;
+$\mathit{best\_costs}[s] \leftarrow 0$; insert $(0, s)$ into min-heap $Q$\;
 \While{$Q$ is not empty}{
   $(d, u) \leftarrow \mathrm{Extract\text{-}Min}(Q)$\;
   \If{$u = t$}{\textbf{break}\tcp*{optimal path reached}}
-  \If{$d > \mathit{dist}[u]$}{\textbf{continue}\tcp*{stale entry (lazy deletion)}}
+  \If{$d > \mathit{best\_costs}[u]$}{\textbf{continue}\tcp*{stale entry (lazy deletion)}}
   \ForEach{edge $(u, v)$ with weight $w = -\log p(u,v)$}{
     $\mathit{edges\_examined} \leftarrow \mathit{edges\_examined} + 1$\;
     $\mathit{edges\_relaxed} \leftarrow \mathit{edges\_relaxed} + 1$\tcp*{no pruning, so every examined edge is relaxed}
-    $\mathit{new\_dist} \leftarrow \mathit{dist}[u] + w$\;
-    \If{$\mathit{new\_dist} < \mathit{dist}[v]$}{
-      $\mathit{dist}[v] \leftarrow \mathit{new\_dist}$; $\mathit{parent}[v] \leftarrow u$\;
+    $\mathit{new\_dist} \leftarrow \mathit{best\_costs}[u] + w$\;
+    \If{$\mathit{new\_dist} < \mathit{best\_costs}[v]$}{
+      $\mathit{best\_costs}[v] \leftarrow \mathit{new\_dist}$; $\mathit{parent}[v] \leftarrow u$\;
       Insert $(\mathit{new\_dist}, v)$ into $Q$\;
     }
   }
 }
-\Return $\mathit{dist}[t]$, $\exp(-\mathit{dist}[t])$, $\mathrm{ReconstructPath}(\mathit{parent}, s, t)$\;
+\Return $\mathit{best\_costs}[t]$, $\exp(-\mathit{best\_costs}[t])$, $\mathrm{ReconstructPath}(\mathit{parent}, s, t)$\;
 \end{algorithm}
 
 \noindent\textbf{Time complexity:} $O(|E| \log |V|)$ with a binary heap~\citep{cormen2009}.\\
@@ -300,11 +300,11 @@ Init   & ---          & $0$    & $\infty$ & $\infty$ & $\infty$ & $\infty$ \\
 4      & \textbf{CK}\checkmark & $0$ & $0.36$ & $0.87$ & $1.20$ & \textbf{1.09} \\
 \bottomrule
 \end{tabular}
-\caption[Dijkstra dist trace]{Dijkstra \texttt{dist[]} trace ($s=\text{LP}$, $t=\text{CK}$).}
+\caption[Dijkstra best\_costs trace]{Dijkstra \texttt{best\_costs[]} trace ($s=\text{LP}$, $t=\text{CK}$).}
 \label{table:dijkstra_trace}
 \end{table}
 
-The column headers are node abbreviations: LP\,=\,Landing Page (source~$s$), SR\,=\,Search Results, PP\,=\,Product Page, CT\,=\,Cart, and CK\,=\,Checkout (target~$t$). Each row shows the \texttt{dist[]} array after extracting the minimum-cost node listed in the \textbf{Extract} column. Values are log-costs $w=-\log\,p$; $\infty$ denotes an unreached node. At Step~1, extracting LP relaxes its neighbours SR ($-\log0.7\approx0.36$) and CT ($-\log0.3\approx1.20$). At Step~2, SR is extracted and reaches PP ($0.36+{-\log0.6}\approx0.87$). Step~3 extracts PP and discovers CK ($0.87+{-\log0.8}\approx1.09$). At Step~4, CK is extracted with cost $\mathbf{1.09}$; the \checkmark{} annotation marks the \emph{target-reached} early exit. The bold value $\mathbf{1.09}$ is the final optimal log-cost, corresponding to path probability $\Pi^*=\exp(-1.09)\approx0.336$.
+The column headers are node abbreviations: LP\,=\,Landing Page (source~$s$), SR\,=\,Search Results, PP\,=\,Product Page, CT\,=\,Cart, and CK\,=\,Checkout (target~$t$). Each row shows the \texttt{best\_costs[]} array after extracting the minimum-cost node listed in the \textbf{Extract} column. Values are log-costs $w=-\log\,p$; $\infty$ denotes an unreached node. At Step~1, extracting LP relaxes its neighbours SR ($-\log0.7\approx0.36$) and CT ($-\log0.3\approx1.20$). At Step~2, SR is extracted and reaches PP ($0.36+{-\log0.6}\approx0.87$). Step~3 extracts PP and discovers CK ($0.87+{-\log0.8}\approx1.09$). At Step~4, CK is extracted with cost $\mathbf{1.09}$; the \checkmark{} annotation marks the \emph{target-reached} early exit. The bold value $\mathbf{1.09}$ is the final optimal log-cost, corresponding to path probability $\Pi^*=\exp(-1.09)\approx0.336$.
 
 \subsection{Optimized Algorithm: Probability-Pruned Dijkstra}
 
@@ -318,26 +318,26 @@ The pruned algorithm extends the baseline by introducing a \textbf{probability p
 \caption{Probability-Pruned Dijkstra}\label{alg:pruned}
 \SetAlgoLined
 \KwIn{Graph $G=(V,E)$, source $s$, target $t$, pruning threshold $\tau \in (0,1]$}
-\KwOut{Shortest-path distance $\mathit{dist}[t]$, probability $\exp(-\mathit{dist}[t])$, path $P^*$}
-Initialise $\mathit{dist}[v] \leftarrow \infty$ for all $v \in V$; $\mathit{parent}[v] \leftarrow \mathrm{NIL}$\;
-$\mathit{dist}[s] \leftarrow 0$; insert $(0, s)$ into min-heap $Q$\;
+\KwOut{Shortest-path distance $\mathit{best\_costs}[t]$, probability $\exp(-\mathit{best\_costs}[t])$, path $P^*$}
+Initialise $\mathit{best\_costs}[v] \leftarrow \infty$ for all $v \in V$; $\mathit{parent}[v] \leftarrow \mathrm{NIL}$\;
+$\mathit{best\_costs}[s] \leftarrow 0$; insert $(0, s)$ into min-heap $Q$\;
 $T \leftarrow -\log(\tau)$\tcp*{pruning threshold in log-space}
 \While{$Q$ is not empty}{
   $(d, u) \leftarrow \mathrm{Extract\text{-}Min}(Q)$\;
   \If{$u = t$}{\textbf{break}}
-  \If{$d > \mathit{dist}[u]$}{\textbf{continue}\tcp*{stale entry}}
+  \If{$d > \mathit{best\_costs}[u]$}{\textbf{continue}\tcp*{stale entry}}
   \ForEach{edge $(u, v)$ with weight $w = -\log p(u,v)$}{
     $\mathit{edges\_examined} \leftarrow \mathit{edges\_examined} + 1$\;
-    $\mathit{new\_dist} \leftarrow \mathit{dist}[u] + w$\;
+    $\mathit{new\_dist} \leftarrow \mathit{best\_costs}[u] + w$\;
     \If{$\mathit{new\_dist} > T$}{\textbf{continue}\tcp*{PRUNE: below $\tau$}}
     $\mathit{edges\_relaxed} \leftarrow \mathit{edges\_relaxed} + 1$\;
-    \If{$\mathit{new\_dist} < \mathit{dist}[v]$}{
-      $\mathit{dist}[v] \leftarrow \mathit{new\_dist}$; $\mathit{parent}[v] \leftarrow u$\;
+    \If{$\mathit{new\_dist} < \mathit{best\_costs}[v]$}{
+      $\mathit{best\_costs}[v] \leftarrow \mathit{new\_dist}$; $\mathit{parent}[v] \leftarrow u$\;
       Insert $(\mathit{new\_dist}, v)$ into $Q$\;
     }
   }
 }
-\Return $\mathit{dist}[t]$, $\exp(-\mathit{dist}[t])$, $\mathrm{ReconstructPath}(\mathit{parent}, s, t)$\;
+\Return $\mathit{best\_costs}[t]$, $\exp(-\mathit{best\_costs}[t])$, $\mathrm{ReconstructPath}(\mathit{parent}, s, t)$\;
 \end{algorithm}
 
 \noindent\textbf{Worst-case time complexity:} $O(|E| \log |V|)$ (when $\tau \to 0$).\\
@@ -374,11 +374,11 @@ Relaxation speedup is defined as the baseline-to-pruned ratio for \texttt{edges\
 
 The following is the actual pruned Dijkstra implementation from the codebase:
 
-\begin{lstlisting}[language=Python, caption={Pruned Dijkstra implementation (\texttt{src/dijkstra.py})}, label=lst:pruned_impl]
-def dijkstra_pruned(graph: Graph, start: str, goal: str,
-                    tau: float = 0.01) -> DijkstraResult:
-    pq = [(0, start)]
-    dist = {start: 0}
+\begin{lstlisting}[language=Python, caption={Unified Dijkstra search engine (\texttt{src/dijkstra.py})}, label=lst:unified_impl]
+def dijkstra_search(graph: Graph, start: str, goal: str,
+                   tau: float = 0.0) -> DijkstraResult:
+    priority_queue = [(0.0, start)]
+    best_costs = {start: 0.0}
     parent = {}
     metrics = DijkstraMetrics()
     metrics.max_pq_size = 1
@@ -386,26 +386,29 @@ def dijkstra_pruned(graph: Graph, start: str, goal: str,
     # Pruning threshold in log-space; tau <= 0 means no pruning.
     T = -math.log(tau) if tau > 0 else math.inf
 
-    while pq:
-        cost, node = heapq.heappop(pq)
+    while priority_queue:
+        cost, node = heapq.heappop(priority_queue)
         if node == goal:
             metrics.nodes_explored += 1
             break
-        if cost > dist.get(node, math.inf):
-            continue  # stale entry
+        if cost > best_costs.get(node, math.inf):
+            continue  # stale entry (lazy deletion)
+        
         metrics.nodes_explored += 1
         for neighbor, weight in graph.get(node, []):
             new_cost = cost + weight
             metrics.edges_examined += 1
+            
             if new_cost > T:
-                continue  # PRUNE
+                continue  # PRUNE: path probability below tau
+            
             metrics.edges_relaxed += 1
-            if neighbor not in dist or new_cost < dist[neighbor]:
-                dist[neighbor] = new_cost
+            if neighbor not in best_costs or new_cost < best_costs[neighbor]:
+                best_costs[neighbor] = new_cost
                 parent[neighbor] = node
-                heapq.heappush(pq, (new_cost, neighbor))
-                if len(pq) > metrics.max_pq_size:
-                    metrics.max_pq_size = len(pq)
+                heapq.heappush(priority_queue, (new_cost, neighbor))
+                if len(priority_queue) > metrics.max_pq_size:
+                    metrics.max_pq_size = len(priority_queue)
     # ... path reconstruction and probability computation
 \end{lstlisting}
 
@@ -545,11 +548,11 @@ The directed graph is stored as a nested Python dictionary mapping each node $u$
 
 \subsection{Binary Min-Heap (Priority Queue)}
 
-Python's \texttt{heapq} module provides $O(\log|V|)$ extract-min and insert. Since \texttt{heapq} does not support decrease-key, \textbf{lazy insertion} is used: when a shorter path to a node is found, a new entry is pushed; stale entries are skipped when popped (the \texttt{if d > dist[u]: continue} check).
+Python's \texttt{heapq} module provides $O(\log|V|)$ extract-min and insert. Since \texttt{heapq} does not support decrease-key, \textbf{lazy insertion} is used: when a shorter path to a node is found, a new entry is pushed to the \texttt{priority\_queue}; stale entries are skipped when popped (the \texttt{if cost > best\_costs.get(node, ...)} check).
 
 \subsection{Hash Maps (Dictionaries)}
 
-\texttt{dist[v]} and \texttt{parent[v]} are Python dictionaries with $O(1)$ average-case access.
+\texttt{best\_costs[v]} and \texttt{parent[v]} are Python dictionaries with $O(1)$ average-case access.
 
 \section{Experimental Design}
 \label{sec:expdesign}

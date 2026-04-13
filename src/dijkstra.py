@@ -16,99 +16,81 @@ class DijkstraMetrics:
 
 @dataclass
 class DijkstraResult:
-    """Full result returned by both baseline and pruned Dijkstra."""
-    dist: dict = field(default_factory=dict)
-    parent: dict = field(default_factory=dict)
+    """Full result returned by the Dijkstra search engine."""
+    dist: dict[str, float] = field(default_factory=dict)
+    parent: dict[str, str] = field(default_factory=dict)
     metrics: DijkstraMetrics = field(default_factory=DijkstraMetrics)
 
 
 Graph = dict[str, list[tuple[str, float]]]
 
 
-def dijkstra(graph: Graph, start: str, goal: str) -> DijkstraResult:
-    """Baseline Dijkstra (Algorithm 1) with stale-entry skip and metrics."""
-    pq = [(0, start)]
-    dist = {start: 0}
-    parent = {}
-    metrics = DijkstraMetrics()
-    metrics.max_pq_size = 1
-
-    while pq:
-        cost, node = heapq.heappop(pq)
-
-        if node == goal:
-            metrics.nodes_explored += 1
-            break
-
-        # Stale entry check (lazy deletion)
-        if cost > dist.get(node, math.inf):
-            continue
-
-        metrics.nodes_explored += 1
-
-        for neighbor, weight in graph.get(node, []):
-            new_cost = cost + weight
-            metrics.edges_examined += 1
-            # In baseline, every examined edge is relaxed (no pruning),
-            # so edges_relaxed == edges_examined by design.
-            metrics.edges_relaxed += 1
-
-            if neighbor not in dist or new_cost < dist[neighbor]:
-                dist[neighbor] = new_cost
-                parent[neighbor] = node
-                heapq.heappush(pq, (new_cost, neighbor))
-                if len(pq) > metrics.max_pq_size:
-                    metrics.max_pq_size = len(pq)
-
-    return DijkstraResult(dist=dist, parent=parent, metrics=metrics)
-
-
-def dijkstra_pruned(graph: Graph, start: str, goal: str, tau: float = 0.01) -> DijkstraResult:
-    """Probability-Pruned Dijkstra (Algorithm 2).
-
-    Prunes partial paths whose cumulative probability falls below tau.
-    When tau <= 0 the algorithm is identical to the baseline.
+def dijkstra_search(graph: Graph, start: str, goal: str, tau: float = 0.0) -> DijkstraResult:
     """
-    pq = [(0, start)]
-    dist = {start: 0}
+    Unified Dijkstra Search Engine.
+    
+    This function finds the most probable path (shortest path in log-space).
+    It optionally supports Probability Pruning via the tau parameter.
+
+    Parameters
+    ----------
+    graph : Graph
+        Adjacency list mapping node labels to (neighbor, weight) tuples.
+    start, goal : str
+        Source and target node labels.
+    tau : float
+        Pruning threshold probability. If tau > 0, paths with probability 
+        less than tau are discarded. Default 0.0 (baseline).
+    """
+    # Priority queue stores (cumulative_cost, current_node)
+    priority_queue = [(0.0, start)]
+    best_costs = {start: 0.0}
     parent = {}
     metrics = DijkstraMetrics()
     metrics.max_pq_size = 1
 
     # Pruning threshold in log-space; tau <= 0 means no pruning.
-    T = -math.log(tau) if tau > 0 else math.inf
+    pruning_limit = -math.log(tau) if tau > 0 else math.inf
 
-    while pq:
-        cost, node = heapq.heappop(pq)
+    while priority_queue:
+        current_cost, current_node = heapq.heappop(priority_queue)
 
-        if node == goal:
+        if current_node == goal:
             metrics.nodes_explored += 1
             break
 
-        # Stale entry check
-        if cost > dist.get(node, math.inf):
+        # --- Lazy Deletion (Stale Entry Skip) ---
+        # Since Python's heapq doesn't support O(log n) decrease-key, we push 
+        # multiple entries for the same node. We only process the one with 
+        # the lowest cost and skip the rest.
+        if current_cost > best_costs.get(current_node, math.inf):
             continue
 
         metrics.nodes_explored += 1
 
-        for neighbor, weight in graph.get(node, []):
-            new_cost = cost + weight
+        for neighbor, weight in graph.get(current_node, []):
+            new_cost = current_cost + weight
             metrics.edges_examined += 1
 
-            # PRUNE: cumulative log-cost exceeds threshold
-            if new_cost > T:
+            # --- Probability Pruning ---
+            # If the cumulative log-cost exceeds our pruning limit (T = -log(tau)),
+            # we discard the edge immediately.
+            if new_cost > pruning_limit:
                 continue
 
             metrics.edges_relaxed += 1
 
-            if neighbor not in dist or new_cost < dist[neighbor]:
-                dist[neighbor] = new_cost
-                parent[neighbor] = node
-                heapq.heappush(pq, (new_cost, neighbor))
-                if len(pq) > metrics.max_pq_size:
-                    metrics.max_pq_size = len(pq)
+            # Standard relaxation check
+            if neighbor not in best_costs or new_cost < best_costs[neighbor]:
+                best_costs[neighbor] = new_cost
+                parent[neighbor] = current_node
+                heapq.heappush(priority_queue, (new_cost, neighbor))
+                
+                # Update peak memory metric
+                if len(priority_queue) > metrics.max_pq_size:
+                    metrics.max_pq_size = len(priority_queue)
 
-    return DijkstraResult(dist=dist, parent=parent, metrics=metrics)
+    return DijkstraResult(dist=best_costs, parent=parent, metrics=metrics)
 
 
 def reconstruct_path(parent: dict[str, str], start: str, goal: str) -> list[str]:

@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 .venv/
 .pytest_cache/
+/docs
 
 # Generated outputs
 data/enhanced_synthetic_journey.csv
