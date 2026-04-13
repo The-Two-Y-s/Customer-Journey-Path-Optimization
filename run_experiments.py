@@ -2,16 +2,10 @@
 
 Runs both Baseline Dijkstra and Probability-Pruned Dijkstra across:
   - graph_type ∈ {erdos_renyi, layered}
-  - |V| ∈ {1_000, 5_000, 10_000}  (pass --sizes 50000 for larger)
+  - |V| ∈ {1_000, 5_000, 10_000}
   - d̄  ∈ {2, 5, 10}
   - distribution ∈ {uniform, power_law}
   - τ  ∈ {0, 0.001, 0.01, 0.05, 0.1, 0.5}
-  - ≥10 runs per configuration (deterministic seeds via hashlib for reproducibility)
-
-Records all 11 evaluation metrics per run (§3.8.2):
-  execution_time_ms, peak_memory_bytes, nodes_explored, edges_examined,
-  edges_relaxed, max_pq_size, path_cost, path_probability, path_length,
-  path_found, optimality_gap_pct
 
 Results are saved to a CSV file for analysis.
 
@@ -34,11 +28,11 @@ import tracemalloc
 from pathlib import Path
 
 from data.graph_generator import generate_erdos_renyi_graph, generate_layered_graph
-from src.dijkstra import dijkstra, dijkstra_pruned, reconstruct_path
+from src.dijkstra import dijkstra_search, reconstruct_path
 
 
 # ---------------------------------------------------------------------------
-# Default experimental parameters (§3.8.3)
+# Default experimental parameters
 # ---------------------------------------------------------------------------
 DEFAULT_GRAPH_TYPES = ["erdos_renyi", "layered"]
 DEFAULT_SIZES = [1_000, 5_000, 10_000]
@@ -53,50 +47,24 @@ _GRAPH_GENERATORS = {
 }
 
 CSV_HEADER = [
-    "graph_type",
-    "graph_size",
-    "avg_degree",
-    "distribution",
-    "tau",
-    "run",
-    "seed",
-    "algorithm",
-    "execution_time_ms",
-    "peak_memory_bytes",
-    "nodes_explored",
-    "edges_examined",
-    "edges_relaxed",
-    "max_pq_size",
-    "path_cost",
-    "path_probability",
-    "path_length",
-    "path_found",
-    "optimality_gap_pct",
+    "graph_type", "graph_size", "avg_degree", "distribution", "tau",
+    "run", "seed", "algorithm", "execution_time_ms", "peak_memory_bytes",
+    "nodes_explored", "edges_examined", "edges_relaxed", "max_pq_size",
+    "path_cost", "path_probability", "path_length", "path_found", "optimality_gap_pct",
 ]
 
 
 def _run_single(graph, source, target, tau, baseline_cost):
-    """Run one algorithm invocation with timing and memory measured separately.
-
-    Timing is measured without tracemalloc overhead; memory is measured in a
-    second pass so that tracing instrumentation does not corrupt the stopwatch.
-
-    Returns a dict of metric values.
-    """
-    is_pruned = tau > 0
-    _algo = dijkstra_pruned if is_pruned else dijkstra
-    _kwargs = dict(graph=graph, start=source, goal=target)
-    if is_pruned:
-        _kwargs["tau"] = tau
-
-    # --- Pass 1: timing (no tracemalloc) ---
+    """Run one search invocation with timing and memory measured separately."""
+    
+    # --- Pass 1: timing (no tracemalloc overhead) ---
     t0 = time.perf_counter()
-    result = _algo(**_kwargs)
+    result = dijkstra_search(graph, source, target, tau=tau)
     t1 = time.perf_counter()
 
     # --- Pass 2: memory (separate run) ---
     tracemalloc.start()
-    _algo(**_kwargs)
+    dijkstra_search(graph, source, target, tau=tau)
     _, peak_mem = tracemalloc.get_traced_memory()
     tracemalloc.stop()
 
@@ -122,7 +90,7 @@ def _run_single(graph, source, target, tau, baseline_cost):
         gap = 0.0
 
     return {
-        "algorithm": "pruned" if is_pruned else "baseline",
+        "algorithm": "pruned" if tau > 0 else "baseline",
         "execution_time_ms": round(elapsed_ms, 4),
         "peak_memory_bytes": peak_mem,
         "nodes_explored": result.metrics.nodes_explored,
@@ -139,13 +107,8 @@ def _run_single(graph, source, target, tau, baseline_cost):
 
 
 def run_experiments(
-    graph_types=None,
-    sizes=None,
-    degrees=None,
-    distributions=None,
-    taus=None,
-    num_runs=DEFAULT_RUNS,
-    output_path="results/experiment_results.csv",
+    graph_types=None, sizes=None, degrees=None, distributions=None, taus=None,
+    num_runs=DEFAULT_RUNS, output_path="results/experiment_results.csv",
 ):
     graph_types = graph_types or DEFAULT_GRAPH_TYPES
     sizes = sizes or DEFAULT_SIZES
@@ -164,130 +127,58 @@ def run_experiments(
 
         for gtype in graph_types:
             gen_fn = _GRAPH_GENERATORS[gtype]
-
             for n in sizes:
                 for d in degrees:
                     for dist in distributions:
                         config_num += 1
-                        print(
-                            f"\n[{config_num}/{total_configs}] "
-                            f"{gtype}  |V|={n:,}  d̄={d}  dist={dist}"
-                        )
+                        print(f"[{config_num}/{total_configs}] {gtype} |V|={n} d̄={d} dist={dist}")
 
                         for run_idx in range(num_runs):
-                            seed = int(hashlib.md5(f"{run_idx}_{n}_{d}_{gtype}_{dist}".encode()).hexdigest(), 16) & 0xFFFFFFFF
+                            seed_str = f"{run_idx}_{n}_{d}_{gtype}_{dist}"
+                            seed = int(hashlib.md5(seed_str.encode()).hexdigest(), 16) & 0xFFFFFFFF
 
-                            graph = gen_fn(
-                                n=n,
-                                avg_degree=d,
-                                distribution=dist,
-                                source="s",
-                                target="t",
-                                seed=seed,
-                            )
+                            graph = gen_fn(n=n, avg_degree=d, distribution=dist, source="s", target="t", seed=seed)
 
                             # --- Baseline (tau=0) ---
                             baseline_metrics = _run_single(graph, "s", "t", tau=0, baseline_cost=None)
-                            baseline_raw_cost = baseline_metrics.pop("_raw_cost")
-
-                            row_base = {
-                                "graph_type": gtype,
-                                "graph_size": n,
-                                "avg_degree": d,
-                                "distribution": dist,
-                                "tau": 0,
-                                "run": run_idx + 1,
-                                "seed": seed,
-                                **baseline_metrics,
-                            }
-                            writer.writerow(row_base)
+                            base_raw_cost = baseline_metrics.pop("_raw_cost")
+                            writer.writerow({
+                                "graph_type": gtype, "graph_size": n, "avg_degree": d,
+                                "distribution": dist, "tau": 0, "run": run_idx + 1, "seed": seed,
+                                **baseline_metrics
+                            })
 
                             # --- Pruned variants (tau > 0) ---
                             for tau in taus:
-                                if tau == 0:
-                                    continue
-                                pruned_metrics = _run_single(
-                                    graph, "s", "t", tau=tau, baseline_cost=baseline_raw_cost
-                                )
+                                if tau == 0: continue
+                                pruned_metrics = _run_single(graph, "s", "t", tau=tau, baseline_cost=base_raw_cost)
                                 pruned_metrics.pop("_raw_cost", None)
-                                row_pruned = {
-                                    "graph_type": gtype,
-                                    "graph_size": n,
-                                    "avg_degree": d,
-                                    "distribution": dist,
-                                    "tau": tau,
-                                    "run": run_idx + 1,
-                                    "seed": seed,
-                                    **pruned_metrics,
-                                }
-                                writer.writerow(row_pruned)
+                                writer.writerow({
+                                    "graph_type": gtype, "graph_size": n, "avg_degree": d,
+                                    "distribution": dist, "tau": tau, "run": run_idx + 1, "seed": seed,
+                                    **pruned_metrics
+                                })
 
-                            # Progress indicator
-                            if (run_idx + 1) % 5 == 0 or run_idx == 0:
+                            if (run_idx + 1) % 5 == 0:
                                 print(f"  run {run_idx + 1}/{num_runs} done")
                                 f.flush()
 
     print(f"\nResults saved to {out.resolve()}")
 
 
-def parse_args():
-    p = argparse.ArgumentParser(description="Run the full experiment matrix.")
-    p.add_argument(
-        "--graph-types",
-        nargs="+",
-        default=None,
-        choices=["erdos_renyi", "layered"],
-        help="Graph types to test (default: erdos_renyi layered)",
-    )
-    p.add_argument(
-        "--sizes",
-        type=int,
-        nargs="+",
-        default=None,
-        help="Graph sizes |V| to test (default: 1000 5000 10000)",
-    )
-    p.add_argument(
-        "--degrees",
-        type=int,
-        nargs="+",
-        default=None,
-        help="Average out-degrees d̄ (default: 2 5 10)",
-    )
-    p.add_argument(
-        "--distributions",
-        nargs="+",
-        default=None,
-        help="Probability distributions (default: uniform power_law)",
-    )
-    p.add_argument(
-        "--taus",
-        type=float,
-        nargs="+",
-        default=None,
-        help="Pruning thresholds τ (default: 0 0.001 0.01 0.05 0.1 0.5)",
-    )
-    p.add_argument(
-        "--runs",
-        type=int,
-        default=DEFAULT_RUNS,
-        help=f"Repetitions per config (default: {DEFAULT_RUNS})",
-    )
-    p.add_argument(
-        "--output",
-        default="results/experiment_results.csv",
-        help="Output CSV path (default: results/experiment_results.csv)",
-    )
-    return p.parse_args()
-
-
 if __name__ == "__main__":
-    args = parse_args()
+    p = argparse.ArgumentParser()
+    p.add_argument("--graph-types", nargs="+", default=None)
+    p.add_argument("--sizes", type=int, nargs="+", default=None)
+    p.add_argument("--degrees", type=int, nargs="+", default=None)
+    p.add_argument("--distributions", nargs="+", default=None)
+    p.add_argument("--taus", type=float, nargs="+", default=None)
+    p.add_argument("--runs", type=int, default=DEFAULT_RUNS)
+    p.add_argument("--output", default="results/experiment_results.csv")
+    args = p.parse_args()
+    
     run_experiments(
-        graph_types=args.graph_types,
-        sizes=args.sizes,
-        degrees=args.degrees,
-        distributions=args.distributions,
-        taus=args.taus,
-        num_runs=args.runs,
-        output_path=args.output,
+        graph_types=args.graph_types, sizes=args.sizes, degrees=args.degrees,
+        distributions=args.distributions, taus=args.taus, num_runs=args.runs,
+        output_path=args.output
     )

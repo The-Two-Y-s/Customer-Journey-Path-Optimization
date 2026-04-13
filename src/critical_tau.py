@@ -15,7 +15,7 @@ import time
 from dataclasses import dataclass
 from typing import List
 
-from src.dijkstra import dijkstra, dijkstra_pruned, reconstruct_path
+from src.dijkstra import dijkstra_search, reconstruct_path
 
 
 @dataclass
@@ -93,7 +93,7 @@ def find_critical_tau(
     # which averages over 10 repetitions.  The speedup_wallclock values in
     # TauProfile should be treated as rough estimates on small graphs.
     t0 = time.perf_counter()
-    result_base = dijkstra(graph, source, target)
+    result_base = dijkstra_search(graph, source, target)
     base_time = time.perf_counter() - t0
     if target not in result_base.dist:
         return CriticalTauResult(
@@ -118,7 +118,7 @@ def find_critical_tau(
 
     for tau in taus_list:
         t0 = time.perf_counter()
-        result_p = dijkstra_pruned(graph, source, target, tau=tau)
+        result_p = dijkstra_search(graph, source, target, tau=tau)
         p_time = time.perf_counter() - t0
         p_nodes = result_p.metrics.nodes_explored
 

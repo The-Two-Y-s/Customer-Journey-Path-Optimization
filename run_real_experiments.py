@@ -21,10 +21,10 @@ import time
 from collections import deque
 from pathlib import Path
 
-from data.real_data_loader import load_retailrocket, load_recsys2015, dataset_summary
+from data.real_data_loader import load_retailrocket, load_recsys2015
 from src.preprocessing import extract_transitions, compute_transition_statistics
 from src.graph_builder import build_weighted_graph
-from src.dijkstra import dijkstra, dijkstra_pruned, reconstruct_path
+from src.dijkstra import dijkstra_search, reconstruct_path
 
 
 TAU_VALUES = [0.001, 0.01, 0.05, 0.1, 0.5]
@@ -35,7 +35,7 @@ NUM_PAIRS = 20  # default source-target pairs per dataset
 
 
 def _bfs_reachable(graph: dict, source: str, target: str) -> bool:
-    """Check reachability via BFS (much cheaper than full Dijkstra)."""
+    """Check reachability via BFS."""
     visited: set[str] = {source}
     queue = deque([source])
     while queue:
@@ -92,14 +92,8 @@ def _make_row(name, n_nodes, n_edges, src, tgt, tau, tau_mode,
     speedup = t_base / t_pr if t_pr > 0 else float("inf")
 
     return {
-        "dataset": name,
-        "nodes": n_nodes,
-        "edges": n_edges,
-        "source": src,
-        "target": tgt,
-        "tau": tau,
-        "tau_mode": tau_mode,
-        "baseline_cost": round(base_cost, 6),
+        "dataset": name, "nodes": n_nodes, "edges": n_edges, "source": src, "target": tgt,
+        "tau": tau, "tau_mode": tau_mode, "baseline_cost": round(base_cost, 6),
         "baseline_prob": f"{base_prob:.10f}",
         "baseline_nodes_explored": res_base.metrics.nodes_explored,
         "baseline_edges_examined": res_base.metrics.edges_examined,
@@ -111,8 +105,7 @@ def _make_row(name, n_nodes, n_edges, src, tgt, tau, tau_mode,
         "pruned_edges_examined": res_pr.metrics.edges_examined,
         "pruned_edges_relaxed": res_pr.metrics.edges_relaxed,
         "pruned_ms": round(t_pr, 3),
-        "path_found": found,
-        "speedup": round(speedup, 2),
+        "path_found": found, "speedup": round(speedup, 2),
         "optimality_gap_pct": round(gap, 6) if gap is not None else "",
     }
 
@@ -132,7 +125,7 @@ def run_dataset(name, df, output_rows, rng, n_pairs=NUM_PAIRS):
     for src, tgt in pairs:
         # Baseline
         t0 = time.perf_counter()
-        res_base = dijkstra(graph, src, tgt)
+        res_base = dijkstra_search(graph, src, tgt, tau=0.0)
         t_base = (time.perf_counter() - t0) * 1000
 
         base_cost = res_base.dist.get(tgt, float("inf"))
@@ -141,7 +134,7 @@ def run_dataset(name, df, output_rows, rng, n_pairs=NUM_PAIRS):
         # --- Fixed-tau sweep (comparability with synthetic experiments) ---
         for tau in TAU_VALUES:
             t0 = time.perf_counter()
-            res_pr = dijkstra_pruned(graph, src, tgt, tau=tau)
+            res_pr = dijkstra_search(graph, src, tgt, tau=tau)
             t_pr = (time.perf_counter() - t0) * 1000
             output_rows.append(_make_row(
                 name, n_nodes, n_edges, src, tgt, tau, "fixed",
@@ -151,7 +144,7 @@ def run_dataset(name, df, output_rows, rng, n_pairs=NUM_PAIRS):
         if base_prob > 0:
             for tau in _adaptive_taus(base_prob):
                 t0 = time.perf_counter()
-                res_pr = dijkstra_pruned(graph, src, tgt, tau=tau)
+                res_pr = dijkstra_search(graph, src, tgt, tau=tau)
                 t_pr = (time.perf_counter() - t0) * 1000
                 output_rows.append(_make_row(
                     name, n_nodes, n_edges, src, tgt, tau, "adaptive",
@@ -159,13 +152,10 @@ def run_dataset(name, df, output_rows, rng, n_pairs=NUM_PAIRS):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Real-data Dijkstra experiments")
-    parser.add_argument("--retailrocket-sessions", type=int, default=None,
-                        help="Cap RetailRocket sessions (default: all)")
-    parser.add_argument("--recsys-sessions", type=int, default=50000,
-                        help="Cap RecSys 2015 sessions (default: 50000)")
-    parser.add_argument("--pairs", type=int, default=20,
-                        help="Number of source-target pairs per dataset")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--retailrocket-sessions", type=int, default=None)
+    parser.add_argument("--recsys-sessions", type=int, default=50000)
+    parser.add_argument("--pairs", type=int, default=20)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -175,8 +165,7 @@ def main():
 
     # ----- RetailRocket (event-level funnel) -----
     print("Loading RetailRocket (event-level)...")
-    df_rr = load_retailrocket(granularity="event",
-                              max_sessions=args.retailrocket_sessions)
+    df_rr = load_retailrocket(granularity="event", max_sessions=args.retailrocket_sessions)
     run_dataset("RetailRocket-event", df_rr, rows, rng, n_pairs=n_pairs)
 
     # ----- RetailRocket (item-level — large graph) -----
@@ -185,8 +174,7 @@ def main():
     run_dataset("RetailRocket-item", df_rr_item, rows, rng, n_pairs=n_pairs)
 
     # ----- RecSys 2015 (item-level) -----
-    print("Loading RecSys 2015 (%s sessions)..." %
-          (f"{args.recsys_sessions:,}" if args.recsys_sessions else "all"))
+    print("Loading RecSys 2015...")
     df_rc = load_recsys2015(max_sessions=args.recsys_sessions)
     run_dataset("RecSys2015", df_rc, rows, rng, n_pairs=n_pairs)
 

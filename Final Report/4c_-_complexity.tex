@@ -11,7 +11,7 @@ Complexity was analyzed using the standard \textbf{operation-counting} approach~
 \subsection{Baseline Dijkstra}
 
 \begin{enumerate}
-    \item \textbf{Initialization:} Setting $\mathit{dist}[v]=\infty$ and $\mathit{parent}[v]=\texttt{NIL}$ for all $v$ costs $O(|V|)$.
+    \item \textbf{Initialization:} Setting $\mathit{best\_costs}[v]=\infty$ and $\mathit{parent}[v]=\texttt{NIL}$ for all $v$ costs $O(|V|)$.
     \item \textbf{Priority queue insertions:} Each node is inserted initially once and re-inserted (lazy) at most once per incoming edge. Total insertions $\leq |V|+|E|$. Each costs $O(\log|V|)$ (binary heap sift-up). Total: $O(|E|\log|V|)$.
     \item \textbf{Extract-min operations:} Total extractions $\leq |V|+|E|$, each $O(\log|V|)$. Total: $O(|E|\log|V|)$.
     \item \textbf{Edge relaxations:} For each settled node $u$, all $\deg(u)$ outgoing edges are examined. Across the full algorithm: $\sum_{u\in V}\deg(u)=|E|$. Each relaxation costs $O(1)$ (comparison + hash map lookup). Total: $O(|E|)$.
@@ -29,7 +29,7 @@ In sparse graphs where $|E|=O(|V|)$, this simplifies to $O(|V|\log|V|)$.
 
 \begin{enumerate}
     \item \textbf{Worst case ($\tau=0$):} Identical to the baseline: $O(|E|\log|V|)$.
-    \item \textbf{Empirically observed case ($\tau>0$):} Let $|E'|\leq|E|$ denote edges surviving the threshold. Pruned edges are checked in $O(1)$ without heap insertion. The observed complexity is:
+    \item \textbf{Empirically observed case ($\tau>0$):} Let $|E'|\leq|E|$ denote edges surviving the threshold. Pruned edges are checked in $O(1)$ using hash maps for $O(1)$ cost lookups, ensuring scalability. The observed complexity is:
     \[
     T_{\text{pruned}} = O(|E'|\log|V|),\quad |E'|\leq|E|
     \]
@@ -70,7 +70,7 @@ $|V|$ & \textbf{Baseline (ms)} & \textbf{Pruned (ms)} & \textbf{Wall Speedup} & 
 \textbf{Data Structure} & \textbf{Space} & \textbf{Purpose} \\
 \midrule
 Adjacency list & $O(|V|+|E|)$ & Graph representation \\
-Distance map $\mathit{dist}[v]$ & $O(|V|)$ & Shortest path estimates \\
+Cost map $\mathit{best\_costs}[v]$ & $O(|V|)$ & Shortest path estimates \\
 Parent map $\mathit{parent}[v]$ & $O(|V|)$ & Path reconstruction \\
 Priority queue (heap) & $O(|V|+|E|)$ worst case & Node ordering \\
 \midrule
@@ -101,7 +101,7 @@ $|V|$ & \textbf{Baseline Peak (KB)} & \textbf{Pruned Peak (KB)} & \textbf{Reduct
 \label{table:memory_by_size}
 \end{table}
 
-\noindent Peak \texttt{tracemalloc} allocation measures algorithm data structures only (distance dict, parent dict, priority-queue heap); the graph adjacency list is built before tracing begins and is excluded. Baseline peak memory (83.8~KB $\to$ 342.9~KB $\to$ 655.0~KB) scales linearly with $|V|$, confirming the $O(|V|+|E|)$ bound, while the pruned algorithm's constant $\approx$4.5~KB at all sizes demonstrates that only a small frontier is ever materialized.
+\noindent Peak \texttt{tracemalloc} allocation measures algorithm data structures only (best\_costs dict, parent dict, priority-queue heap); the graph adjacency list is built before tracing begins and is excluded. Baseline peak memory (83.8~KB $\to$ 342.9~KB $\to$ 655.0~KB) scales linearly with $|V|$, confirming the $O(|V|+|E|)$ bound, while the pruned algorithm's constant $\approx$4.5~KB at all sizes demonstrates that only a small frontier is ever materialized.
 
 \section{Summary of Complexity}
 

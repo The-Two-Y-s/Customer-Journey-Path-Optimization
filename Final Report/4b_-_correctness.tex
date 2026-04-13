@@ -15,11 +15,11 @@ The negative logarithm $f(x)=-\log(x)$ is a strictly monotone decreasing functio
 \section{Correctness of Baseline Dijkstra}
 
 \begin{theorem}[Baseline Optimality]\label{thm:baseline_optimal}
-Upon termination, $\mathit{dist}[t]$ equals the true shortest-path distance $\delta(s,t)$ in the log-transformed graph.
+Upon termination, $\mathit{best\_costs}[t]$ equals the true shortest-path distance $\delta(s,t)$ in the log-transformed graph.
 \end{theorem}
 
 \begin{proof}
-We rely on the standard inductive proof for Dijkstra’s algorithm~\citep{cormen2009}. The algorithm maintains the invariant that for every node $u$ extracted from the priority queue, $\mathit{dist}[u] = \delta(s,u)$. Because all edge weights $w(u,v) \geq 0$, the extraction of a node $u$ with the minimum tentative distance guarantees that no shorter path can exist through nodes currently in the queue or yet to be discovered. 
+We rely on the standard inductive proof for Dijkstra’s algorithm~\citep{cormen2009}. The algorithm maintains the invariant that for every node $u$ extracted from the priority queue, $\mathit{best\_costs}[u] = \delta(s,u)$. Because all edge weights $w(u,v) \geq 0$, the extraction of a node $u$ with the minimum tentative distance guarantees that no shorter path can exist through nodes currently in the queue or yet to be discovered. 
 \end{proof}
 
 \section{Correctness of Probability-Pruned Dijkstra}
@@ -31,7 +31,7 @@ As $\tau \to 0^+$, Algorithm~2 converges to Algorithm~1.
 \end{theorem}
 
 \begin{proof}
-As $\tau \to 0^+$, we have $T = -\log(\tau) \to +\infty$. Setting $\tau = 0$ is equivalent to $T = \mathtt{math.inf}$ in the implementation. The pruning condition $\mathit{new\_cost} > T$ is never satisfied since all finite costs are $< +\infty$. Therefore no edge is pruned, and every code path of Algorithm~2 behaves identically to Algorithm~1. Correctness follows directly from Theorem~\ref{thm:baseline_optimal}.
+As $\tau \to 0^+$, we have $T = -\log(\tau) \to +\infty$. In the unified `dijkstra_search` implementation, setting $\tau = 0.0$ is equivalent to $T = \mathtt{math.inf}$. The pruning condition $\mathit{new\_cost} > T$ is never satisfied since all finite path costs are strictly less than infinity. Consequently, no edge is pruned, and the execution flow becomes identical to the baseline Dijkstra algorithm. Correctness follows directly from Theorem~\ref{thm:baseline_optimal}.
 \end{proof}
 
 \subsection{Conditional Optimality for \texorpdfstring{$\tau > 0$}{tau > 0}}

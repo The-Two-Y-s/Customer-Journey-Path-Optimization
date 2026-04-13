@@ -10,7 +10,7 @@ from typing import Dict, List, Tuple
 
 import pandas as pd
 
-from src.dijkstra import dijkstra, dijkstra_pruned, reconstruct_path, DijkstraResult
+from src.dijkstra import dijkstra_search, reconstruct_path, DijkstraResult
 from src.graph_builder import build_weighted_graph
 from src.preprocessing import compute_transition_statistics, extract_transitions
 
@@ -19,13 +19,52 @@ Graph = Dict[str, List[Tuple[str, float]]]
 
 
 def load_dataset(data_path: Path) -> pd.DataFrame:
+    """Load clickstream data from CSV."""
     if not data_path.exists():
         raise FileNotFoundError(f"Dataset not found: {data_path}")
     return pd.read_csv(data_path)
 
 
-def format_path(path: List[str]) -> str:
-    return " -> ".join(path)
+def run_search_with_metrics(
+    graph: Graph, source: str, target: str, tau: float = 0.0, label: str = "Search"
+) -> DijkstraResult:
+    """Run Dijkstra with timing and memory tracking."""
+    tracemalloc.start()
+    start_time = time.perf_counter()
+    
+    result = dijkstra_search(graph, source, target, tau=tau)
+    
+    end_time = time.perf_counter()
+    _, peak_mem = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+
+    execution_time_ms = (end_time - start_time) * 1000
+    
+    print("=" * 50)
+    print(f"{label.upper()} ({'baseline' if tau <= 0 else f'tau={tau}'})")
+    print("=" * 50)
+    
+    if target not in result.dist:
+        print(f"No path found from {source} to {target}.")
+    else:
+        path = reconstruct_path(result.parent, source, target)
+        cost = result.dist[target]
+        prob = math.exp(-cost)
+
+        print(f"Path: {' -> '.join(path)}")
+        print(f"\nTotal Cost (log-space): {cost:.4f}")
+        print(f"Path Probability:       {prob:.6f}")
+        
+        m = result.metrics
+        print(f"\nMetrics:")
+        print(f"  Nodes explored:    {m.nodes_explored}")
+        print(f"  Edges examined:    {m.edges_examined}")
+        print(f"  Edges relaxed:     {m.edges_relaxed}")
+        print(f"  Max PQ size:       {m.max_pq_size}")
+        print(f"  Execution time:    {execution_time_ms:.3f} ms")
+        print(f"  Peak memory:       {peak_mem / 1024:.2f} KB")
+
+    return result
 
 
 def k_shortest_simple_paths(
@@ -35,11 +74,7 @@ def k_shortest_simple_paths(
     k: int,
     max_path_len: int | None = None,
 ) -> List[Tuple[float, List[str]]]:
-    """Best-first search for top-k simple paths by total weight.
-
-    Warning: worst-case exponential time/space — enumerates all simple paths.
-    Use only with small k on sparse graphs.
-    """
+    """Best-first search for top-k simple paths by total weight."""
     if k <= 0:
         return []
 
@@ -69,13 +104,13 @@ def k_shortest_simple_paths(
 
 
 def export_graph_image(graph: Graph, output_path: Path) -> None:
+    """Export a visualization of the graph to a file."""
     try:
         import matplotlib.pyplot as plt
         import networkx as nx
-    except Exception as exc:
-        raise RuntimeError(
-            "Graph export requires `networkx` and `matplotlib`. Install them first."
-        ) from exc
+    except ImportError:
+        print("Warning: Graph export requires `networkx` and `matplotlib`. Skipping visualization.")
+        return
 
     g = nx.DiGraph()
     for source, neighbors in graph.items():
@@ -92,28 +127,6 @@ def export_graph_image(graph: Graph, output_path: Path) -> None:
     plt.close()
 
 
-def print_result(result: DijkstraResult, source: str, target: str, label: str = "Optimal") -> None:
-    """Print path, cost, probability, and metrics for a single Dijkstra run."""
-    if target not in result.dist:
-        print(f"No path found from {source} to {target}.")
-        return
-
-    path = reconstruct_path(result.parent, source, target)
-    cost = result.dist[target]
-    prob = math.exp(-cost)
-
-    print(f"{label} Path:")
-    print(format_path(path))
-    print(f"\nTotal Cost (log-space): {cost:.4f}")
-    print(f"Path Probability:       {prob:.6f}")
-    m = result.metrics
-    print(f"\nMetrics:")
-    print(f"  Nodes explored:    {m.nodes_explored}")
-    print(f"  Edges examined:    {m.edges_examined}")
-    print(f"  Edges relaxed:     {m.edges_relaxed}")
-    print(f"  Max PQ size:       {m.max_pq_size}")
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Find most probable customer journey paths using Dijkstra."
@@ -121,7 +134,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--data",
         default="data/enhanced_synthetic_journey.csv",
-        help="Path to CSV clickstream data (default: data/enhanced_synthetic_journey.csv)",
+        help="Path to CSV clickstream data",
     )
     parser.add_argument("--source", default="Home", help="Start node")
     parser.add_argument("--target", default="Checkout", help="Target node")
@@ -130,12 +143,12 @@ def parse_args() -> argparse.Namespace:
         "--tau",
         type=float,
         default=0.0,
-        help="Pruning threshold tau for Pruned Dijkstra (0 = baseline only)",
+        help="Pruning threshold tau (0 = baseline only)",
     )
     parser.add_argument(
         "--output",
         default=None,
-        help="Optional image output path for graph visualization (e.g., output.png)",
+        help="Optional image output path for graph visualization",
     )
     return parser.parse_args()
 
@@ -144,83 +157,51 @@ def main() -> None:
     args = parse_args()
     data_path = Path(args.data)
 
+    # 1. Load Data
     try:
         df = load_dataset(data_path)
     except FileNotFoundError:
         from data.synthetic_data_generator import SyntheticJourneyGenerator
-
-        print(f"Dataset not found at {data_path}. Generating synthetic data...")
-        generator = SyntheticJourneyGenerator(avg_session_length=12)
-        df = generator.generate(num_sessions=2000)
-        data_path = Path("data/enhanced_synthetic_journey.csv")
+        print(f"Dataset not found. Generating synthetic data at {data_path}...")
+        df = SyntheticJourneyGenerator(avg_session_length=12).generate(num_sessions=2000)
+        data_path.parent.mkdir(parents=True, exist_ok=True)
         df.to_csv(data_path, index=False)
-        print(f"Generated dataset at {data_path}")
 
+    # 2. Build Graph
     transitions = extract_transitions(df)
     _, transition_probs = compute_transition_statistics(transitions)
     graph = build_weighted_graph(transition_probs)
 
-    if args.source not in graph:
-        raise ValueError(f"Source node '{args.source}' not found in graph")
-    if args.target not in graph:
-        raise ValueError(f"Target node '{args.target}' not found in graph")
+    if args.source not in graph or args.target not in graph:
+        print(f"Error: Source '{args.source}' or Target '{args.target}' not found in data.")
+        return
 
+    # 3. Execute Search
     if args.k <= 1:
-        # --- Baseline Dijkstra ---
-        tracemalloc.start()
-        t0 = time.perf_counter()
-        result_baseline = dijkstra(graph, args.source, args.target)
-        t1 = time.perf_counter()
-        _, peak_mem = tracemalloc.get_traced_memory()
-        tracemalloc.stop()
-
-        print("=" * 50)
-        print("BASELINE DIJKSTRA")
-        print("=" * 50)
-        print_result(result_baseline, args.source, args.target, label="Optimal")
-        print(f"  Execution time:    {(t1 - t0) * 1000:.3f} ms")
-        print(f"  Peak memory:       {peak_mem / 1024:.2f} KB")
-
-        # --- Pruned Dijkstra (if tau > 0) ---
+        res_base = run_search_with_metrics(graph, args.source, args.target, tau=0.0, label="Baseline")
+        
         if args.tau > 0:
-            tracemalloc.start()
-            t0 = time.perf_counter()
-            result_pruned = dijkstra_pruned(graph, args.source, args.target, tau=args.tau)
-            t1 = time.perf_counter()
-            _, peak_mem = tracemalloc.get_traced_memory()
-            tracemalloc.stop()
-
             print()
-            print("=" * 50)
-            print(f"PRUNED DIJKSTRA (tau={args.tau})")
-            print("=" * 50)
-            print_result(result_pruned, args.source, args.target, label="Pruned")
-            print(f"  Execution time:    {(t1 - t0) * 1000:.3f} ms")
-            print(f"  Peak memory:       {peak_mem / 1024:.2f} KB")
-
-            # Optimality gap (cost-based, matching report §3.8.2)
-            if args.target in result_baseline.dist and args.target in result_pruned.dist:
-                cost_base = result_baseline.dist[args.target]
-                cost_pruned = result_pruned.dist[args.target]
-                if cost_base > 0:
-                    gap = abs(cost_pruned - cost_base) / cost_base * 100
-                    print(f"\n  Optimality gap:    {gap:.4f}%")
+            res_pruned = run_search_with_metrics(graph, args.source, args.target, tau=args.tau, label="Pruned")
+            
+            # Show optimality gap
+            if args.target in res_base.dist and args.target in res_pruned.dist:
+                gap = abs(res_pruned.dist[args.target] - res_base.dist[args.target])
+                gap_pct = (gap / res_base.dist[args.target] * 100) if res_base.dist[args.target] > 0 else 0
+                print(f"\n  Optimality gap:    {gap_pct:.4f}%")
     else:
         if args.tau > 0:
-            print(f"Warning: --tau {args.tau} is ignored when --k > 1 (k-shortest paths does not support pruning).")
+            print(f"Warning: --tau {args.tau} is ignored when --k > 1.")
+        
         paths = k_shortest_simple_paths(graph, args.source, args.target, args.k)
-        if not paths:
-            print(f"No path found from {args.source} to {args.target}.")
-        else:
-            print(f"Top {len(paths)} Paths:")
-            for i, (cost, path) in enumerate(paths, start=1):
-                prob = math.exp(-cost)
-                print(f"{i}. {format_path(path)} (Cost: {cost:.4f}, Prob: {prob:.6f})")
+        print(f"Top {len(paths)} Paths:")
+        for i, (cost, path) in enumerate(paths, start=1):
+            print(f"{i}. {' -> '.join(path)} (Cost: {cost:.4f}, Prob: {math.exp(-cost):.6f})")
 
+    # 4. Optional Visualization
     if args.output:
-        output_path = Path(args.output)
-        export_graph_image(graph, output_path)
-        print(f"\nGraph visualization saved to {output_path}")
+        export_graph_image(graph, Path(args.output))
+        print(f"\nGraph visualization saved to {args.output}")
 
 
 if __name__ == "__main__":

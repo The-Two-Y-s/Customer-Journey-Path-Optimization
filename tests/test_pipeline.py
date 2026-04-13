@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.dijkstra import dijkstra, dijkstra_pruned, reconstruct_path, DijkstraResult
+from src.dijkstra import dijkstra_search, reconstruct_path, DijkstraResult
 from src.graph_builder import build_weighted_graph
 from src.preprocessing import compute_transition_statistics, extract_transitions
 from data.graph_generator import generate_erdos_renyi_graph, generate_layered_graph
@@ -82,7 +82,7 @@ class TestGraphAndDijkstra(unittest.TestCase):
             "Checkout": [],
         }
 
-        result = dijkstra(graph, "Home", "Checkout")
+        result = dijkstra_search(graph, "Home", "Checkout")
         path = reconstruct_path(result.parent, "Home", "Checkout")
 
         self.assertIsInstance(result, DijkstraResult)
@@ -97,7 +97,7 @@ class TestGraphAndDijkstra(unittest.TestCase):
             # Checkout key intentionally omitted.
         }
 
-        result = dijkstra(graph, "Home", "Checkout")
+        result = dijkstra_search(graph, "Home", "Checkout")
         path = reconstruct_path(result.parent, "Home", "Checkout")
 
         self.assertAlmostEqual(result.dist["Checkout"], 1.0)
@@ -111,8 +111,8 @@ class TestGraphAndDijkstra(unittest.TestCase):
             "Checkout": [],
         }
 
-        result_base = dijkstra(graph, "Home", "Checkout")
-        result_pruned = dijkstra_pruned(graph, "Home", "Checkout", tau=0.001)
+        result_base = dijkstra_search(graph, "Home", "Checkout")
+        result_pruned = dijkstra_search(graph, "Home", "Checkout", tau=0.001)
 
         self.assertAlmostEqual(
             result_base.dist["Checkout"], result_pruned.dist["Checkout"]
@@ -129,7 +129,7 @@ class TestGraphAndDijkstra(unittest.TestCase):
         # tau=0.5 means T = -log(0.5) ≈ 0.693
         # A->B->D cost = 0.3 < 0.693 (kept)
         # A->C cost = 10.0 > 0.693 (pruned)
-        result = dijkstra_pruned(graph, "A", "D", tau=0.5)
+        result = dijkstra_search(graph, "A", "D", tau=0.5)
         path = reconstruct_path(result.parent, "A", "D")
         self.assertEqual(path, ["A", "B", "D"])
 
@@ -142,7 +142,7 @@ class TestConvergence(unittest.TestCase):
 
     def test_convergence_on_generated_graph(self):
         graph = generate_erdos_renyi_graph(n=200, avg_degree=5, seed=99)
-        result_base = dijkstra(graph, "s", "t")
+        result_base = dijkstra_search(graph, "s", "t")
 
         if "t" not in result_base.dist:
             self.skipTest("No s-t path in this random graph")
@@ -151,7 +151,7 @@ class TestConvergence(unittest.TestCase):
 
         # As tau decreases, pruned result must converge to baseline
         for tau in [0.5, 0.1, 0.01, 0.001]:
-            result_p = dijkstra_pruned(graph, "s", "t", tau=tau)
+            result_p = dijkstra_search(graph, "s", "t", tau=tau)
             if "t" in result_p.dist:
                 self.assertGreaterEqual(
                     result_p.dist["t"],
@@ -160,7 +160,7 @@ class TestConvergence(unittest.TestCase):
                 )
 
         # tau very close to 0 must match baseline exactly
-        result_tiny = dijkstra_pruned(graph, "s", "t", tau=1e-15)
+        result_tiny = dijkstra_search(graph, "s", "t", tau=1e-15)
         if "t" in result_tiny.dist:
             self.assertAlmostEqual(result_tiny.dist["t"], base_cost, places=9)
 
@@ -178,7 +178,7 @@ class TestProbabilityConsistency(unittest.TestCase):
             "AB": {},
         }
         graph = build_weighted_graph(edge_probs)
-        result = dijkstra(graph, "LP", "CK")
+        result = dijkstra_search(graph, "LP", "CK")
         path = reconstruct_path(result.parent, "LP", "CK")
 
         # Compute product of edge probabilities along the path
@@ -202,13 +202,13 @@ class TestEdgeCases(unittest.TestCase):
             "C": [("D", 1.0)],
             "D": [],
         }
-        result = dijkstra(graph, "A", "D")
+        result = dijkstra_search(graph, "A", "D")
         self.assertNotIn("D", result.dist)
         self.assertEqual(reconstruct_path(result.parent, "A", "D"), [])
 
     def test_single_node_source_equals_target(self):
         graph = {"A": []}
-        result = dijkstra(graph, "A", "A")
+        result = dijkstra_search(graph, "A", "A")
         self.assertEqual(result.dist["A"], 0)
         self.assertEqual(reconstruct_path(result.parent, "A", "A"), ["A"])
 
@@ -219,7 +219,7 @@ class TestEdgeCases(unittest.TestCase):
             "B": [("C", 1.0)],
             "C": [],
         }
-        result = dijkstra(graph, "A", "A")
+        result = dijkstra_search(graph, "A", "A")
         self.assertEqual(result.dist["A"], 0)
         self.assertEqual(reconstruct_path(result.parent, "A", "A"), ["A"])
 
@@ -230,7 +230,7 @@ class TestEdgeCases(unittest.TestCase):
             "B": [("C", 0.0)],
             "C": [],
         }
-        result = dijkstra(graph, "A", "C")
+        result = dijkstra_search(graph, "A", "C")
         self.assertAlmostEqual(result.dist["C"], 0.0)
         self.assertAlmostEqual(math.exp(-result.dist["C"]), 1.0)
 
@@ -240,7 +240,7 @@ class TestEdgesExaminedInvariant(unittest.TestCase):
 
     def test_baseline_examined_geq_relaxed(self):
         graph = generate_erdos_renyi_graph(n=300, avg_degree=5, seed=42)
-        result = dijkstra(graph, "s", "t")
+        result = dijkstra_search(graph, "s", "t")
         self.assertGreaterEqual(
             result.metrics.edges_examined,
             result.metrics.edges_relaxed,
@@ -250,7 +250,7 @@ class TestEdgesExaminedInvariant(unittest.TestCase):
     def test_pruned_examined_geq_relaxed(self):
         graph = generate_erdos_renyi_graph(n=300, avg_degree=5, seed=42)
         for tau in [0.001, 0.01, 0.05, 0.1, 0.5]:
-            result = dijkstra_pruned(graph, "s", "t", tau=tau)
+            result = dijkstra_search(graph, "s", "t", tau=tau)
             self.assertGreaterEqual(
                 result.metrics.edges_examined,
                 result.metrics.edges_relaxed,
@@ -267,7 +267,7 @@ class TestGraphGenerator(unittest.TestCase):
 
     def test_guaranteed_connectivity(self):
         graph = generate_erdos_renyi_graph(n=500, avg_degree=2, seed=7)
-        result = dijkstra(graph, "s", "t")
+        result = dijkstra_search(graph, "s", "t")
         self.assertIn("t", result.dist, "s-t path must exist after connectivity fix")
 
     def test_power_law_distribution(self):
@@ -286,7 +286,7 @@ class TestLayeredGenerator(unittest.TestCase):
 
     def test_guaranteed_connectivity(self):
         graph = generate_layered_graph(n=500, avg_degree=3, seed=7)
-        result = dijkstra(graph, "s", "t")
+        result = dijkstra_search(graph, "s", "t")
         self.assertIn("t", result.dist, "s-t path must exist in layered graph")
 
     def test_nodes_have_stage_labels(self):
@@ -303,7 +303,7 @@ class TestLayeredGenerator(unittest.TestCase):
         graph = generate_layered_graph(
             n=100, avg_degree=3, seed=42, backward_prob=0.0
         )
-        result = dijkstra(graph, "s", "t")
+        result = dijkstra_search(graph, "s", "t")
         self.assertIn("t", result.dist)
 
     def test_power_law_distribution(self):
@@ -359,7 +359,7 @@ class TestKShortestSimplePaths(unittest.TestCase):
     def test_k1_matches_dijkstra_optimal(self):
         from main import k_shortest_simple_paths
         paths = k_shortest_simple_paths(self.graph, "A", "D", k=1)
-        result = dijkstra(self.graph, "A", "D")
+        result = dijkstra_search(self.graph, "A", "D")
         self.assertEqual(len(paths), 1)
         self.assertAlmostEqual(paths[0][0], result.dist["D"])
 
@@ -412,7 +412,7 @@ class TestRealDataPipeline(unittest.TestCase):
         graph = build_weighted_graph(probs)
         self.assertIn("Home", graph, "Expected 'Home' node in graph")
 
-        result_base = dijkstra(graph, "Home", "Checkout")
+        result_base = dijkstra_search(graph, "Home", "Checkout")
         self.assertIn("Checkout", result_base.dist, "Baseline should find Home->Checkout path")
 
         path = reconstruct_path(result_base.parent, "Home", "Checkout")
@@ -423,7 +423,7 @@ class TestRealDataPipeline(unittest.TestCase):
         self.assertLessEqual(prob, 1.0)
 
         # Pruned with conservative tau should match
-        result_pruned = dijkstra_pruned(graph, "Home", "Checkout", tau=1e-10)
+        result_pruned = dijkstra_search(graph, "Home", "Checkout", tau=1e-10)
         if "Checkout" in result_pruned.dist:
             self.assertAlmostEqual(
                 result_base.dist["Checkout"],
@@ -461,7 +461,7 @@ class TestRealDataLoaders(unittest.TestCase):
         graph = build_weighted_graph(probs)
         self.assertGreater(len(graph), 1)
 
-    def test_retailrocket_dijkstra(self):
+    def test_retailrocket_dijkstra_search(self):
         if not (self._rr_dir / "events.csv").exists():
             self.skipTest("RetailRocket data not found")
         from data.real_data_loader import load_retailrocket
@@ -469,7 +469,7 @@ class TestRealDataLoaders(unittest.TestCase):
         transitions = extract_transitions(df)
         _, probs = compute_transition_statistics(transitions)
         graph = build_weighted_graph(probs)
-        result = dijkstra(graph, "view", "transaction")
+        result = dijkstra_search(graph, "view", "transaction")
         self.assertIn("transaction", result.dist)
         path = reconstruct_path(result.parent, "view", "transaction")
         self.assertEqual(path[0], "view")
@@ -485,7 +485,7 @@ class TestRealDataLoaders(unittest.TestCase):
         transitions = extract_transitions(df)
         self.assertGreater(len(transitions), 0)
 
-    def test_recsys2015_dijkstra(self):
+    def test_recsys2015_dijkstra_search(self):
         if not (self._rc_dir / "yoochoose-clicks.dat").exists():
             self.skipTest("RecSys 2015 data not found")
         from data.real_data_loader import load_recsys2015
@@ -495,7 +495,7 @@ class TestRealDataLoaders(unittest.TestCase):
         graph = build_weighted_graph(probs)
         # Pick the most popular node and a reachable target
         popular = max(graph, key=lambda n: len(graph[n]))
-        result = dijkstra(graph, popular, list(graph.keys())[-1])
+        result = dijkstra_search(graph, popular, list(graph.keys())[-1])
         self.assertGreater(result.metrics.nodes_explored, 0)
 
     def test_pruned_optimality_on_real_data(self):
@@ -507,8 +507,8 @@ class TestRealDataLoaders(unittest.TestCase):
         transitions = extract_transitions(df)
         _, probs = compute_transition_statistics(transitions)
         graph = build_weighted_graph(probs)
-        base = dijkstra(graph, "view", "transaction")
-        pruned = dijkstra_pruned(graph, "view", "transaction", tau=0.001)
+        base = dijkstra_search(graph, "view", "transaction")
+        pruned = dijkstra_search(graph, "view", "transaction", tau=0.001)
         if "transaction" in pruned.dist:
             self.assertAlmostEqual(base.dist["transaction"], pruned.dist["transaction"], places=9)
 
@@ -546,8 +546,8 @@ class TestCriticalTau(unittest.TestCase):
             n=200, avg_degree=5, distribution="uniform", seed=99,
             source="s", target="t",
         )
-        res_base = dijkstra(graph, "s", "t")
-        res_prune = dijkstra_pruned(graph, "s", "t", tau=0)
+        res_base = dijkstra_search(graph, "s", "t")
+        res_prune = dijkstra_search(graph, "s", "t", tau=0)
 
         # Identical shortest-path cost to target
         self.assertAlmostEqual(
@@ -581,19 +581,19 @@ class TestScaleAndProperty(unittest.TestCase):
     def test_correctness_at_2000_nodes_er(self):
         """Pruned Dijkstra returns exact optimal on a 2,000-node ER graph."""
         graph = generate_erdos_renyi_graph(n=2000, avg_degree=5, seed=77)
-        base = dijkstra(graph, "s", "t")
+        base = dijkstra_search(graph, "s", "t")
         if "t" not in base.dist:
             self.skipTest("No s-t path in this graph")
-        pruned = dijkstra_pruned(graph, "s", "t", tau=1e-6)
+        pruned = dijkstra_search(graph, "s", "t", tau=1e-6)
         if "t" in pruned.dist:
             self.assertAlmostEqual(base.dist["t"], pruned.dist["t"], places=12)
 
     def test_correctness_at_5000_nodes_layered(self):
         """Pruned Dijkstra returns exact optimal on a 5,000-node layered graph."""
         graph = generate_layered_graph(n=5000, avg_degree=5, seed=88)
-        base = dijkstra(graph, "s", "t")
+        base = dijkstra_search(graph, "s", "t")
         self.assertIn("t", base.dist, "Layered graph must have s-t path")
-        pruned = dijkstra_pruned(graph, "s", "t", tau=1e-6)
+        pruned = dijkstra_search(graph, "s", "t", tau=1e-6)
         if "t" in pruned.dist:
             self.assertAlmostEqual(base.dist["t"], pruned.dist["t"], places=12)
 
@@ -603,11 +603,11 @@ class TestScaleAndProperty(unittest.TestCase):
         seeds = _rng.Random(42).sample(range(10000), 20)
         for seed in seeds:
             graph = generate_erdos_renyi_graph(n=500, avg_degree=4, seed=seed)
-            base = dijkstra(graph, "s", "t")
+            base = dijkstra_search(graph, "s", "t")
             if "t" not in base.dist:
                 continue
             for tau in [1e-6, 1e-4, 1e-2]:
-                pruned = dijkstra_pruned(graph, "s", "t", tau=tau)
+                pruned = dijkstra_search(graph, "s", "t", tau=tau)
                 if "t" in pruned.dist:
                     self.assertAlmostEqual(
                         base.dist["t"], pruned.dist["t"], places=12,
