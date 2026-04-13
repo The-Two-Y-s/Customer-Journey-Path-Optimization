@@ -103,8 +103,8 @@ class TestGraphAndDijkstra(unittest.TestCase):
         self.assertAlmostEqual(result.dist["Checkout"], 1.0)
         self.assertEqual(path, ["Home", "Checkout"])
 
-    def test_dijkstra_pruned_finds_same_path(self):
-        """Pruned Dijkstra with a loose tau should find the same optimal path."""
+    def test_search_pruned_finds_same_path(self):
+        """dijkstra_search with a loose tau should find the same optimal path."""
         graph = {
             "Home": [("Search", 1.0), ("Checkout", 5.0)],
             "Search": [("Checkout", 1.0)],
@@ -118,8 +118,8 @@ class TestGraphAndDijkstra(unittest.TestCase):
             result_base.dist["Checkout"], result_pruned.dist["Checkout"]
         )
 
-    def test_dijkstra_pruned_prunes_high_cost(self):
-        """Pruned Dijkstra with aggressive tau prunes expensive paths."""
+    def test_search_pruned_prunes_high_cost(self):
+        """dijkstra_search with aggressive tau prunes expensive paths."""
         graph = {
             "A": [("B", 0.1), ("C", 10.0)],
             "B": [("D", 0.2)],
@@ -222,6 +222,23 @@ class TestEdgeCases(unittest.TestCase):
         result = dijkstra_search(graph, "A", "A")
         self.assertEqual(result.dist["A"], 0)
         self.assertEqual(reconstruct_path(result.parent, "A", "A"), ["A"])
+
+    def test_source_equals_target_with_pruning(self):
+        """start == goal with tau > 0 should still return cost 0 and path [start]."""
+        graph = {
+            "A": [("B", 1.0), ("C", 2.0)],
+            "B": [("C", 1.0)],
+            "C": [],
+        }
+        result = dijkstra_search(graph, "A", "A", tau=0.5)
+        self.assertEqual(result.dist["A"], 0)
+        self.assertEqual(reconstruct_path(result.parent, "A", "A"), ["A"])
+
+    def test_negative_tau_raises(self):
+        """Negative tau must raise ValueError."""
+        graph = {"A": [("B", 1.0)], "B": []}
+        with self.assertRaises(ValueError):
+            dijkstra_search(graph, "A", "B", tau=-0.1)
 
     def test_probability_one_edges(self):
         """Probability-1 edges have weight -log(1)=0, so total cost = 0."""
@@ -541,7 +558,7 @@ class TestCriticalTau(unittest.TestCase):
     # Theorem 3 (Convergence): tau=0 pruned == baseline
     # ------------------------------------------------------------------
     def test_pruned_tau_zero_matches_baseline(self):
-        """dijkstra_pruned with tau=0 must produce identical results to dijkstra."""
+        """dijkstra_search with tau=0 must produce identical results to baseline."""
         graph = generate_erdos_renyi_graph(
             n=200, avg_degree=5, distribution="uniform", seed=99,
             source="s", target="t",

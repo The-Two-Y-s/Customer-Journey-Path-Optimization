@@ -42,6 +42,9 @@ def dijkstra_search(graph: Graph, start: str, goal: str, tau: float = 0.0) -> Di
         Pruning threshold probability. If tau > 0, paths with probability 
         less than tau are discarded. Default 0.0 (baseline).
     """
+    if tau < 0:
+        raise ValueError(f"tau must be non-negative, got {tau}")
+
     # Priority queue stores (cumulative_cost, current_node)
     priority_queue = [(0.0, start)]
     best_costs = {start: 0.0}

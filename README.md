@@ -236,14 +236,14 @@ Since `P(v|u) ∈ (0, 1]`, every weight `-log(p)` is non-negative — Dijkstra's
 Standard Dijkstra with lazy-deletion via stale-entry skip. Uses a binary min-heap priority queue.
 
 - **Complexity:** `O((V + E) log V)`
-- **Implementation:** `src/dijkstra.py → dijkstra()`
+- **Implementation:** `src/dijkstra.py → dijkstra_search(tau=0.0)`
 
 ### Probability-Pruned Dijkstra
 
 Converts the threshold τ to log-space (`T = -log(τ)`) and discards any edge whose cumulative cost would exceed `T` before examining it.
 
 - **Complexity:** Same worst-case `O((V + E) log V)`, but in practice examines far fewer edges.
-- **Implementation:** `src/dijkstra.py → dijkstra_pruned()`
+- **Implementation:** `src/dijkstra.py → dijkstra_search(tau>0)`
 
 ### Pruning Correctness
 

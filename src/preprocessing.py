@@ -35,7 +35,7 @@ def extract_transitions(df: pd.DataFrame) -> List[Tuple[str, str]]:
 
         transitions: List[Tuple[str, str]] = []
         for _, group in df.sort_values(order_cols).groupby("session_id"):
-            states = group["state"].astype(str).tolist()
+            states = group["state"].dropna().astype(str).tolist()
             transitions.extend(zip(states[:-1], states[1:]))
         return transitions
 

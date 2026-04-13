@@ -384,28 +384,28 @@ def dijkstra_search(graph: Graph, start: str, goal: str,
     metrics.max_pq_size = 1
 
     # Pruning threshold in log-space; tau <= 0 means no pruning.
-    T = -math.log(tau) if tau > 0 else math.inf
+    pruning_limit = -math.log(tau) if tau > 0 else math.inf
 
     while priority_queue:
-        cost, node = heapq.heappop(priority_queue)
-        if node == goal:
+        current_cost, current_node = heapq.heappop(priority_queue)
+        if current_node == goal:
             metrics.nodes_explored += 1
             break
-        if cost > best_costs.get(node, math.inf):
+        if current_cost > best_costs.get(current_node, math.inf):
             continue  # stale entry (lazy deletion)
         
         metrics.nodes_explored += 1
-        for neighbor, weight in graph.get(node, []):
-            new_cost = cost + weight
+        for neighbor, weight in graph.get(current_node, []):
+            new_cost = current_cost + weight
             metrics.edges_examined += 1
             
-            if new_cost > T:
+            if new_cost > pruning_limit:
                 continue  # PRUNE: path probability below tau
             
             metrics.edges_relaxed += 1
             if neighbor not in best_costs or new_cost < best_costs[neighbor]:
                 best_costs[neighbor] = new_cost
-                parent[neighbor] = node
+                parent[neighbor] = current_node
                 heapq.heappush(priority_queue, (new_cost, neighbor))
                 if len(priority_queue) > metrics.max_pq_size:
                     metrics.max_pq_size = len(priority_queue)

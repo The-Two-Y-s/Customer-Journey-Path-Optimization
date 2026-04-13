@@ -40,12 +40,12 @@ def _bfs_reachable(graph: dict, source: str, target: str) -> bool:
     queue = deque([source])
     while queue:
         node = queue.popleft()
-        for neighbour, _weight in graph.get(node, []):
-            if neighbour == target:
+        for neighbor, _weight in graph.get(node, []):
+            if neighbor == target:
                 return True
-            if neighbour not in visited:
-                visited.add(neighbour)
-                queue.append(neighbour)
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
     return False
 
 

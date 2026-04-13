@@ -15,7 +15,7 @@ import time
 from dataclasses import dataclass
 from typing import List
 
-from src.dijkstra import dijkstra_search, reconstruct_path
+from src.dijkstra import dijkstra_search, reconstruct_path, Graph
 
 
 @dataclass
@@ -61,7 +61,7 @@ def _adaptive_tau_sweep(baseline_prob: float) -> list[float]:
 
 
 def find_critical_tau(
-    graph,
+    graph: Graph,
     source: str,
     target: str,
     taus: list[float] | None = None,
